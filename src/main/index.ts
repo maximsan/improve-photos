@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerScannerHandlers } from './ipc/scanner'
 import { registerDedupHandlers } from './ipc/dedup'
+import { registerOrganizerHandlers } from './ipc/organizer'
 
 function createWindow(): void {
   // Create the browser window.
@@ -63,6 +64,7 @@ app.whenReady().then(async () => {
 
   registerScannerHandlers()
   registerDedupHandlers()
+  registerOrganizerHandlers()
 
   createWindow()
 
