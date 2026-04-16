@@ -6,6 +6,7 @@ import { registerScannerHandlers } from './ipc/scanner'
 import { registerDedupHandlers } from './ipc/dedup'
 import { registerOrganizerHandlers } from './ipc/organizer'
 import { registerQualityHandlers } from './ipc/quality'
+import { registerExporterHandlers } from './ipc/exporter'
 
 function createWindow(): void {
   // Create the browser window.
@@ -67,6 +68,7 @@ app.whenReady().then(async () => {
   registerDedupHandlers()
   registerOrganizerHandlers()
   registerQualityHandlers()
+  registerExporterHandlers()
 
   createWindow()
 
