@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { registerScannerHandlers } from './ipc/scanner'
 import { registerDedupHandlers } from './ipc/dedup'
 import { registerOrganizerHandlers } from './ipc/organizer'
+import { registerQualityHandlers } from './ipc/quality'
 
 function createWindow(): void {
   // Create the browser window.
@@ -65,6 +66,7 @@ app.whenReady().then(async () => {
   registerScannerHandlers()
   registerDedupHandlers()
   registerOrganizerHandlers()
+  registerQualityHandlers()
 
   createWindow()
 
