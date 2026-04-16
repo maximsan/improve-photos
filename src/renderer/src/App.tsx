@@ -1,34 +1,31 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useState } from 'react'
+import Sidebar from './components/Sidebar'
+import type { Tab, FeatureMap } from './types'
+import Scanner from './features/Scanner'
+import Dedup from './features/Dedup'
+import Organizer from './features/Organizer'
+import QualityReview from './features/QualityReview'
+import Exporter from './features/Exporter'
+
+const FEATURES: FeatureMap = {
+  scanner: Scanner,
+  dedup: Dedup,
+  organizer: Organizer,
+  quality: QualityReview,
+  exporter: Exporter
+}
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const [activeTab, setActiveTab] = useState<Tab>('scanner')
+  const ActiveFeature = FEATURES[activeTab]
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
+    <div className="flex h-full overflow-hidden">
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-surface-50">
+        <ActiveFeature />
+      </main>
+    </div>
   )
 }
 

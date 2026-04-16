@@ -41,7 +41,7 @@ const api: ElectronAPI = {
    * Returns an unsubscribe function — call it when the component unmounts.
    */
   onExportProgress: (cb: (progress: ExportProgress) => void) => {
-    const handler = (_event: IpcRendererEvent, progress: ExportProgress) => cb(progress)
+    const handler = (_event: IpcRendererEvent, progress: ExportProgress): void => cb(progress)
     ipcRenderer.on(IPC.EXPORT_PROGRESS, handler)
     return () => ipcRenderer.removeListener(IPC.EXPORT_PROGRESS, handler)
   }
@@ -55,8 +55,8 @@ if (process.contextIsolated) {
     console.error(error)
   }
 } else {
-  // @ts-ignore
+  // @ts-ignore -- window.electron is not typed when context isolation is disabled
   window.electron = electronAPI
-  // @ts-ignore
+  // @ts-ignore -- window.api is not typed when context isolation is disabled
   window.api = api
 }
