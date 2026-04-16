@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Warm amber/orange primary palette */
+  --color-primary-50: #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
+
+  /* Warm neutral backgrounds */
+  --color-surface-50: #fafaf9;
+  --color-surface-100: #f5f5f4;
+  --color-surface-200: #e7e5e4;
+  --color-surface-300: #d6d3d1;
+  --color-surface-400: #a8a29e;
+  --color-surface-500: #78716c;
+  --color-surface-600: #57534e;
+  --color-surface-700: #44403c;
+  --color-surface-800: #292524;
+  --color-surface-900: #1c1917;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --radius-app: 12px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-surface-100);
+  color: var(--color-surface-900);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Electron drag region */
+.titlebar-drag {
+  -webkit-app-region: drag;
+}
+.titlebar-no-drag {
+  -webkit-app-region: no-drag;
+}
