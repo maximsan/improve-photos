@@ -5,8 +5,16 @@ import tailwindcss from '@tailwindcss/vite'
 import { version } from './package.json'
 
 export default defineConfig({
-  main: {},
-  preload: {},
+  main: {
+    resolve: {
+      alias: { '@shared': resolve('src/shared') }
+    }
+  },
+  preload: {
+    resolve: {
+      alias: { '@shared': resolve('src/shared') }
+    }
+  },
   renderer: {
     define: {
       __APP_VERSION__: JSON.stringify(version)

@@ -6,8 +6,8 @@ import type {
   PhotoRecord,
   MoveOperation,
   ExportPreset
-} from '../shared/ipc'
-import { IPC } from '../shared/ipc'
+} from '@shared/ipc'
+import { IPC } from '@shared/ipc'
 
 /**
  * The preload script runs in a special context that has access to both the
@@ -18,6 +18,8 @@ import { IPC } from '../shared/ipc'
  * functions we explicitly allow — it cannot access any raw Node.js APIs.
  */
 const api: ElectronAPI = {
+  pickFolder: () => ipcRenderer.invoke(IPC.PICK_FOLDER),
+
   scan: (folderPath: string) => ipcRenderer.invoke(IPC.SCAN, folderPath),
 
   computeHashes: (paths: string[]) => ipcRenderer.invoke(IPC.COMPUTE_HASHES, paths),

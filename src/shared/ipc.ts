@@ -44,8 +44,15 @@ export interface MoveOperation {
 
 // ─── Quality / blur ──────────────────────────────────────────────────────────
 
+/** Perceptual hash keyed by absolute file path */
+export interface PhotoHashes {
+  [path: string]: string
+}
+
 /** Laplacian variance score — lower means blurrier */
-export type BlurScores = Record<string, number>
+export interface BlurScores {
+  [path: string]: number
+}
 
 // ─── Exporter ────────────────────────────────────────────────────────────────
 
@@ -71,6 +78,7 @@ export interface ExportProgress {
 // ─── IPC channel names (single source of truth) ──────────────────────────────
 
 export const IPC = {
+  PICK_FOLDER: 'pick-folder',
   SCAN: 'scan',
   COMPUTE_HASHES: 'compute-hashes',
   GET_DUPLICATE_GROUPS: 'get-duplicate-groups',
@@ -85,9 +93,11 @@ export const IPC = {
 // ─── Typed window.api surface (matches preload contextBridge) ────────────────
 
 export interface ElectronAPI {
+  /** Opens a native folder-picker dialog; resolves to the chosen path or null if cancelled */
+  pickFolder: () => Promise<string | null>
   scan: (folderPath: string) => Promise<PhotoRecord[]>
-  computeHashes: (paths: string[]) => Promise<Record<string, string>>
-  getDuplicateGroups: (hashes: Record<string, string>) => Promise<DuplicateGroup[]>
+  computeHashes: (paths: string[]) => Promise<PhotoHashes>
+  getDuplicateGroups: (hashes: PhotoHashes) => Promise<DuplicateGroup[]>
   getBlurScores: (paths: string[]) => Promise<BlurScores>
   previewOrganize: (photos: PhotoRecord[]) => Promise<MoveOperation[]>
   executeOrganize: (ops: MoveOperation[]) => Promise<void>

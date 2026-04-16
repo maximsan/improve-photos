@@ -6,6 +6,8 @@ import Dedup from './features/Dedup'
 import Organizer from './features/Organizer'
 import QualityReview from './features/QualityReview'
 import Exporter from './features/Exporter'
+import { PhotosContext } from './context/photos'
+import type { PhotoRecord } from '@shared/ipc'
 
 const FEATURES: FeatureMap = {
   scanner: Scanner,
@@ -17,15 +19,18 @@ const FEATURES: FeatureMap = {
 
 function App(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<Tab>('scanner')
+  const [photos, setPhotos] = useState<PhotoRecord[]>([])
   const ActiveFeature = FEATURES[activeTab]
 
   return (
-    <div className="flex h-full overflow-hidden">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-surface-50">
-        <ActiveFeature />
-      </main>
-    </div>
+    <PhotosContext.Provider value={{ photos, setPhotos }}>
+      <div className="flex h-full overflow-hidden">
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-surface-50">
+          <ActiveFeature />
+        </main>
+      </div>
+    </PhotosContext.Provider>
   )
 }
 
