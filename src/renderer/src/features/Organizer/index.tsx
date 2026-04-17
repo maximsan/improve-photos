@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   CalendarCheck,
   FolderOpen,
@@ -140,9 +140,15 @@ interface PreviewViewProps {
 }
 
 function PreviewView({ ops, onConfirm, onCancel }: PreviewViewProps): React.JSX.Element {
-  const conflictCount = ops.filter((op) => op.conflict).length
-  const moveCount = ops.filter((op) => !op.conflict).length
-  const tree = buildTree(ops)
+  const { conflictCount, moveCount, tree } = useMemo(() => {
+    let conflictCount = 0
+    let moveCount = 0
+    for (const op of ops) {
+      if (op.conflict) conflictCount++
+      else moveCount++
+    }
+    return { conflictCount, moveCount, tree: buildTree(ops) }
+  }, [ops])
 
   return (
     <div className="flex flex-col h-full">
@@ -245,13 +251,17 @@ function Organizer(): React.JSX.Element {
     setStatus('moving')
     try {
       await window.api.executeOrganize(ops)
-      const moved = ops.filter((op) => !op.conflict).length
-      setMovedCount(moved)
-
-      // Update the renderer's photo list with the new paths
-      const movedPaths = new Map(
-        ops.filter((op) => !op.conflict).map((op) => [op.photo.path, op.targetPath])
+      const { moved, movedPaths } = ops.reduce<{ moved: number; movedPaths: Map<string, string> }>(
+        (acc, op) => {
+          if (!op.conflict) {
+            acc.moved++
+            acc.movedPaths.set(op.photo.path, op.targetPath)
+          }
+          return acc
+        },
+        { moved: 0, movedPaths: new Map() }
       )
+      setMovedCount(moved)
       setPhotos(
         photos.map((p) => {
           const newPath = movedPaths.get(p.path)

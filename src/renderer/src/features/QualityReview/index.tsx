@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Sparkles, Trash2, ShieldCheck } from 'lucide-react'
+import { formatBytes, fileUrl } from '@renderer/lib/format'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
 import { usePhotos } from '../../context/photos'
@@ -8,15 +9,6 @@ import type { PhotoRecord, BlurScores } from '@shared/ipc'
 type QualityStatus = 'idle' | 'scoring' | 'results' | 'reviewing' | 'trashing' | 'done'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function fileUrl(path: string): string {
-  return `file://${path}`
-}
 
 /** Maps a blur score to a human-readable label + color. */
 function scoreLabel(score: number): { label: string; color: string } {
@@ -96,7 +88,10 @@ function ResultsGrid({
   onToggle,
   onReview
 }: ResultsGridProps): React.JSX.Element {
-  const sorted = [...photos].sort((a, b) => (scores[a.path] ?? 0) - (scores[b.path] ?? 0))
+  const sorted = useMemo(
+    () => [...photos].sort((a, b) => (scores[a.path] ?? 0) - (scores[b.path] ?? 0)),
+    [photos, scores]
+  )
 
   return (
     <div className="flex flex-col h-full">

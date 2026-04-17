@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ScanSearch, FolderOpen, RotateCcw } from 'lucide-react'
+import { formatBytes } from '@renderer/lib/format'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
 import { usePhotos } from '../../context/photos'
@@ -8,13 +9,6 @@ import type { PhotoRecord } from '@shared/ipc'
 type ScanStatus = 'idle' | 'scanning' | 'done'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
-}
 
 function formatYear(iso: string): string {
   return new Date(iso).getFullYear().toString()
@@ -54,13 +48,16 @@ interface ScanResultsProps {
 }
 
 function ScanResults({ photos, folderPath, onRescan }: ScanResultsProps): React.JSX.Element {
-  const totalSize = photos.reduce((sum, p) => sum + p.size, 0)
-  const dates = photos.flatMap((p) => (p.dateTaken ? [new Date(p.dateTaken).getTime()] : []))
-  const dateRange =
-    dates.length > 0
-      ? { from: new Date(Math.min(...dates)), to: new Date(Math.max(...dates)) }
-      : null
-  const formatCounts = getFormatCounts(photos)
+  const { totalSize, dateRange, formatCounts } = useMemo(() => {
+    const totalSize = photos.reduce((sum, p) => sum + p.size, 0)
+    const dates = photos.flatMap((p) => (p.dateTaken ? [new Date(p.dateTaken).getTime()] : []))
+    const dateRange =
+      dates.length > 0
+        ? { from: new Date(Math.min(...dates)), to: new Date(Math.max(...dates)) }
+        : null
+    const formatCounts = getFormatCounts(photos)
+    return { totalSize, dateRange, formatCounts }
+  }, [photos])
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8 p-8">

@@ -1,23 +1,12 @@
 import { useState } from 'react'
 import { Copy, Trash2, ShieldCheck, ArrowLeft, AlertTriangle } from 'lucide-react'
+import { formatBytes, fileUrl } from '@renderer/lib/format'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
 import { usePhotos } from '../../context/photos'
 import type { DuplicateGroup, PhotoRecord } from '@shared/ipc'
 
 type DedupStatus = 'idle' | 'computing' | 'results' | 'reviewing' | 'trashing' | 'done'
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-/** Convert an absolute file-system path to a file:// URL for use as img src. */
-function fileUrl(path: string): string {
-  return `file://${path}`
-}
 
 // ─── Sub-views ────────────────────────────────────────────────────────────────
 

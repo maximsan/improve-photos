@@ -1,0 +1,13 @@
+---
+description: Global project rules
+alwaysApply: true
+---
+
+Follow AGENTS.md as the primary rule source.
+
+When working with React:
+
+1. Apply react-component-architecture skill
+2. Then apply performance best practices
+
+Do not generate large monolithic components.
