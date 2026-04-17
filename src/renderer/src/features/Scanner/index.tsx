@@ -138,12 +138,12 @@ function Scanner(): React.JSX.Element {
 
   async function handleChooseFolder(): Promise<void> {
     setError(null)
-    const path = await window.api.pickFolder()
-    if (!path) return
-
-    setFolderPath(path)
-    setStatus('scanning')
     try {
+      const path = await window.api.pickFolder()
+      if (!path) return
+
+      setFolderPath(path)
+      setStatus('scanning')
       const result = await window.api.scan(path)
       setLocalPhotos(result)
       setPhotos(result)

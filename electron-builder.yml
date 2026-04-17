@@ -1,43 +1,42 @@
-appId: com.electron.app
-productName: react-ts
+appId: com.maksim.cleanup-photos
+productName: Cleanup Photos
+copyright: Copyright © 2025 Maksim Shchutski
 directories:
   buildResources: build
+  output: dist
+
+# Files included in the package
 files:
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!{vitest.config.ts,tests}'
+
+# Native modules must live outside the asar archive so the OS can load them
 asarUnpack:
   - resources/**
-win:
-  executableName: react-ts
-nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+  - node_modules/sharp/**
+  - node_modules/@img/**
+  - '**/@img/**'
+
+# macOS — DMG only
 mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
+
 dmg:
-  artifactName: ${name}-${version}.${ext}
-linux:
-  target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  title: ${productName} ${version}
+
+# Do not rebuild native modules during packaging — pnpm postinstall handles this
 npmRebuild: false
-publish:
-  provider: generic
-  url: https://example.com/auto-updates

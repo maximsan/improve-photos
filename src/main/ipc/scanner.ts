@@ -86,8 +86,9 @@ export async function buildPhotoRecord(filePath: string): Promise<PhotoRecord | 
 
 export function registerScannerHandlers(): void {
   ipcMain.handle(IPC.PICK_FOLDER, async (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender)
-    const { canceled, filePaths } = await dialog.showOpenDialog(win!, {
+    const win = BrowserWindow.fromWebContents(event.sender) ?? BrowserWindow.getFocusedWindow()
+    if (!win) return null
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
       properties: ['openDirectory']
     })
     return canceled ? null : filePaths[0]
