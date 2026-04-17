@@ -9,10 +9,13 @@ import {
 } from 'lucide-react'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
+import SpinnerView from '../../components/SpinnerView'
 import { usePhotos } from '../../context/photos'
 import type { MoveOperation } from '@shared/ipc'
 
 type OrganizerStatus = 'idle' | 'previewing' | 'preview' | 'moving' | 'done'
+
+const DEFAULT_TREE_OPEN_DEPTH = 3
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -55,7 +58,7 @@ interface TreeNodeViewProps {
 }
 
 function TreeNodeView({ node, depth }: TreeNodeViewProps): React.JSX.Element {
-  const [open, setOpen] = useState(depth < 3)
+  const [open, setOpen] = useState(depth < DEFAULT_TREE_OPEN_DEPTH)
   const hasChildren = node.children.size > 0
   const indent = depth * 16
 
@@ -194,16 +197,7 @@ function PreviewView({ ops, onConfirm, onCancel }: PreviewViewProps): React.JSX.
   )
 }
 
-// ─── Moving / Done views ──────────────────────────────────────────────────────
-
-function MovingView(): React.JSX.Element {
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4">
-      <div className="w-10 h-10 rounded-full border-2 border-primary-200 border-t-primary-500 animate-spin" />
-      <p className="text-[13px] text-surface-500">Moving files…</p>
-    </div>
-  )
-}
+// ─── Done view ────────────────────────────────────────────────────────────────
 
 function DoneView({ count }: { count: number }): React.JSX.Element {
   return (
@@ -275,122 +269,86 @@ function Organizer(): React.JSX.Element {
     }
   }
 
-  if (status === 'previewing') {
-    return (
-      <div className="flex flex-col h-full">
-        <PanelHeader
-          title="Organize"
-          subtitle="Move photos into date-based folders using EXIF metadata"
-        />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <div className="w-10 h-10 rounded-full border-2 border-primary-200 border-t-primary-500 animate-spin" />
-          <p className="text-[13px] text-surface-500">Building folder preview…</p>
-        </div>
-      </div>
+  function renderBody(): React.JSX.Element {
+    if (status === 'previewing') return <SpinnerView message="Building folder preview…" />
+    if (status === 'moving') return <SpinnerView message="Moving files…" />
+    if (status === 'done') return <DoneView count={movedCount} />
+
+    if (status === 'preview') {
+      return (
+        <>
+          {ops.length === 0 ? (
+            <EmptyState
+              icon={<CheckCircle2 size={34} strokeWidth={1.4} className="text-primary-600" />}
+              warm
+              title="Already organised"
+              body="All photos are already in their correct date folders. Nothing to move."
+              footer={
+                <button
+                  onClick={() => setStatus('idle')}
+                  className="text-[12px] font-medium text-surface-500 hover:text-surface-700 cursor-default transition-colors"
+                >
+                  Back
+                </button>
+              }
+            />
+          ) : (
+            <PreviewView ops={ops} onConfirm={handleConfirm} onCancel={() => setStatus('idle')} />
+          )}
+          {error && (
+            <p className="shrink-0 px-5 pb-3 text-[11px] text-red-500 text-center">{error}</p>
+          )}
+        </>
+      )
+    }
+
+    // idle
+    return !hasPhotos ? (
+      <EmptyState
+        icon={<CalendarCheck size={34} strokeWidth={1.4} className="text-surface-500" />}
+        title="Organize by date"
+        body={
+          <>
+            Preview the proposed <span className="font-mono">YYYY/MM/DD</span> folder structure
+            before any files are moved.
+          </>
+        }
+        needsScan
+      />
+    ) : (
+      <EmptyState
+        icon={<CalendarCheck size={34} strokeWidth={1.4} className="text-primary-600" />}
+        warm
+        title="Ready to organise"
+        body={
+          <>
+            <span className="font-semibold text-surface-700">{photos.length}</span> photos loaded. A
+            dry-run preview shows exactly which files will move before anything changes.
+          </>
+        }
+        footer={
+          <>
+            <button
+              onClick={handlePreview}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-medium text-white cursor-default bg-primary-500 hover:bg-primary-600 transition-colors duration-150"
+            >
+              <FolderOpen size={15} strokeWidth={2} />
+              Preview Changes
+            </button>
+            {error && <p className="text-[11px] text-red-500">{error}</p>}
+          </>
+        }
+      />
     )
   }
 
-  if (status === 'moving') {
-    return (
-      <div className="flex flex-col h-full">
-        <PanelHeader
-          title="Organize"
-          subtitle="Move photos into date-based folders using EXIF metadata"
-        />
-        <MovingView />
-      </div>
-    )
-  }
-
-  if (status === 'done') {
-    return (
-      <div className="flex flex-col h-full">
-        <PanelHeader
-          title="Organize"
-          subtitle="Move photos into date-based folders using EXIF metadata"
-        />
-        <DoneView count={movedCount} />
-      </div>
-    )
-  }
-
-  if (status === 'preview') {
-    return (
-      <div className="flex flex-col h-full">
-        <PanelHeader
-          title="Organize"
-          subtitle="Move photos into date-based folders using EXIF metadata"
-        />
-        {ops.length === 0 ? (
-          <EmptyState
-            icon={<CheckCircle2 size={34} strokeWidth={1.4} className="text-primary-600" />}
-            warm
-            title="Already organised"
-            body="All photos are already in their correct date folders. Nothing to move."
-            footer={
-              <button
-                onClick={() => setStatus('idle')}
-                className="text-[12px] font-medium text-surface-500 hover:text-surface-700 cursor-default transition-colors"
-              >
-                Back
-              </button>
-            }
-          />
-        ) : (
-          <PreviewView ops={ops} onConfirm={handleConfirm} onCancel={() => setStatus('idle')} />
-        )}
-        {error && (
-          <p className="shrink-0 px-5 pb-3 text-[11px] text-red-500 text-center">{error}</p>
-        )}
-      </div>
-    )
-  }
-
-  // idle
   return (
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Organize"
         subtitle="Move photos into date-based folders using EXIF metadata"
       />
-
-      {!hasPhotos ? (
-        <EmptyState
-          icon={<CalendarCheck size={34} strokeWidth={1.4} className="text-surface-500" />}
-          title="Organize by date"
-          body={
-            <>
-              Preview the proposed <span className="font-mono">YYYY/MM/DD</span> folder structure
-              before any files are moved.
-            </>
-          }
-          needsScan
-        />
-      ) : (
-        <EmptyState
-          icon={<CalendarCheck size={34} strokeWidth={1.4} className="text-primary-600" />}
-          warm
-          title="Ready to organise"
-          body={
-            <>
-              <span className="font-semibold text-surface-700">{photos.length}</span> photos loaded.
-              A dry-run preview shows exactly which files will move before anything changes.
-            </>
-          }
-          footer={
-            <>
-              <button
-                onClick={handlePreview}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-medium text-white cursor-default bg-primary-500 hover:bg-primary-600 transition-colors duration-150"
-              >
-                <FolderOpen size={15} strokeWidth={2} />
-                Preview Changes
-              </button>
-              {error && <p className="text-[11px] text-red-500">{error}</p>}
-            </>
-          }
-        />
-      )}
+      {renderBody()}
     </div>
   )
 }

@@ -39,9 +39,19 @@ Every renderer → main call goes through `window.api.<method>()` (defined in pr
 
 ## React
 
+### When to apply (MANDATORY)
+
+Apply `react-component-architecture` for **any** of these tasks:
+
+- creating a new React feature or component
+- reviewing existing React feature files
+- refactoring or modifying React feature files
+
+This includes **file-level splitting** — extracting components and hooks into their own files is required, not optional.
+
 ### Execution order (MANDATORY)
 
-1. Apply: react-component-architecture
+1. Apply: react-component-architecture — including file-level splitting into `components/` and `hooks/` subdirectories
 2. Then apply: external performance rules (Vercel skills already installed)
 
 Do not skip step 1.

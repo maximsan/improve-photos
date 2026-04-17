@@ -72,6 +72,29 @@ Never leave magic values inline.
 
 ---
 
+### 8. File structure (MANDATORY)
+
+Every extracted unit lives in its own file. Co-locating multiple components or hooks in one file is **not** a valid split — it is deferred work.
+
+Required layout for any feature with more than one component or hook:
+
+```
+FeatureName/
+  index.tsx                  ← main component only; imports from below
+  hooks/
+    useFeatureState.ts       ← state orchestration
+  components/
+    SubComponent.tsx         ← one component per file
+```
+
+Rules:
+- `index.tsx` must only contain the top-level component and its `renderBody` / view-switching logic
+- Each hook goes in `hooks/`
+- Each sub-component goes in `components/`
+- Shared helpers go in `lib/` at the feature or renderer root
+
+---
+
 ### 5. JSX
 
 JSX must be:

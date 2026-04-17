@@ -16,9 +16,29 @@ interface Preset extends ExportPreset {
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
+const WEB_PRESET_WIDTH = 1920
+const WEB_PRESET_QUALITY = 85
+const THUMB_PRESET_SIZE = 300
+const THUMB_PRESET_QUALITY = 75
+const DEFAULT_NEW_PRESET_QUALITY = 80
+
 const DEFAULT_PRESETS: Preset[] = [
-  { id: 'preset-web', name: 'web', width: 1920, height: undefined, quality: 85, format: 'jpeg' },
-  { id: 'preset-thumb', name: 'thumb', width: 300, height: 300, quality: 75, format: 'webp' }
+  {
+    id: 'preset-web',
+    name: 'web',
+    width: WEB_PRESET_WIDTH,
+    height: undefined,
+    quality: WEB_PRESET_QUALITY,
+    format: 'jpeg'
+  },
+  {
+    id: 'preset-thumb',
+    name: 'thumb',
+    width: THUMB_PRESET_SIZE,
+    height: THUMB_PRESET_SIZE,
+    quality: THUMB_PRESET_QUALITY,
+    format: 'webp'
+  }
 ]
 
 const FORMATS: ExportFormat[] = ['jpeg', 'webp', 'png']
@@ -119,35 +139,6 @@ function PresetRow({ preset, onChange, onRemove, canRemove }: PresetRowProps): R
   )
 }
 
-// ─── Exporting view ───────────────────────────────────────────────────────────
-
-function ExportingView({ progress }: { progress: ExportProgress | null }): React.JSX.Element {
-  const pct = progress ? Math.round((progress.done / progress.total) * 100) : 0
-  const filename = progress ? (progress.currentPath.split('/').pop() ?? '') : ''
-
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8">
-      <div className="w-full max-w-sm space-y-3">
-        <div className="flex justify-between text-[12px] text-surface-500">
-          <span>{progress ? `${progress.done} / ${progress.total} files` : 'Starting…'}</span>
-          <span className="font-medium text-surface-700">{pct}%</span>
-        </div>
-        <div className="h-2 bg-surface-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary-500 rounded-full transition-all duration-200"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        {filename && (
-          <p className="text-[11px] text-surface-400 truncate text-center" title={filename}>
-            {filename}
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ─── Done view ────────────────────────────────────────────────────────────────
 
 function DoneView({
@@ -178,6 +169,35 @@ function DoneView({
       >
         Export again with different presets
       </button>
+    </div>
+  )
+}
+
+// ─── Exporting view ───────────────────────────────────────────────────────────
+
+function ExportingView({ progress }: { progress: ExportProgress | null }): React.JSX.Element {
+  const pct = progress ? Math.round((progress.done / progress.total) * 100) : 0
+  const filename = progress ? (progress.currentPath.split('/').pop() ?? '') : ''
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8">
+      <div className="w-full max-w-sm space-y-3">
+        <div className="flex justify-between text-[12px] text-surface-500">
+          <span>{progress ? `${progress.done} / ${progress.total} files` : 'Starting…'}</span>
+          <span className="font-medium text-surface-700">{pct}%</span>
+        </div>
+        <div className="h-2 bg-surface-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary-500 rounded-full transition-all duration-200"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {filename && (
+          <p className="text-[11px] text-surface-400 truncate text-center" title={filename}>
+            {filename}
+          </p>
+        )}
+      </div>
     </div>
   )
 }
@@ -213,7 +233,7 @@ function Exporter(): React.JSX.Element {
         name: 'preset',
         width: undefined,
         height: undefined,
-        quality: 80,
+        quality: DEFAULT_NEW_PRESET_QUALITY,
         format: 'jpeg'
       }
     ])
@@ -254,14 +274,13 @@ function Exporter(): React.JSX.Element {
     }
   }
 
-  const header = (
-    <PanelHeader title="Export" subtitle="Batch resize and convert photos using named presets" />
-  )
-
   if (status === 'exporting') {
     return (
       <div className="flex flex-col h-full">
-        {header}
+        <PanelHeader
+          title="Export"
+          subtitle="Batch resize and convert photos using named presets"
+        />
         <ExportingView progress={progress} />
       </div>
     )
@@ -270,7 +289,10 @@ function Exporter(): React.JSX.Element {
   if (status === 'done') {
     return (
       <div className="flex flex-col h-full">
-        {header}
+        <PanelHeader
+          title="Export"
+          subtitle="Batch resize and convert photos using named presets"
+        />
         <DoneView count={exportedCount} outDir={outDir ?? ''} onReset={() => setStatus('idle')} />
       </div>
     )
@@ -279,7 +301,10 @@ function Exporter(): React.JSX.Element {
   if (!hasPhotos) {
     return (
       <div className="flex flex-col h-full">
-        {header}
+        <PanelHeader
+          title="Export"
+          subtitle="Batch resize and convert photos using named presets"
+        />
         <EmptyState
           icon={<Upload size={34} strokeWidth={1.4} className="text-surface-500" />}
           title="Batch export photos"
@@ -293,7 +318,7 @@ function Exporter(): React.JSX.Element {
   // idle with photos
   return (
     <div className="flex flex-col h-full">
-      {header}
+      <PanelHeader title="Export" subtitle="Batch resize and convert photos using named presets" />
 
       {/* Settings */}
       <div className="flex-1 overflow-y-auto p-5 space-y-5">
@@ -338,13 +363,13 @@ function Exporter(): React.JSX.Element {
             <span className="w-20 text-[10px] font-medium text-surface-400 uppercase tracking-wide">
               Name
             </span>
-            <span className="w-[124px] text-[10px] font-medium text-surface-400 uppercase tracking-wide">
+            <span className="w-31 text-[10px] font-medium text-surface-400 uppercase tracking-wide">
               Size (px)
             </span>
             <span className="flex-1 text-[10px] font-medium text-surface-400 uppercase tracking-wide">
               Quality
             </span>
-            <span className="w-[108px] text-[10px] font-medium text-surface-400 uppercase tracking-wide">
+            <span className="w-27 text-[10px] font-medium text-surface-400 uppercase tracking-wide">
               Format
             </span>
             <span className="w-6" />

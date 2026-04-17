@@ -3,10 +3,14 @@ import { ScanSearch, FolderOpen, RotateCcw } from 'lucide-react'
 import { formatBytes } from '@renderer/lib/format'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
+import SpinnerView from '../../components/SpinnerView'
 import { usePhotos } from '../../context/photos'
 import type { PhotoRecord } from '@shared/ipc'
 
 type ScanStatus = 'idle' | 'scanning' | 'done'
+
+const UNKNOWN_FORMAT_LABEL = 'OTHER'
+const MAX_DISPLAYED_FORMATS = 2
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -22,23 +26,12 @@ interface FormatCount {
 function getFormatCounts(photos: PhotoRecord[]): FormatCount[] {
   const counts: { [ext: string]: number } = {}
   for (const p of photos) {
-    const ext = p.name.split('.').pop()?.toUpperCase() ?? 'OTHER'
+    const ext = p.name.split('.').pop()?.toUpperCase() ?? UNKNOWN_FORMAT_LABEL
     counts[ext] = (counts[ext] ?? 0) + 1
   }
   return Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
     .map(([ext, count]) => ({ ext, count }))
-}
-
-// ─── Sub-views ────────────────────────────────────────────────────────────────
-
-function ScanningView(): React.JSX.Element {
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4">
-      <div className="w-10 h-10 rounded-full border-2 border-primary-200 border-t-primary-500 animate-spin" />
-      <p className="text-[13px] text-surface-500">Reading metadata…</p>
-    </div>
-  )
 }
 
 interface ScanResultsProps {
@@ -85,7 +78,7 @@ function ScanResults({ photos, folderPath, onRescan }: ScanResultsProps): React.
         <StatCard
           label="Formats"
           value={formatCounts
-            .slice(0, 2)
+            .slice(0, MAX_DISPLAYED_FORMATS)
             .map(({ ext, count }) => `${ext} ${count}`)
             .join(' · ')}
         />
@@ -155,7 +148,7 @@ function Scanner(): React.JSX.Element {
     <div className="flex flex-col h-full">
       <PanelHeader title="Scan Folder" subtitle="Walk a directory and read photo metadata" />
 
-      {status === 'scanning' && <ScanningView />}
+      {status === 'scanning' && <SpinnerView message="Reading metadata…" />}
 
       {status === 'done' && folderPath && (
         <ScanResults photos={localPhotos} folderPath={folderPath} onRescan={handleChooseFolder} />
