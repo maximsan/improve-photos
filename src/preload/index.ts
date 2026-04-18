@@ -3,6 +3,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 import type {
   ElectronAPI,
   ExportProgress,
+  HashProgress,
   PhotoRecord,
   MoveOperation,
   ExportPreset
@@ -46,7 +47,19 @@ const api: ElectronAPI = {
     const handler = (_event: IpcRendererEvent, progress: ExportProgress): void => cb(progress)
     ipcRenderer.on(IPC.EXPORT_PROGRESS, handler)
     return () => ipcRenderer.removeListener(IPC.EXPORT_PROGRESS, handler)
-  }
+  },
+
+  /**
+   * Subscribe to per-file hash progress events pushed from the main process.
+   * Returns an unsubscribe function — call it when the component unmounts.
+   */
+  onHashProgress: (cb: (progress: HashProgress) => void) => {
+    const handler = (_event: IpcRendererEvent, progress: HashProgress): void => cb(progress)
+    ipcRenderer.on(IPC.HASH_PROGRESS, handler)
+    return () => ipcRenderer.removeListener(IPC.HASH_PROGRESS, handler)
+  },
+
+  cancelHashes: () => ipcRenderer.invoke(IPC.CANCEL_HASHES)
 }
 
 if (process.contextIsolated) {

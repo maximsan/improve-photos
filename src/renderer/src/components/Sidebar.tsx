@@ -16,9 +16,9 @@ interface SidebarProps {
 
 function Sidebar({ activeTab, onTabChange }: SidebarProps): React.JSX.Element {
   return (
-    <aside className="flex flex-col w-[220px] shrink-0 h-full select-none bg-surface-900 sidebar-inset">
+    <aside className="flex flex-col w-55 shrink-0 h-full select-none bg-surface-900 sidebar-inset">
       {/* macOS traffic-light drag zone — must be exactly this height */}
-      <div className="titlebar-drag h-[42px] shrink-0" />
+      <div className="titlebar-drag h-10.5 shrink-0" />
 
       {/* App logo */}
       <div className="titlebar-no-drag px-5 pb-4">
@@ -39,7 +39,7 @@ function Sidebar({ activeTab, onTabChange }: SidebarProps): React.JSX.Element {
             <button
               key={id}
               onClick={() => onTabChange(id)}
-              className={`w-full flex items-center gap-3 px-3 py-[9px] rounded-lg text-[13px] font-medium transition-colors duration-150 cursor-default text-left ${
+              className={`w-full flex items-center gap-3 px-3 py-2.25 rounded-lg text-[13px] font-medium transition-colors duration-150 cursor-default text-left ${
                 isActive ? 'nav-active text-primary-400' : 'nav-inactive text-surface-500'
               }`}
             >

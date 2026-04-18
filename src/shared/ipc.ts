@@ -75,6 +75,14 @@ export interface ExportProgress {
   currentPath: string
 }
 
+/** Progress event emitted after each file is hashed (or fails) during deduplication. */
+export interface HashProgress {
+  done: number
+  total: number
+  /** Absolute path of the file that just finished processing */
+  current: string
+}
+
 // ─── IPC channel names (single source of truth) ──────────────────────────────
 
 export const IPC = {
@@ -87,7 +95,9 @@ export const IPC = {
   EXECUTE_ORGANIZE: 'execute-organize',
   TRASH_FILES: 'trash-files',
   EXPORT_BATCH: 'export-batch',
-  EXPORT_PROGRESS: 'export-progress'
+  EXPORT_PROGRESS: 'export-progress',
+  HASH_PROGRESS: 'dedup:hash-progress',
+  CANCEL_HASHES: 'dedup:cancel-hashes'
 } as const
 
 // ─── Typed window.api surface (matches preload contextBridge) ────────────────
@@ -104,6 +114,10 @@ export interface ElectronAPI {
   trashFiles: (paths: string[]) => Promise<void>
   exportBatch: (photos: PhotoRecord[], presets: ExportPreset[], outDir: string) => Promise<void>
   onExportProgress: (cb: (progress: ExportProgress) => void) => () => void
+  /** Subscribe to per-file hash progress events. Returns an unsubscribe function. */
+  onHashProgress: (cb: (progress: HashProgress) => void) => () => void
+  /** Cancel an in-progress `computeHashes` call. */
+  cancelHashes: () => Promise<void>
 }
 
 declare global {

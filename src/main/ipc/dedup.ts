@@ -1,6 +1,6 @@
 import { ipcMain, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
-import type { PhotoHashes, DuplicateGroup } from '@shared/ipc'
+import type { PhotoHashes, DuplicateGroup, HashProgress } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 import { computePHash, hammingDistance } from '../lib/hash'
 import { getCachedPhotos } from './scanner'
@@ -8,21 +8,54 @@ import { getCachedPhotos } from './scanner'
 /** Bit distance at or below which two photos are considered near-duplicates. */
 const DUPLICATE_THRESHOLD = 10
 
+/**
+ * Maximum number of photos hashed concurrently.
+ * Higher values risk OOM on large HEIC folders: each sips conversion briefly
+ * allocates memory proportional to the output image size.
+ */
+const HASH_CONCURRENCY = 4
+
+/** Set by CANCEL_HASHES to interrupt the active COMPUTE_HASHES call. */
+let activeController: { cancelled: boolean } | null = null
+
 export function registerDedupHandlers(): void {
-  ipcMain.handle(IPC.COMPUTE_HASHES, async (_event, paths: string[]): Promise<PhotoHashes> => {
+  ipcMain.handle(IPC.CANCEL_HASHES, () => {
+    if (activeController) {
+      activeController.cancelled = true
+      console.log('[dedup] hash cancelled by user')
+    }
+  })
+
+  ipcMain.handle(IPC.COMPUTE_HASHES, async (event, paths: string[]): Promise<PhotoHashes> => {
+    const controller = { cancelled: false }
+    activeController = controller
+
     const hashes: PhotoHashes = {}
-    await Promise.all(
-      paths.map(async (p) => {
+    let done = 0
+    let failed = 0
+    const total = paths.length
+    const queue = [...paths]
+
+    const worker = async (): Promise<void> => {
+      while (queue.length > 0 && !controller.cancelled) {
+        const p = queue.shift()!
         try {
           hashes[p] = await computePHash(p)
         } catch (e) {
-          if (is.dev) {
-            console.warn('[dedup] failed to hash file:', p, e)
-          }
+          failed++
+          console.warn('[dedup] failed to hash file:', p, e)
         }
-      })
-    )
+        done++
+        event.sender.send(IPC.HASH_PROGRESS, { done, total, current: p } satisfies HashProgress)
+      }
+    }
 
+    await Promise.all(Array.from({ length: Math.min(HASH_CONCURRENCY, total) }, worker))
+
+    const status = controller.cancelled ? 'cancelled' : 'completed'
+    console.log(`[dedup] hashing ${status}: ${done}/${total} processed, ${failed} failed`)
+
+    activeController = null
     return hashes
   })
 

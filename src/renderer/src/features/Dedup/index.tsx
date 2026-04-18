@@ -4,6 +4,7 @@ import EmptyState from '../../components/EmptyState'
 import SpinnerView from '../../components/SpinnerView'
 import { usePhotos } from '../../context/photos'
 import { useDedupState } from './hooks/useDedupState'
+import { ComputingView } from './components/ComputingView'
 import { DoneView } from './components/DoneView'
 import { ReviewScreen } from './components/ReviewScreen'
 import { ResultsView } from './components/ResultsView'
@@ -15,8 +16,10 @@ function Dedup(): React.JSX.Element {
     groups,
     toTrash,
     error,
+    progress,
     toggleTrash,
     handleAnalyze,
+    handleCancel,
     handleConfirmTrash,
     setStatus
   } = useDedupState(photos)
@@ -25,7 +28,7 @@ function Dedup(): React.JSX.Element {
 
   function renderBody(): React.JSX.Element {
     if (status === 'computing') {
-      return <SpinnerView message="Computing perceptual hashes…" />
+      return <ComputingView progress={progress} onCancel={handleCancel} />
     }
     if (status === 'trashing') {
       return <SpinnerView message="Moving files to Trash…" variant="danger" />

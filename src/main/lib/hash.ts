@@ -1,7 +1,17 @@
+import { execFile } from 'node:child_process'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+import { promisify } from 'node:util'
 import sharp from 'sharp'
+
+const execFileAsync = promisify(execFile)
 
 const HASH_SIZE = 8
 const DCT_SIZE = 32
+
+/** Extensions that require the `sips` fallback when sharp cannot decode them. */
+const HEIC_EXTENSIONS = new Set(['.heic', '.heif'])
 
 /**
  * Orthonormal 1D DCT-II on an array of length N.
@@ -37,19 +47,8 @@ function dct2d(matrix: number[][]): number[][] {
   return result
 }
 
-/**
- * Computes a 64-bit perceptual hash for an image file and returns it as a
- * 16-character lowercase hex string.
- *
- * Algorithm:
- *  1. Resize to 32×32 greyscale (eliminate detail, normalise size).
- *  2. Apply 2D DCT — concentrates structural energy in the top-left.
- *  3. Extract the top-left 8×8 sub-matrix (64 low-frequency coefficients).
- *  4. Compute the mean of the 63 non-DC coefficients.
- *  5. Each of the 64 bits = coefficient > mean ? 1 : 0.
- *  6. Pack bits into 16 hex chars.
- */
-export async function computePHash(filePath: string): Promise<string> {
+/** Runs the sharp decode + DCT pipeline on an already-decodable file path. */
+async function hashWithSharp(filePath: string): Promise<string> {
   const { data } = await sharp(filePath)
     .resize(DCT_SIZE, DCT_SIZE, { fit: 'fill' })
     .greyscale()
@@ -86,6 +85,66 @@ export async function computePHash(filePath: string): Promise<string> {
     hex += parseInt(bits.slice(i, i + 4), 2).toString(16)
   }
   return hex
+}
+
+/**
+ * Converts a HEIC/HEIF file to a small temporary PNG using the macOS `sips` CLI.
+ *
+ * Sharp's bundled libheif is compiled without HEVC/H.265 support, so iPhone
+ * HEIC photos fail to decode. `sips` delegates to the OS image pipeline,
+ * which supports all codecs the system can open.
+ *
+ * sips flags used:
+ *   -z 32 32        Resize to height=32 width=32 pixels before encoding.
+ *                   pHash only needs 32×32 input, so we avoid writing a
+ *                   full-resolution temp file (which can be 80–150 MB for
+ *                   modern iPhones).
+ *   -s format png   Set the output encoding to PNG.
+ *   --out <path>    Write to a new file instead of modifying the source.
+ *
+ * The caller is responsible for deleting the returned temp file.
+ */
+async function convertHeicToPng(filePath: string): Promise<string> {
+  const tmpPath = path.join(
+    os.tmpdir(),
+    `cleanup-photos-${Date.now()}-${Math.random().toString(36).slice(2)}.png`
+  )
+  await execFileAsync('sips', ['-z', '32', '32', '-s', 'format', 'png', filePath, '--out', tmpPath])
+  return tmpPath
+}
+
+/**
+ * Computes a 64-bit perceptual hash for an image file and returns it as a
+ * 16-character lowercase hex string.
+ *
+ * Algorithm:
+ *  1. Resize to 32×32 greyscale (eliminate detail, normalise size).
+ *  2. Apply 2D DCT — concentrates structural energy in the top-left.
+ *  3. Extract the top-left 8×8 sub-matrix (64 low-frequency coefficients).
+ *  4. Compute the mean of the 63 non-DC coefficients.
+ *  5. Each of the 64 bits = coefficient > mean ? 1 : 0.
+ *  6. Pack bits into 16 hex chars.
+ *
+ * For HEIC/HEIF files that sharp cannot decode (HEVC codec not built into
+ * libheif), the function falls back to converting via `sips` first.
+ */
+export async function computePHash(filePath: string): Promise<string> {
+  try {
+    return await hashWithSharp(filePath)
+  } catch (err) {
+    const ext = path.extname(filePath).toLowerCase()
+    if (!HEIC_EXTENSIONS.has(ext)) {
+      throw err
+    }
+
+    // Sharp's libheif lacks HEVC support — convert via macOS sips and retry.
+    const tmpPath = await convertHeicToPng(filePath)
+    try {
+      return await hashWithSharp(tmpPath)
+    } finally {
+      await fs.unlink(tmpPath).catch(() => {})
+    }
+  }
 }
 
 /**
