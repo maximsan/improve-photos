@@ -1,4 +1,4 @@
-import { ipcMain, shell } from 'electron'
+import { dialog, ipcMain, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import type { PhotoHashes, DuplicateGroup, HashProgress } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
@@ -121,6 +121,19 @@ export function registerDedupHandlers(): void {
       return groups
     }
   )
+
+  ipcMain.handle(IPC.CONFIRM_TRASH, async (_event, count: number): Promise<boolean> => {
+    const label = `Move ${count} photo${count !== 1 ? 's' : ''} to Trash`
+    const { response } = await dialog.showMessageBox({
+      type: 'warning',
+      buttons: ['Cancel', label],
+      defaultId: 1,
+      cancelId: 0,
+      message: `${label}?`,
+      detail: 'Files go to macOS Trash and can be restored at any time.'
+    })
+    return response === 1
+  })
 
   ipcMain.handle(IPC.TRASH_FILES, async (_event, paths: string[]): Promise<void> => {
     await Promise.all(paths.map((p) => shell.trashItem(p)))

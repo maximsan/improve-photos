@@ -59,7 +59,9 @@ const api: ElectronAPI = {
     return () => ipcRenderer.removeListener(IPC.HASH_PROGRESS, handler)
   },
 
-  cancelHashes: () => ipcRenderer.invoke(IPC.CANCEL_HASHES)
+  cancelHashes: () => ipcRenderer.invoke(IPC.CANCEL_HASHES),
+
+  confirmTrash: (count: number) => ipcRenderer.invoke(IPC.CONFIRM_TRASH, count)
 }
 
 if (process.contextIsolated) {

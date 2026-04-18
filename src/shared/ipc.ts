@@ -97,7 +97,8 @@ export const IPC = {
   EXPORT_BATCH: 'export-batch',
   EXPORT_PROGRESS: 'export-progress',
   HASH_PROGRESS: 'dedup:hash-progress',
-  CANCEL_HASHES: 'dedup:cancel-hashes'
+  CANCEL_HASHES: 'dedup:cancel-hashes',
+  CONFIRM_TRASH: 'dedup:confirm-trash'
 } as const
 
 // ─── Typed window.api surface (matches preload contextBridge) ────────────────
@@ -118,6 +119,8 @@ export interface ElectronAPI {
   onHashProgress: (cb: (progress: HashProgress) => void) => () => void
   /** Cancel an in-progress `computeHashes` call. */
   cancelHashes: () => Promise<void>
+  /** Show a native macOS confirmation dialog before trashing. Resolves to true if confirmed. */
+  confirmTrash: (count: number) => Promise<boolean>
 }
 
 declare global {

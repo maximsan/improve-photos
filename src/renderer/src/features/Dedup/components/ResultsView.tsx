@@ -7,6 +7,7 @@ interface ResultsViewProps {
   groups: DuplicateGroup[]
   toTrash: Set<string>
   onToggle: (path: string) => void
+  onTrash: () => void
   onReview: () => void
 }
 
@@ -14,6 +15,7 @@ export function ResultsView({
   groups,
   toTrash,
   onToggle,
+  onTrash,
   onReview
 }: ResultsViewProps): React.JSX.Element {
   const trashCount = toTrash.size
@@ -39,25 +41,43 @@ export function ResultsView({
             groupIndex={i}
             toTrash={toTrash}
             onToggle={onToggle}
+            onTrash={onTrash}
           />
         ))}
       </div>
 
-      {trashCount > 0 && (
-        <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between">
-          <p className="text-[12px] text-surface-500">
-            <span className="font-semibold text-surface-800">{trashCount}</span> photo
-            {trashCount !== 1 ? 's' : ''} selected to trash
-          </p>
+      <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between">
+        <p className="text-[12px] text-surface-500">
+          {trashCount === 0 ? (
+            'Select photos to mark for trash'
+          ) : (
+            <>
+              <span className="font-semibold text-surface-800">{trashCount}</span> photo
+              {trashCount !== 1 ? 's' : ''} selected
+            </>
+          )}
+        </p>
+        <div className="flex items-center gap-3">
+          {trashCount > 0 && (
+            <button
+              onClick={onReview}
+              className="text-[12px] text-surface-500 hover:text-surface-800 transition-colors duration-150 cursor-default"
+            >
+              Review →
+            </button>
+          )}
           <button
-            onClick={onReview}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors duration-150 cursor-default"
+            onClick={onTrash}
+            disabled={trashCount === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-default"
           >
             <Trash2 size={13} strokeWidth={2} />
-            Review &amp; Trash
+            {trashCount > 0
+              ? `Trash ${trashCount} photo${trashCount !== 1 ? 's' : ''}`
+              : 'Trash selected'}
           </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }

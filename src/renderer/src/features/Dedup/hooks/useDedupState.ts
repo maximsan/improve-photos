@@ -13,6 +13,7 @@ export type DedupState = {
   toggleTrash: (path: string) => void
   handleAnalyze: () => Promise<void>
   handleCancel: () => void
+  handleTrashWithConfirm: () => Promise<void>
   handleConfirmTrash: () => Promise<void>
   setStatus: React.Dispatch<React.SetStateAction<DedupStatus>>
 }
@@ -61,6 +62,23 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
     setStatus('idle')
   }
 
+  /** Primary trash action — shows a native confirmation dialog first. */
+  async function handleTrashWithConfirm(): Promise<void> {
+    try {
+      const confirmed = await window.api.confirmTrash(toTrash.size)
+      if (!confirmed) {
+        return
+      }
+      setStatus('trashing')
+      await window.api.trashFiles([...toTrash])
+      setStatus('done')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Trash failed')
+      setStatus('results')
+    }
+  }
+
+  /** Used by ReviewScreen's confirm button after the user has inspected the list. */
   async function handleConfirmTrash(): Promise<void> {
     setStatus('trashing')
     try {
@@ -81,6 +99,7 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
     toggleTrash,
     handleAnalyze,
     handleCancel,
+    handleTrashWithConfirm,
     handleConfirmTrash,
     setStatus
   }

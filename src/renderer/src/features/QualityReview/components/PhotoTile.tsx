@@ -30,7 +30,7 @@ export function PhotoTile({ photo, score, selected, onToggle }: PhotoTileProps):
           className="w-full h-full object-cover"
           draggable={false}
         />
-        {selected && <TrashOverlay />}
+        {selected && <TrashOverlay onDeselect={onToggle} />}
         <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-black/60 to-transparent px-2 py-2">
           <span className={`text-[10px] font-semibold ${color}`}>{label}</span>
         </div>

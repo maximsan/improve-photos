@@ -1,4 +1,4 @@
-import { ArrowLeft, AlertTriangle, Trash2 } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, Trash2, X } from 'lucide-react'
 import { formatBytes, fileUrl } from '@renderer/lib/format'
 import type { DuplicateGroup } from '@shared/ipc'
 
@@ -7,13 +7,15 @@ interface ReviewScreenProps {
   toTrash: Set<string>
   onBack: () => void
   onConfirm: () => void
+  onToggle: (path: string) => void
 }
 
 export function ReviewScreen({
   groups,
   toTrash,
   onBack,
-  onConfirm
+  onConfirm,
+  onToggle
 }: ReviewScreenProps): React.JSX.Element {
   const trashList = groups.flatMap((g) => g.photos).filter((p) => toTrash.has(p.path))
   const hasAllTrashed = groups.some((g) => g.photos.every((p) => toTrash.has(p.path)))
@@ -59,6 +61,13 @@ export function ReviewScreen({
               <p className="text-[10px] text-surface-400 truncate">{photo.path}</p>
             </div>
             <span className="text-[11px] text-surface-400 shrink-0">{formatBytes(photo.size)}</span>
+            <button
+              onClick={() => onToggle(photo.path)}
+              title="Remove from trash list"
+              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-surface-400 hover:text-surface-700 hover:bg-surface-200 transition-colors duration-150 cursor-default"
+            >
+              <X size={13} strokeWidth={2.5} />
+            </button>
           </div>
         ))}
       </div>

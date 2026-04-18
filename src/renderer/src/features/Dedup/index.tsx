@@ -20,6 +20,7 @@ function Dedup(): React.JSX.Element {
     toggleTrash,
     handleAnalyze,
     handleCancel,
+    handleTrashWithConfirm,
     handleConfirmTrash,
     setStatus
   } = useDedupState(photos)
@@ -44,6 +45,7 @@ function Dedup(): React.JSX.Element {
           toTrash={toTrash}
           onBack={() => setStatus('results')}
           onConfirm={handleConfirmTrash}
+          onToggle={toggleTrash}
         />
       )
     }
@@ -54,6 +56,7 @@ function Dedup(): React.JSX.Element {
           groups={groups}
           toTrash={toTrash}
           onToggle={toggleTrash}
+          onTrash={handleTrashWithConfirm}
           onReview={() => setStatus('reviewing')}
         />
       )
@@ -100,7 +103,7 @@ function Dedup(): React.JSX.Element {
         title="Duplicates"
         subtitle="Find near-identical photos and keep only the best ones"
       />
-      {renderBody()}
+      <div className="flex-1 min-h-0">{renderBody()}</div>
     </div>
   )
 }

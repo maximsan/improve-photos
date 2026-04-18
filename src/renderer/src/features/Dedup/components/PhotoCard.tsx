@@ -8,13 +8,15 @@ interface PhotoCardProps {
   isBest: boolean
   markedForTrash: boolean
   onToggle: () => void
+  onTrash?: () => void
 }
 
 export function PhotoCard({
   photo,
   isBest,
   markedForTrash,
-  onToggle
+  onToggle,
+  onTrash
 }: PhotoCardProps): React.JSX.Element {
   return (
     <div
@@ -23,16 +25,18 @@ export function PhotoCard({
           ? 'border-red-300 shadow-sm shadow-red-100 opacity-70'
           : 'border-surface-200 hover:border-surface-300'
       }`}
-      onClick={onToggle}
+      onClick={markedForTrash ? undefined : onToggle}
     >
       <PhotoThumbnail
         path={photo.path}
         name={photo.name}
         isBest={isBest}
         markedForTrash={markedForTrash}
+        onDeselect={onToggle}
+        onTrash={onTrash}
       />
       <PhotoInfo name={photo.name} size={photo.size} />
-      <SelectionRow markedForTrash={markedForTrash} />
+      <SelectionRow markedForTrash={markedForTrash} onToggle={onToggle} />
     </div>
   )
 }

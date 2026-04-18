@@ -9,13 +9,15 @@ interface DuplicateGroupCardProps {
   groupIndex: number
   toTrash: Set<string>
   onToggle: (path: string) => void
+  onTrash?: () => void
 }
 
 export function DuplicateGroupCard({
   group,
   groupIndex,
   toTrash,
-  onToggle
+  onToggle,
+  onTrash
 }: DuplicateGroupCardProps): React.JSX.Element {
   const allTrashed = group.photos.every((p) => toTrash.has(p.path))
 
@@ -48,6 +50,7 @@ export function DuplicateGroupCard({
               isBest={i === 0}
               markedForTrash={toTrash.has(photo.path)}
               onToggle={() => onToggle(photo.path)}
+              onTrash={onTrash}
             />
           ))}
         </div>
