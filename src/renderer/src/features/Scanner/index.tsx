@@ -6,7 +6,8 @@ import { useScannerState } from './hooks/useScannerState'
 import { ScanResults } from './components/ScanResults'
 
 function Scanner(): React.JSX.Element {
-  const { status, localPhotos, folderPath, error, handleChooseFolder } = useScannerState()
+  const { status, localPhotos, folderPath, error, handleChooseFolder, handleRescan } =
+    useScannerState()
 
   return (
     <div className="flex flex-col h-full">
@@ -15,7 +16,12 @@ function Scanner(): React.JSX.Element {
       {status === 'scanning' && <SpinnerView message="Reading metadata…" />}
 
       {status === 'done' && folderPath && (
-        <ScanResults photos={localPhotos} folderPath={folderPath} onRescan={handleChooseFolder} />
+        <ScanResults
+          photos={localPhotos}
+          folderPath={folderPath}
+          onRescan={handleRescan}
+          onChoose={handleChooseFolder}
+        />
       )}
 
       {status === 'idle' && (

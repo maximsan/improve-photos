@@ -4,7 +4,7 @@ import { useState } from 'react'
  * Manages a Set<T> with a stable toggle callback.
  * Returns the current set and a function that adds or removes a value.
  */
-export function useSetToggle<T>(): [Set<T>, (value: T) => void] {
+export function useSetToggle<T>(): [Set<T>, (value: T) => void, () => void] {
   const [set, setSet] = useState<Set<T>>(new Set())
 
   function toggle(value: T): void {
@@ -19,5 +19,9 @@ export function useSetToggle<T>(): [Set<T>, (value: T) => void] {
     })
   }
 
-  return [set, toggle]
+  function clear(): void {
+    setSet(new Set())
+  }
+
+  return [set, toggle, clear]
 }

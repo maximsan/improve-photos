@@ -35,7 +35,7 @@ function Dedup(): React.JSX.Element {
       return <SpinnerView message="Moving files to Trash…" variant="danger" />
     }
     if (status === 'done') {
-      return <DoneView />
+      return <DoneView onFindMore={() => setStatus('idle')} />
     }
 
     if (status === 'reviewing') {
@@ -103,7 +103,7 @@ function Dedup(): React.JSX.Element {
         title="Duplicates"
         subtitle="Find near-identical photos and keep only the best ones"
       />
-      <div className="flex-1 min-h-0">{renderBody()}</div>
+      <div className="flex-1 min-h-0 flex flex-col">{renderBody()}</div>
     </div>
   )
 }

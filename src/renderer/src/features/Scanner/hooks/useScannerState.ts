@@ -10,6 +10,7 @@ export type ScannerState = {
   folderPath: string | null
   error: string | null
   handleChooseFolder: () => Promise<void>
+  handleRescan: () => Promise<void>
 }
 
 export function useScannerState(): ScannerState {
@@ -39,5 +40,20 @@ export function useScannerState(): ScannerState {
     }
   }
 
-  return { status, localPhotos, folderPath, error, handleChooseFolder }
+  async function handleRescan(): Promise<void> {
+    if (!folderPath) { return }
+    setError(null)
+    setStatus('scanning')
+    try {
+      const result = await window.api.scan(folderPath)
+      setLocalPhotos(result)
+      setPhotos(result)
+      setStatus('done')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Scan failed')
+      setStatus('done')
+    }
+  }
+
+  return { status, localPhotos, folderPath, error, handleChooseFolder, handleRescan }
 }

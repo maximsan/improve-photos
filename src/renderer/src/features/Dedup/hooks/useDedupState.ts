@@ -21,7 +21,7 @@ export type DedupState = {
 export function useDedupState(photos: PhotoRecord[]): DedupState {
   const [status, setStatus] = useState<DedupStatus>('idle')
   const [groups, setGroups] = useState<DuplicateGroup[]>([])
-  const [toTrash, toggleTrash] = useSetToggle<string>()
+  const [toTrash, toggleTrash, clearTrash] = useSetToggle<string>()
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<HashProgress | null>(null)
   const unsubscribeRef = useRef<(() => void) | null>(null)
@@ -62,6 +62,15 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
     setStatus('idle')
   }
 
+  function applyTrash(trashedPaths: Set<string>): void {
+    const remainingGroups = groups
+      .map((g) => ({ ...g, photos: g.photos.filter((p) => !trashedPaths.has(p.path)) }))
+      .filter((g) => g.photos.length >= 2)
+    setGroups(remainingGroups)
+    clearTrash()
+    setStatus(remainingGroups.length > 0 ? 'results' : 'done')
+  }
+
   /** Primary trash action — shows a native confirmation dialog first. */
   async function handleTrashWithConfirm(): Promise<void> {
     try {
@@ -70,8 +79,9 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
         return
       }
       setStatus('trashing')
-      await window.api.trashFiles([...toTrash])
-      setStatus('done')
+      const trashedPaths = new Set([...toTrash])
+      await window.api.trashFiles([...trashedPaths])
+      applyTrash(trashedPaths)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Trash failed')
       setStatus('results')
@@ -82,8 +92,9 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   async function handleConfirmTrash(): Promise<void> {
     setStatus('trashing')
     try {
-      await window.api.trashFiles([...toTrash])
-      setStatus('done')
+      const trashedPaths = new Set([...toTrash])
+      await window.api.trashFiles([...trashedPaths])
+      applyTrash(trashedPaths)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Trash failed')
       setStatus('reviewing')

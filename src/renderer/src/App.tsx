@@ -20,14 +20,17 @@ const FEATURES: FeatureMap = {
 function App(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<Tab>('scanner')
   const [photos, setPhotos] = useState<PhotoRecord[]>([])
-  const ActiveFeature = FEATURES[activeTab]
 
   return (
     <PhotosContext.Provider value={{ photos, setPhotos }}>
       <div className="flex h-full overflow-hidden">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-surface-50">
-          <ActiveFeature />
+          {(Object.entries(FEATURES) as [Tab, React.ComponentType][]).map(([tab, Feature]) => (
+            <div key={tab} className={tab === activeTab ? 'contents' : 'hidden'}>
+              <Feature />
+            </div>
+          ))}
         </main>
       </div>
     </PhotosContext.Provider>
