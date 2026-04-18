@@ -55,6 +55,7 @@ Returns PhotoRecord[] back up the same chain
 Getting from source code to an installable `.dmg` is two separate stages:
 
 **Stage 1 — `electron-vite build`** compiles TypeScript to JavaScript:
+
 ```
 src/main/*.ts      →  out/main/
 src/preload/*.ts   →  out/preload/
@@ -62,12 +63,14 @@ src/renderer/*.tsx →  out/renderer/
 ```
 
 **Stage 2 — `electron-builder --mac`** bundles everything into a distributable:
+
 ```
 out/          ─┐
 resources/    ─┤  →  dist/cleanup-photos.dmg
 build/icons   ─┘
 node_modules (including native modules like sharp)
 ```
+
 The result is a self-contained `.app` — the user who installs it needs nothing else (no Node.js, no pnpm).
 
 `pnpm dev` skips both stages entirely and runs the TypeScript source directly with hot reload. `pnpm build:mac` runs Stage 1 then Stage 2.

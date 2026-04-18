@@ -1,6 +1,6 @@
-const BLUR_SCORE_VERY_BLURRY_THRESHOLD = 50
-const BLUR_SCORE_BLURRY_THRESHOLD = 200
-const BLUR_SCORE_SOFT_THRESHOLD = 600
+export const BLUR_SCORE_VERY_BLURRY_THRESHOLD = 50
+export const BLUR_SCORE_BLURRY_THRESHOLD = 200
+export const BLUR_SCORE_SOFT_THRESHOLD = 600
 
 export function scoreLabel(score: number): { label: string; color: string } {
   if (score < BLUR_SCORE_VERY_BLURRY_THRESHOLD)

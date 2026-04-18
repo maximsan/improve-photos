@@ -10,12 +10,7 @@ interface PhotoTileProps {
   onToggle: () => void
 }
 
-export function PhotoTile({
-  photo,
-  score,
-  selected,
-  onToggle
-}: PhotoTileProps): React.JSX.Element {
+export function PhotoTile({ photo, score, selected, onToggle }: PhotoTileProps): React.JSX.Element {
   const { label, color } = scoreLabel(score)
 
   return (

@@ -88,6 +88,7 @@ FeatureName/
 ```
 
 Rules:
+
 - `index.tsx` must only contain the top-level component and its `renderBody` / view-switching logic
 - Each hook goes in `hooks/`
 - Each sub-component goes in `components/`

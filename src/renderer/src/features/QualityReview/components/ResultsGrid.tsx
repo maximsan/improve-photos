@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Trash2 } from 'lucide-react'
-import { PhotoTile } from './PhotoTile'
+import { TierSection } from './TierSection'
+import { TIERS } from '../tiers'
 import type { PhotoRecord, BlurScores } from '@shared/ipc'
 
 interface ResultsGridProps {
@@ -8,6 +9,7 @@ interface ResultsGridProps {
   scores: BlurScores
   selected: Set<string>
   onToggle: (path: string) => void
+  onSelectAll: (paths: string[], select: boolean) => void
   onReview: () => void
 }
 
@@ -16,6 +18,7 @@ export function ResultsGrid({
   scores,
   selected,
   onToggle,
+  onSelectAll,
   onReview
 }: ResultsGridProps): React.JSX.Element {
   const sorted = useMemo(
@@ -25,18 +28,23 @@ export function ResultsGrid({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-4 gap-3">
-          {sorted.map((photo) => (
-            <PhotoTile
-              key={photo.path}
-              photo={photo}
-              score={scores[photo.path] ?? 0}
-              selected={selected.has(photo.path)}
-              onToggle={() => onToggle(photo.path)}
+      <div className="flex-1 overflow-y-auto">
+        {TIERS.map((tier) => {
+          const tierPhotos = sorted.filter((p) => tier.test(scores[p.path] ?? 0))
+          if (tierPhotos.length === 0) return null
+
+          return (
+            <TierSection
+              key={tier.key}
+              tier={tier}
+              tierPhotos={tierPhotos}
+              scores={scores}
+              selected={selected}
+              onToggle={onToggle}
+              onSelectAll={onSelectAll}
             />
-          ))}
-        </div>
+          )
+        })}
       </div>
 
       {selected.size > 0 && (

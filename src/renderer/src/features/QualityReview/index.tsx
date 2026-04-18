@@ -16,6 +16,7 @@ function QualityReview(): React.JSX.Element {
     selected,
     error,
     toggleSelect,
+    selectAll,
     handleScore,
     handleConfirmTrash,
     setStatus
@@ -53,6 +54,7 @@ function QualityReview(): React.JSX.Element {
           scores={scores}
           selected={selected}
           onToggle={toggleSelect}
+          onSelectAll={selectAll}
           onReview={() => setStatus('reviewing')}
         />
       )
@@ -93,12 +95,16 @@ function QualityReview(): React.JSX.Element {
     )
   }
 
+  const subtitle =
+    status === 'results' || status === 'reviewing'
+      ? selected.size > 0
+        ? `${photos.length} photos · ${selected.size} selected to trash`
+        : `${photos.length} photos analysed`
+      : 'Sort photos by sharpness score and trash the blurry ones'
+
   return (
     <div className="flex flex-col h-full">
-      <PanelHeader
-        title="Quality"
-        subtitle="Sort photos by sharpness score and trash the blurry ones"
-      />
+      <PanelHeader title="Quality" subtitle={subtitle} />
       {renderBody()}
     </div>
   )
