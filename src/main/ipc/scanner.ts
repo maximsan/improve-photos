@@ -1,10 +1,12 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron'
+import { is } from '@electron-toolkit/utils'
 import { readdir, stat } from 'fs/promises'
 import { join, extname, basename } from 'path'
 import sharp from 'sharp'
 import exifr from 'exifr'
 import type { PhotoRecord } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
+import { allowDirectory } from '../localProtocol'
 
 export const IMAGE_EXTENSIONS = new Set([
   '.jpg',
@@ -33,7 +35,9 @@ export async function walkDir(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })
 
   for (const entry of entries) {
-    if (entry.name.startsWith('.')) continue
+    if (entry.name.startsWith('.')) {
+      continue
+    }
     const fullPath = join(dir, entry.name)
     if (entry.isDirectory()) {
       const nested = await walkDir(fullPath)
@@ -79,7 +83,11 @@ export async function buildPhotoRecord(filePath: string): Promise<PhotoRecord | 
       height: metadata.height ?? null,
       camera
     }
-  } catch {
+  } catch (e) {
+    if (is.dev) {
+      console.warn('[scanner] failed to process file:', filePath, e)
+    }
+
     return null
   }
 }
@@ -87,17 +95,34 @@ export async function buildPhotoRecord(filePath: string): Promise<PhotoRecord | 
 export function registerScannerHandlers(): void {
   ipcMain.handle(IPC.PICK_FOLDER, async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender) ?? BrowserWindow.getFocusedWindow()
-    if (!win) return null
+
+    if (!win) {
+      return null
+    }
+
     const { canceled, filePaths } = await dialog.showOpenDialog(win, {
       properties: ['openDirectory']
     })
+
     return canceled ? null : filePaths[0]
   })
 
   ipcMain.handle(IPC.SCAN, async (_event, folderPath: string): Promise<PhotoRecord[]> => {
+    allowDirectory(folderPath)
+
     const paths = await walkDir(folderPath)
+
     const records = await Promise.all(paths.map(buildPhotoRecord))
+
     photoCache = records.filter((r): r is PhotoRecord => r !== null)
+
+    if (is.dev) {
+      const failed = records.length - photoCache.length
+      console.log(
+        `[scanner] ${photoCache.length} photos loaded from "${folderPath}"${failed > 0 ? `, ${failed} failed` : ''}`
+      )
+    }
+
     return photoCache
   })
 }

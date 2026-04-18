@@ -24,8 +24,11 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
   function toggleSelect(path: string): void {
     setSelected((prev) => {
       const next = new Set(prev)
-      if (next.has(path)) next.delete(path)
-      else next.add(path)
+      if (next.has(path)) {
+        next.delete(path)
+      } else {
+        next.add(path)
+      }
       return next
     })
   }
@@ -33,8 +36,11 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
   function selectAll(paths: string[], select: boolean): void {
     setSelected((prev) => {
       const next = new Set(prev)
-      if (select) paths.forEach((p) => next.add(p))
-      else paths.forEach((p) => next.delete(p))
+      if (select) {
+        paths.forEach((p) => next.add(p))
+      } else {
+        paths.forEach((p) => next.delete(p))
+      }
       return next
     })
   }

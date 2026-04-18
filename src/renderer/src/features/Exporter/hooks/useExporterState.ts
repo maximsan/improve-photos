@@ -26,11 +26,15 @@ export function useExporterState(): ExporterState {
 
   async function handlePickFolder(): Promise<void> {
     const path = await window.api.pickFolder()
-    if (path) setOutDir(path)
+    if (path) {
+      setOutDir(path)
+    }
   }
 
   async function handleExport(presets: Preset[]): Promise<void> {
-    if (!outDir) return
+    if (!outDir) {
+      return
+    }
     setError(null)
     setProgress(null)
     setStatus('exporting')

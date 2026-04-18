@@ -15,8 +15,11 @@ export function PreviewView({ ops, onConfirm, onCancel }: PreviewViewProps): Rea
     let conflictCount = 0
     let moveCount = 0
     for (const op of ops) {
-      if (op.conflict) conflictCount++
-      else moveCount++
+      if (op.conflict) {
+        conflictCount++
+      } else {
+        moveCount++
+      }
     }
     return { conflictCount, moveCount, tree: buildTree(ops) }
   }, [ops])

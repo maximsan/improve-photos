@@ -25,10 +25,15 @@ function QualityReview(): React.JSX.Element {
   const hasPhotos = photos.length > 0
 
   function renderBody(): React.JSX.Element {
-    if (status === 'scoring') return <SpinnerView message="Analysing sharpness…" />
-    if (status === 'trashing')
+    if (status === 'scoring') {
+      return <SpinnerView message="Analysing sharpness…" />
+    }
+    if (status === 'trashing') {
       return <SpinnerView message="Moving files to Trash…" variant="danger" />
-    if (status === 'done') return <DoneView />
+    }
+    if (status === 'done') {
+      return <DoneView />
+    }
 
     if (status === 'reviewing') {
       return (

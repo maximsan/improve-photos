@@ -17,7 +17,9 @@ export function buildTree(ops: MoveOperation[]): TreeNode {
         node.children.set(seg, { name: seg, children: new Map(), ops: [] })
       }
       const next = node.children.get(seg)
-      if (next) node = next
+      if (next) {
+        node = next
+      }
     }
     node.ops.push(op)
   }

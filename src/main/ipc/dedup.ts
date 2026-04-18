@@ -1,4 +1,5 @@
 import { ipcMain, shell } from 'electron'
+import { is } from '@electron-toolkit/utils'
 import type { PhotoHashes, DuplicateGroup } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 import { computePHash, hammingDistance } from '../lib/hash'
@@ -14,11 +15,14 @@ export function registerDedupHandlers(): void {
       paths.map(async (p) => {
         try {
           hashes[p] = await computePHash(p)
-        } catch {
-          // skip files that cannot be hashed (corrupt, unsupported format)
+        } catch (e) {
+          if (is.dev) {
+            console.warn('[dedup] failed to hash file:', p, e)
+          }
         }
       })
     )
+
     return hashes
   })
 
@@ -33,11 +37,16 @@ export function registerDedupHandlers(): void {
       const parent = new Map<string, string>()
 
       const find = (x: string): string => {
-        if (!parent.has(x)) parent.set(x, x)
+        if (!parent.has(x)) {
+          parent.set(x, x)
+        }
         const root = parent.get(x)!
-        if (root === x) return x
+        if (root === x) {
+          return x
+        }
         const canonical = find(root)
         parent.set(x, canonical)
+
         return canonical
       }
 
@@ -58,16 +67,25 @@ export function registerDedupHandlers(): void {
       const buckets = new Map<string, string[]>()
       for (const p of paths) {
         const root = find(p)
-        if (!buckets.has(root)) buckets.set(root, [])
+        if (!buckets.has(root)) {
+          buckets.set(root, [])
+        }
         buckets.get(root)!.push(p)
       }
 
-      return [...buckets.values()]
+      const groups = [...buckets.values()]
         .filter((g) => g.length >= 2)
         .map((g) => {
           const groupPhotos = g.map((p) => photoMap.get(p)!).sort((a, b) => b.size - a.size) // largest (highest quality) first
+
           return { hash: hashes[groupPhotos[0].path], photos: groupPhotos }
         })
+
+      if (is.dev) {
+        console.log(`[dedup] ${groups.length} duplicate group(s) found from ${paths.length} photos`)
+      }
+
+      return groups
     }
   )
 

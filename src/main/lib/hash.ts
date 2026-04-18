@@ -93,7 +93,9 @@ export async function computePHash(filePath: string): Promise<string> {
  * perceptual hashes. Returns `Infinity` when lengths differ.
  */
 export function hammingDistance(a: string, b: string): number {
-  if (a.length !== b.length) return Infinity
+  if (a.length !== b.length) {
+    return Infinity
+  }
   let dist = 0
   for (let i = 0; i < a.length; i++) {
     let xor = parseInt(a[i], 16) ^ parseInt(b[i], 16)

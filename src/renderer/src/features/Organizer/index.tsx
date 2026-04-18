@@ -15,9 +15,15 @@ function Organizer(): React.JSX.Element {
   const hasPhotos = photos.length > 0
 
   function renderBody(): React.JSX.Element {
-    if (status === 'previewing') return <SpinnerView message="Building folder preview…" />
-    if (status === 'moving') return <SpinnerView message="Moving files…" />
-    if (status === 'done') return <DoneView count={movedCount} />
+    if (status === 'previewing') {
+      return <SpinnerView message="Building folder preview…" />
+    }
+    if (status === 'moving') {
+      return <SpinnerView message="Moving files…" />
+    }
+    if (status === 'done') {
+      return <DoneView count={movedCount} />
+    }
 
     if (status === 'preview') {
       return (

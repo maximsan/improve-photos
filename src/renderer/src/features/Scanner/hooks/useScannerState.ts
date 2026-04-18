@@ -23,7 +23,9 @@ export function useScannerState(): ScannerState {
     setError(null)
     try {
       const path = await window.api.pickFolder()
-      if (!path) return
+      if (!path) {
+        return
+      }
 
       setFolderPath(path)
       setStatus('scanning')

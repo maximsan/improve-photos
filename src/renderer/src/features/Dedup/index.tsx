@@ -24,10 +24,15 @@ function Dedup(): React.JSX.Element {
   const hasPhotos = photos.length > 0
 
   function renderBody(): React.JSX.Element {
-    if (status === 'computing') return <SpinnerView message="Computing perceptual hashes…" />
-    if (status === 'trashing')
+    if (status === 'computing') {
+      return <SpinnerView message="Computing perceptual hashes…" />
+    }
+    if (status === 'trashing') {
       return <SpinnerView message="Moving files to Trash…" variant="danger" />
-    if (status === 'done') return <DoneView />
+    }
+    if (status === 'done') {
+      return <DoneView />
+    }
 
     if (status === 'reviewing') {
       return (
@@ -67,7 +72,7 @@ function Dedup(): React.JSX.Element {
         body={
           <>
             <span className="font-semibold text-surface-700">{photos.length}</span> photos loaded.
-            Perceptual hashing detects near-identical images even with slight edits or re-saves.
+            Detects near-identical images even with slight edits, re-saves, or different file names.
           </>
         }
         footer={
@@ -90,7 +95,7 @@ function Dedup(): React.JSX.Element {
     <div className="flex flex-col h-full">
       <PanelHeader
         title="Duplicates"
-        subtitle="Find visually identical photos using perceptual hashing"
+        subtitle="Find near-identical photos and keep only the best ones"
       />
       {renderBody()}
     </div>

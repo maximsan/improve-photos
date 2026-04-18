@@ -31,7 +31,9 @@ export function ResultsGrid({
       <div className="flex-1 overflow-y-auto">
         {TIERS.map((tier) => {
           const tierPhotos = sorted.filter((p) => tier.test(scores[p.path] ?? 0))
-          if (tierPhotos.length === 0) return null
+          if (tierPhotos.length === 0) {
+            return null
+          }
 
           return (
             <TierSection

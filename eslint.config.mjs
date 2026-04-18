@@ -25,8 +25,27 @@ export default defineConfig(
     },
     rules: {
       ...eslintPluginReactHooks.configs.recommended.rules,
-      ...eslintPluginReactRefresh.configs.vite.rules
+      ...eslintPluginReactRefresh.configs.vite.rules,
+      'no-else-return': 'error',
+      curly: ['error', 'all']
     }
   },
-  eslintConfigPrettier
+  {
+    // Renderer lib files are pure utilities — no magic numbers allowed
+    files: ['src/renderer/src/lib/**/*.ts'],
+    rules: {
+      'no-magic-numbers': [
+        'error',
+        { ignore: [0, 1, -1, 2], ignoreArrayIndexes: true, enforceConst: true }
+      ]
+    }
+  },
+  eslintConfigPrettier,
+  // Must come after eslintConfigPrettier — prettier config sets curly:0 and would win otherwise
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      curly: ['error', 'all']
+    }
+  }
 )

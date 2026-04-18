@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron'
+import { is } from '@electron-toolkit/utils'
 import sharp from 'sharp'
 import type { BlurScores } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
@@ -14,18 +15,24 @@ import { IPC } from '@shared/ipc'
  * Exported for unit testing.
  */
 export function laplacianVariance(pixels: Uint8Array | Buffer, width: number): number {
-  if (width < 3 || pixels.length < 3) return 0
+  if (width < 3 || pixels.length < 3) {
+    return 0
+  }
 
   const responses: number[] = []
   for (let i = 1; i < pixels.length - 1; i++) {
     // Skip pixels at the left/right edge of each row
     const col = i % width
-    if (col === 0 || col === width - 1) continue
+    if (col === 0 || col === width - 1) {
+      continue
+    }
     const response = -pixels[i - 1] + 2 * pixels[i] - pixels[i + 1]
     responses.push(response)
   }
 
-  if (responses.length === 0) return 0
+  if (responses.length === 0) {
+    return 0
+  }
 
   const mean = responses.reduce((a, b) => a + b, 0) / responses.length
   const variance = responses.reduce((sum, v) => sum + (v - mean) ** 2, 0) / responses.length
@@ -54,11 +61,18 @@ export function registerQualityHandlers(): void {
       paths.map(async (p) => {
         try {
           scores[p] = await computeBlurScore(p)
-        } catch {
-          // skip files that cannot be processed
+        } catch (e) {
+          if (is.dev) {
+            console.warn('[quality] failed to score file:', p, e)
+          }
         }
       })
     )
+    if (is.dev) {
+      const scored = Object.keys(scores).length
+      const failed = paths.length - scored
+      console.log(`[quality] ${scored} photos scored${failed > 0 ? `, ${failed} failed` : ''}`)
+    }
     return scores
   })
 }

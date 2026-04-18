@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, protocol } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -7,6 +7,11 @@ import { registerDedupHandlers } from './ipc/dedup'
 import { registerOrganizerHandlers } from './ipc/organizer'
 import { registerQualityHandlers } from './ipc/quality'
 import { registerExporterHandlers } from './ipc/exporter'
+import { registerAppProtocol } from './localProtocol'
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { secure: true, bypassCSP: true, stream: true } }
+])
 
 function createWindow(): void {
   // Create the browser window.
@@ -32,6 +37,7 @@ function createWindow(): void {
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
+
     return { action: 'deny' }
   })
 
@@ -64,6 +70,7 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  registerAppProtocol()
   registerScannerHandlers()
   registerDedupHandlers()
   registerOrganizerHandlers()
@@ -75,7 +82,9 @@ app.whenReady().then(async () => {
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
   })
 })
 
