@@ -11,5 +11,5 @@ export function qualityReviewSubtitle(
   if (selectedCount > 0) {
     return `${photoCount} photos · ${selectedCount} selected to trash`
   }
-  return `${photoCount} photos analysed`
+  return `${photoCount} photos analyzed`
 }
