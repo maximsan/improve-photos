@@ -1,6 +1,8 @@
-export const BLUR_SCORE_VERY_BLURRY_THRESHOLD = 50
-export const BLUR_SCORE_BLURRY_THRESHOLD = 200
-export const BLUR_SCORE_SOFT_THRESHOLD = 600
+// Thresholds for stdev of the 2D Laplacian response on 1024×1024 greyscale images.
+// Higher stdev = more edge energy = sharper photo.
+export const BLUR_SCORE_VERY_BLURRY_THRESHOLD = 3
+export const BLUR_SCORE_BLURRY_THRESHOLD = 8
+export const BLUR_SCORE_SOFT_THRESHOLD = 16
 
 export function scoreLabel(score: number): { label: string; color: string } {
   if (score < BLUR_SCORE_VERY_BLURRY_THRESHOLD) {

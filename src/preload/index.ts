@@ -4,6 +4,8 @@ import type {
   ElectronAPI,
   ExportProgress,
   HashProgress,
+  QualityProgress,
+  ScanProgress,
   PhotoRecord,
   MoveOperation,
   ExportPreset
@@ -57,6 +59,18 @@ const api: ElectronAPI = {
     const handler = (_event: IpcRendererEvent, progress: HashProgress): void => cb(progress)
     ipcRenderer.on(IPC.HASH_PROGRESS, handler)
     return () => ipcRenderer.removeListener(IPC.HASH_PROGRESS, handler)
+  },
+
+  onQualityProgress: (cb: (progress: QualityProgress) => void) => {
+    const handler = (_event: IpcRendererEvent, progress: QualityProgress): void => cb(progress)
+    ipcRenderer.on(IPC.QUALITY_PROGRESS, handler)
+    return () => ipcRenderer.removeListener(IPC.QUALITY_PROGRESS, handler)
+  },
+
+  onScanProgress: (cb: (progress: ScanProgress) => void) => {
+    const handler = (_event: IpcRendererEvent, progress: ScanProgress): void => cb(progress)
+    ipcRenderer.on(IPC.SCAN_PROGRESS, handler)
+    return () => ipcRenderer.removeListener(IPC.SCAN_PROGRESS, handler)
   },
 
   cancelHashes: () => ipcRenderer.invoke(IPC.CANCEL_HASHES),

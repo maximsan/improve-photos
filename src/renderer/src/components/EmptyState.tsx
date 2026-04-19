@@ -1,3 +1,5 @@
+import { useNavigation } from '../context/navigation'
+
 interface EmptyStateProps {
   /** Lucide icon or any React node rendered inside the icon container */
   icon: React.ReactNode
@@ -10,6 +12,23 @@ interface EmptyStateProps {
   footer?: React.ReactNode
   /** Renders the standard "Scan a folder first" hint. Use for all non-Scanner panels. */
   needsScan?: boolean
+}
+
+function NeedsScanHint(): React.JSX.Element {
+  const { setActiveTab } = useNavigation()
+  return (
+    <p className="text-[12px] font-medium text-surface-400">
+      Scan a folder first in the{' '}
+      <button
+        type="button"
+        onClick={() => setActiveTab('scanner')}
+        className="text-primary-500 hover:text-primary-600 cursor-pointer transition-colors duration-150"
+      >
+        Scan
+      </button>{' '}
+      tab
+    </p>
+  )
 }
 
 function EmptyState({
@@ -35,11 +54,7 @@ function EmptyState({
 
       {footer}
 
-      {needsScan && (
-        <p className="text-[12px] font-medium text-surface-400">
-          Scan a folder first in the <span className="text-primary-500">Scan</span> tab
-        </p>
-      )}
+      {needsScan && <NeedsScanHint />}
     </div>
   )
 }

@@ -107,12 +107,28 @@ export function registerScannerHandlers(): void {
     return canceled ? null : filePaths[0]
   })
 
-  ipcMain.handle(IPC.SCAN, async (_event, folderPath: string): Promise<PhotoRecord[]> => {
+  ipcMain.handle(IPC.SCAN, async (event, folderPath: string): Promise<PhotoRecord[]> => {
     allowDirectory(folderPath)
 
     const paths = await walkDir(folderPath)
+    const total = paths.length
+    let done = 0
+    const iter = paths[Symbol.iterator]()
 
-    const records = await Promise.all(paths.map(buildPhotoRecord))
+    async function worker(): Promise<(PhotoRecord | null)[]> {
+      const results: (PhotoRecord | null)[] = []
+      for (const p of { [Symbol.iterator]: () => iter }) {
+        const record = await buildPhotoRecord(p)
+        results.push(record)
+        done++
+        event.sender.send(IPC.SCAN_PROGRESS, { done, total, current: p })
+      }
+      return results
+    }
+
+    const MAX_CONCURRENT = 8
+    const chunks = await Promise.all(Array.from({ length: MAX_CONCURRENT }, worker))
+    const records = chunks.flat()
 
     photoCache = records.filter((r): r is PhotoRecord => r !== null)
 

@@ -1,19 +1,21 @@
 import { ScanSearch, FolderOpen } from 'lucide-react'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
-import SpinnerView from '../../components/SpinnerView'
+import { ProgressView } from '../../components/ProgressView'
 import { PrimaryButton } from '../../components/PrimaryButton'
 import { FormErrorText } from '../../components/FormErrorText'
 import { useScannerState } from './hooks/useScannerState'
 import { ScanResults } from './components/ScanResults'
 
 function Scanner(): React.JSX.Element {
-  const { status, localPhotos, folderPath, error, handleChooseFolder, handleRescan, handleReset } =
+  const { status, localPhotos, folderPath, error, progress, handleChooseFolder, handleRescan, handleReset } =
     useScannerState()
 
   function renderBody(): React.JSX.Element | null {
     if (status === 'scanning') {
-      return <SpinnerView message="Reading metadata…" />
+      const percent = progress ? Math.round((progress.done / progress.total) * 100) : 0
+      const label = progress ? `Scanning photo ${progress.done} of ${progress.total}` : 'Starting…'
+      return <ProgressView label={label} percent={percent} current={progress?.current} />
     }
 
     if (status === 'done' && folderPath) {

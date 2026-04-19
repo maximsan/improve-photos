@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import type { PhotoRecord, BlurScores } from '@shared/ipc'
+import { useEffect, useRef, useState } from 'react'
+import { usePhotos } from '../../../context/photos'
+import type { PhotoRecord, BlurScores, QualityProgress } from '@shared/ipc'
 
 export type QualityStatus = 'idle' | 'scoring' | 'results' | 'reviewing' | 'trashing' | 'done'
 
@@ -8,6 +9,7 @@ export type QualityReviewState = {
   scores: BlurScores
   selected: Set<string>
   error: string | null
+  progress: QualityProgress | null
   toggleSelect: (path: string) => void
   selectAll: (paths: string[], select: boolean) => void
   handleScore: () => Promise<void>
@@ -17,10 +19,31 @@ export type QualityReviewState = {
 }
 
 export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState {
+  const { scanRevision } = usePhotos()
   const [status, setStatus] = useState<QualityStatus>('idle')
   const [scores, setScores] = useState<BlurScores>({})
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
+  const [progress, setProgress] = useState<QualityProgress | null>(null)
+  const unsubscribeRef = useRef<(() => void) | null>(null)
+  const lastRevisionRef = useRef(scanRevision)
+
+  useEffect(() => {
+    return () => {
+      unsubscribeRef.current?.()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (lastRevisionRef.current === scanRevision) {
+      return
+    }
+    lastRevisionRef.current = scanRevision
+    if (status !== 'idle') {
+      handleReset()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanRevision])
 
   function toggleSelect(path: string): void {
     setSelected((prev) => {
@@ -49,7 +72,11 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
   async function handleScore(): Promise<void> {
     setError(null)
     setSelected(new Set())
+    setProgress(null)
     setStatus('scoring')
+
+    unsubscribeRef.current = window.api.onQualityProgress(setProgress)
+
     try {
       const result = await window.api.getBlurScores(photos.map((p) => p.path))
       setScores(result)
@@ -57,6 +84,10 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Scoring failed')
       setStatus('idle')
+    } finally {
+      unsubscribeRef.current?.()
+      unsubscribeRef.current = null
+      setProgress(null)
     }
   }
 
@@ -76,6 +107,7 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     setScores({})
     setSelected(new Set())
     setError(null)
+    setProgress(null)
   }
 
   return {
@@ -83,6 +115,7 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     scores,
     selected,
     error,
+    progress,
     toggleSelect,
     selectAll,
     handleScore,

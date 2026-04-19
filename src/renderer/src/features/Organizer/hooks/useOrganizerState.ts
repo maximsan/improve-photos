@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePhotos } from '../../../context/photos'
 import type { MoveOperation } from '@shared/ipc'
 
@@ -16,11 +16,23 @@ export type OrganizerState = {
 }
 
 export function useOrganizerState(): OrganizerState {
-  const { photos, setPhotos } = usePhotos()
+  const { photos, setPhotos, scanRevision } = usePhotos()
   const [status, setStatus] = useState<OrganizerStatus>('idle')
   const [ops, setOps] = useState<MoveOperation[]>([])
   const [movedCount, setMovedCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const lastRevisionRef = useRef(scanRevision)
+
+  useEffect(() => {
+    if (lastRevisionRef.current === scanRevision) {
+      return
+    }
+    lastRevisionRef.current = scanRevision
+    if (status !== 'idle') {
+      handleReset()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanRevision])
 
   async function handlePreview(): Promise<void> {
     setError(null)

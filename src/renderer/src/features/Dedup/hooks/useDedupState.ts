@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSetToggle } from '../../../lib/useSetToggle'
+import { usePhotos } from '../../../context/photos'
 import type { DuplicateGroup, HashProgress, PhotoRecord } from '@shared/ipc'
 
 export type DedupStatus = 'idle' | 'computing' | 'results' | 'reviewing' | 'trashing' | 'done'
@@ -20,18 +21,31 @@ export type DedupState = {
 }
 
 export function useDedupState(photos: PhotoRecord[]): DedupState {
+  const { scanRevision } = usePhotos()
   const [status, setStatus] = useState<DedupStatus>('idle')
   const [groups, setGroups] = useState<DuplicateGroup[]>([])
   const [toTrash, toggleTrash, clearTrash] = useSetToggle<string>()
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<HashProgress | null>(null)
   const unsubscribeRef = useRef<(() => void) | null>(null)
+  const lastRevisionRef = useRef(scanRevision)
 
   useEffect(() => {
     return () => {
       unsubscribeRef.current?.()
     }
   }, [])
+
+  useEffect(() => {
+    if (lastRevisionRef.current === scanRevision) {
+      return
+    }
+    lastRevisionRef.current = scanRevision
+    if (status !== 'idle') {
+      handleReset()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanRevision])
 
   async function handleAnalyze(): Promise<void> {
     setError(null)

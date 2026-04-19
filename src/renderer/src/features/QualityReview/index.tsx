@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import PanelHeader from '../../components/PanelHeader'
-import SpinnerView from '../../components/SpinnerView'
+import { ProgressView } from '../../components/ProgressView'
 import { PhotosRequiredCallout } from '../../components/PhotosRequiredCallout'
 import { FormErrorText } from '../../components/FormErrorText'
 import { usePhotos } from '../../context/photos'
@@ -17,6 +17,7 @@ function QualityReview(): React.JSX.Element {
     scores,
     selected,
     error,
+    progress,
     toggleSelect,
     selectAll,
     handleScore,
@@ -29,10 +30,13 @@ function QualityReview(): React.JSX.Element {
 
   function renderBody(): React.JSX.Element {
     if (status === 'scoring') {
-      return <SpinnerView message="Analysing sharpness…" />
+      const percent = progress ? Math.round((progress.done / progress.total) * 100) : 0
+      const label = progress ? `Scoring photo ${progress.done} of ${progress.total}` : 'Starting…'
+      const current = progress?.current.split(/[\\/]/).pop()
+      return <ProgressView label={label} percent={percent} current={current} />
     }
     if (status === 'trashing') {
-      return <SpinnerView message="Moving files to Trash…" variant="danger" />
+      return <ProgressView label="Moving files to Trash…" percent={100} />
     }
     if (status === 'done') {
       return <DoneView onReset={handleReset} />

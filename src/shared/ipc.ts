@@ -54,6 +54,20 @@ export interface BlurScores {
   [path: string]: number
 }
 
+/** Progress event emitted after each file is scored during quality analysis. */
+export interface QualityProgress {
+  done: number
+  total: number
+  current: string
+}
+
+/** Progress event emitted after each file is read during a folder scan. */
+export interface ScanProgress {
+  done: number
+  total: number
+  current: string
+}
+
 // ─── Exporter ────────────────────────────────────────────────────────────────
 
 export type ExportFormat = 'jpeg' | 'png' | 'webp'
@@ -98,7 +112,9 @@ export const IPC = {
   EXPORT_PROGRESS: 'export-progress',
   HASH_PROGRESS: 'dedup:hash-progress',
   CANCEL_HASHES: 'dedup:cancel-hashes',
-  CONFIRM_TRASH: 'dedup:confirm-trash'
+  CONFIRM_TRASH: 'dedup:confirm-trash',
+  QUALITY_PROGRESS: 'quality:progress',
+  SCAN_PROGRESS: 'scanner:progress'
 } as const
 
 // ─── Typed window.api surface (matches preload contextBridge) ────────────────
@@ -117,6 +133,10 @@ export interface ElectronAPI {
   onExportProgress: (cb: (progress: ExportProgress) => void) => () => void
   /** Subscribe to per-file hash progress events. Returns an unsubscribe function. */
   onHashProgress: (cb: (progress: HashProgress) => void) => () => void
+  /** Subscribe to per-file quality-scoring progress events. Returns an unsubscribe function. */
+  onQualityProgress: (cb: (progress: QualityProgress) => void) => () => void
+  /** Subscribe to per-file scan progress events. Returns an unsubscribe function. */
+  onScanProgress: (cb: (progress: ScanProgress) => void) => () => void
   /** Cancel an in-progress `computeHashes` call. */
   cancelHashes: () => Promise<void>
   /** Show a native macOS confirmation dialog before trashing. Resolves to true if confirmed. */
