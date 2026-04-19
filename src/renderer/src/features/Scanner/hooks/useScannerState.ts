@@ -41,7 +41,9 @@ export function useScannerState(): ScannerState {
   }
 
   async function handleRescan(): Promise<void> {
-    if (!folderPath) { return }
+    if (!folderPath) {
+      return
+    }
     setError(null)
     setStatus('scanning')
     try {

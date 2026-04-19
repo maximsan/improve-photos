@@ -2,6 +2,8 @@ import { CalendarCheck, FolderOpen, CheckCircle2 } from 'lucide-react'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
 import SpinnerView from '../../components/SpinnerView'
+import { PhotosRequiredCallout } from '../../components/PhotosRequiredCallout'
+import { FormErrorText } from '../../components/FormErrorText'
 import { usePhotos } from '../../context/photos'
 import { useOrganizerState } from './hooks/useOrganizerState'
 import { PreviewView } from './components/PreviewView'
@@ -36,6 +38,7 @@ function Organizer(): React.JSX.Element {
               body="All photos are already in their correct date folders. Nothing to move."
               footer={
                 <button
+                  type="button"
                   onClick={() => setStatus('idle')}
                   className="text-[12px] font-medium text-surface-500 hover:text-surface-700 cursor-default transition-colors"
                 >
@@ -46,49 +49,36 @@ function Organizer(): React.JSX.Element {
           ) : (
             <PreviewView ops={ops} onConfirm={handleConfirm} onCancel={() => setStatus('idle')} />
           )}
-          {error && (
-            <p className="shrink-0 px-5 pb-3 text-[11px] text-red-500 text-center">{error}</p>
-          )}
+          {error ? (
+            <FormErrorText className="shrink-0 px-5 pb-3 text-center">{error}</FormErrorText>
+          ) : null}
         </>
       )
     }
 
-    // idle
-    return !hasPhotos ? (
-      <EmptyState
-        icon={<CalendarCheck size={34} strokeWidth={1.4} className="text-surface-500" />}
-        title="Organize by date"
-        body={
+    return (
+      <PhotosRequiredCallout
+        hasPhotos={hasPhotos}
+        idleIcon={<CalendarCheck size={34} strokeWidth={1.4} className="text-surface-500" />}
+        readyIcon={<CalendarCheck size={34} strokeWidth={1.4} className="text-primary-600" />}
+        titleNeedsScan="Organize by date"
+        titleReady="Ready to organise"
+        bodyNeedsScan={
           <>
             Preview the proposed <span className="font-mono">YYYY/MM/DD</span> folder structure
             before any files are moved.
           </>
         }
-        needsScan
-      />
-    ) : (
-      <EmptyState
-        icon={<CalendarCheck size={34} strokeWidth={1.4} className="text-primary-600" />}
-        warm
-        title="Ready to organise"
-        body={
+        bodyReady={
           <>
             <span className="font-semibold text-surface-700">{photos.length}</span> photos loaded. A
             dry-run preview shows exactly which files will move before anything changes.
           </>
         }
-        footer={
-          <>
-            <button
-              onClick={handlePreview}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-medium text-white cursor-default bg-primary-500 hover:bg-primary-600 transition-colors duration-150"
-            >
-              <FolderOpen size={15} strokeWidth={2} />
-              Preview Changes
-            </button>
-            {error && <p className="text-[11px] text-red-500">{error}</p>}
-          </>
-        }
+        actionLabel="Preview Changes"
+        actionIcon={<FolderOpen size={15} strokeWidth={2} />}
+        onAction={handlePreview}
+        error={error}
       />
     )
   }
@@ -99,7 +89,7 @@ function Organizer(): React.JSX.Element {
         title="Organize"
         subtitle="Move photos into date-based folders using EXIF metadata"
       />
-      {renderBody()}
+      <div className="flex-1 min-h-0 flex flex-col">{renderBody()}</div>
     </div>
   )
 }

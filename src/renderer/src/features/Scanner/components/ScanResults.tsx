@@ -81,10 +81,7 @@ export function ScanResults({
       </div>
 
       <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between">
-        <p
-          className="text-[12px] text-surface-400 truncate max-w-xs"
-          title={folderPath}
-        >
+        <p className="text-[12px] text-surface-400 truncate max-w-xs" title={folderPath}>
           {folderPath}
         </p>
         <div className="flex items-center gap-3">

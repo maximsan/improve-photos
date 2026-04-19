@@ -1,7 +1,7 @@
 import { Copy } from 'lucide-react'
 import PanelHeader from '../../components/PanelHeader'
-import EmptyState from '../../components/EmptyState'
 import SpinnerView from '../../components/SpinnerView'
+import { PhotosRequiredCallout } from '../../components/PhotosRequiredCallout'
 import { usePhotos } from '../../context/photos'
 import { useDedupState } from './hooks/useDedupState'
 import { ComputingView } from './components/ComputingView'
@@ -62,37 +62,24 @@ function Dedup(): React.JSX.Element {
       )
     }
 
-    // idle
-    return !hasPhotos ? (
-      <EmptyState
-        icon={<Copy size={34} strokeWidth={1.4} className="text-surface-500" />}
-        title="Find duplicate photos"
-        body="Side-by-side review of near-identical photos so you can keep the best and trash the rest."
-        needsScan
-      />
-    ) : (
-      <EmptyState
-        icon={<Copy size={34} strokeWidth={1.4} className="text-primary-600" />}
-        warm
-        title="Ready to find duplicates"
-        body={
+    return (
+      <PhotosRequiredCallout
+        hasPhotos={hasPhotos}
+        idleIcon={<Copy size={34} strokeWidth={1.4} className="text-surface-500" />}
+        readyIcon={<Copy size={34} strokeWidth={1.4} className="text-primary-600" />}
+        titleNeedsScan="Find duplicate photos"
+        titleReady="Ready to find duplicates"
+        bodyNeedsScan="Side-by-side review of near-identical photos so you can keep the best and trash the rest."
+        bodyReady={
           <>
             <span className="font-semibold text-surface-700">{photos.length}</span> photos loaded.
             Detects near-identical images even with slight edits, re-saves, or different file names.
           </>
         }
-        footer={
-          <>
-            <button
-              onClick={handleAnalyze}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-medium text-white cursor-default bg-primary-500 hover:bg-primary-600 transition-colors duration-150"
-            >
-              <Copy size={15} strokeWidth={2} />
-              Find Duplicates
-            </button>
-            {error && <p className="text-[11px] text-red-500">{error}</p>}
-          </>
-        }
+        actionLabel="Find Duplicates"
+        actionIcon={<Copy size={15} strokeWidth={2} />}
+        onAction={handleAnalyze}
+        error={error}
       />
     )
   }
