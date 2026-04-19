@@ -21,6 +21,7 @@ function QualityReview(): React.JSX.Element {
     selectAll,
     handleScore,
     handleConfirmTrash,
+    handleReset,
     setStatus
   } = useQualityReviewState(photos)
 
@@ -34,7 +35,7 @@ function QualityReview(): React.JSX.Element {
       return <SpinnerView message="Moving files to Trash…" variant="danger" />
     }
     if (status === 'done') {
-      return <DoneView />
+      return <DoneView onReset={handleReset} />
     }
 
     if (status === 'reviewing') {
@@ -63,6 +64,7 @@ function QualityReview(): React.JSX.Element {
           onToggle={toggleSelect}
           onSelectAll={selectAll}
           onReview={() => setStatus('reviewing')}
+          onReset={handleReset}
         />
       )
     }

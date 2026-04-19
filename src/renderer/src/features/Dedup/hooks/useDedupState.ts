@@ -15,6 +15,7 @@ export type DedupState = {
   handleCancel: () => void
   handleTrashWithConfirm: () => Promise<void>
   handleConfirmTrash: () => Promise<void>
+  handleReset: () => void
   setStatus: React.Dispatch<React.SetStateAction<DedupStatus>>
 }
 
@@ -101,6 +102,14 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
     }
   }
 
+  function handleReset(): void {
+    setStatus('idle')
+    setGroups([])
+    clearTrash()
+    setError(null)
+    setProgress(null)
+  }
+
   return {
     status,
     groups,
@@ -112,6 +121,7 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
     handleCancel,
     handleTrashWithConfirm,
     handleConfirmTrash,
+    handleReset,
     setStatus
   }
 }

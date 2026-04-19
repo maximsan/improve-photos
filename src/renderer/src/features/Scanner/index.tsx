@@ -8,7 +8,7 @@ import { useScannerState } from './hooks/useScannerState'
 import { ScanResults } from './components/ScanResults'
 
 function Scanner(): React.JSX.Element {
-  const { status, localPhotos, folderPath, error, handleChooseFolder, handleRescan } =
+  const { status, localPhotos, folderPath, error, handleChooseFolder, handleRescan, handleReset } =
     useScannerState()
 
   function renderBody(): React.JSX.Element | null {
@@ -23,6 +23,7 @@ function Scanner(): React.JSX.Element {
           folderPath={folderPath}
           onRescan={handleRescan}
           onChoose={handleChooseFolder}
+          onReset={handleReset}
         />
       )
     }

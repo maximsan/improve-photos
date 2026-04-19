@@ -11,6 +11,7 @@ interface ResultsGridProps {
   onToggle: (path: string) => void
   onSelectAll: (paths: string[], select: boolean) => void
   onReview: () => void
+  onReset: () => void
 }
 
 export function ResultsGrid({
@@ -19,7 +20,8 @@ export function ResultsGrid({
   selected,
   onToggle,
   onSelectAll,
-  onReview
+  onReview,
+  onReset
 }: ResultsGridProps): React.JSX.Element {
   const sorted = useMemo(
     () => [...photos].sort((a, b) => (scores[a.path] ?? 0) - (scores[b.path] ?? 0)),
@@ -49,21 +51,35 @@ export function ResultsGrid({
         })}
       </div>
 
-      {selected.size > 0 && (
-        <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between">
-          <p className="text-[12px] text-surface-500">
-            <span className="font-semibold text-surface-800">{selected.size}</span> photo
-            {selected.size !== 1 ? 's' : ''} selected to trash
-          </p>
+      <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {selected.size > 0 ? (
+            <p className="text-[12px] text-surface-500">
+              <span className="font-semibold text-surface-800">{selected.size}</span> photo
+              {selected.size !== 1 ? 's' : ''} selected to trash
+            </p>
+          ) : (
+            <p className="text-[12px] text-surface-500">Select photos to mark for trash</p>
+          )}
           <button
+            type="button"
+            onClick={onReset}
+            className="text-[12px] font-medium text-surface-400 hover:text-surface-700 cursor-default transition-colors duration-150"
+          >
+            Start over
+          </button>
+        </div>
+        {selected.size > 0 && (
+          <button
+            type="button"
             onClick={onReview}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors duration-150 cursor-default"
           >
             <Trash2 size={13} strokeWidth={2} />
             Review &amp; Trash
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

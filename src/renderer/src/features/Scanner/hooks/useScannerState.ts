@@ -11,6 +11,7 @@ export type ScannerState = {
   error: string | null
   handleChooseFolder: () => Promise<void>
   handleRescan: () => Promise<void>
+  handleReset: () => void
 }
 
 export function useScannerState(): ScannerState {
@@ -57,5 +58,13 @@ export function useScannerState(): ScannerState {
     }
   }
 
-  return { status, localPhotos, folderPath, error, handleChooseFolder, handleRescan }
+  function handleReset(): void {
+    setStatus('idle')
+    setLocalPhotos([])
+    setFolderPath(null)
+    setError(null)
+    setPhotos([])
+  }
+
+  return { status, localPhotos, folderPath, error, handleChooseFolder, handleRescan, handleReset }
 }

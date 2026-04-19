@@ -22,6 +22,7 @@ function Dedup(): React.JSX.Element {
     handleCancel,
     handleTrashWithConfirm,
     handleConfirmTrash,
+    handleReset,
     setStatus
   } = useDedupState(photos)
 
@@ -58,6 +59,7 @@ function Dedup(): React.JSX.Element {
           onToggle={toggleTrash}
           onTrash={handleTrashWithConfirm}
           onReview={() => setStatus('reviewing')}
+          onReset={handleReset}
         />
       )
     }

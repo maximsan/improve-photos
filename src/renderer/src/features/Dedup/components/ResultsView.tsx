@@ -9,6 +9,7 @@ interface ResultsViewProps {
   onToggle: (path: string) => void
   onTrash: () => void
   onReview: () => void
+  onReset: () => void
 }
 
 export function ResultsView({
@@ -16,7 +17,8 @@ export function ResultsView({
   toTrash,
   onToggle,
   onTrash,
-  onReview
+  onReview,
+  onReset
 }: ResultsViewProps): React.JSX.Element {
   const trashCount = toTrash.size
 
@@ -47,16 +49,25 @@ export function ResultsView({
       </div>
 
       <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between">
-        <p className="text-[12px] text-surface-500">
-          {trashCount === 0 ? (
-            'Select photos to mark for trash'
-          ) : (
-            <>
-              <span className="font-semibold text-surface-800">{trashCount}</span> photo
-              {trashCount !== 1 ? 's' : ''} selected
-            </>
-          )}
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="text-[12px] text-surface-500">
+            {trashCount === 0 ? (
+              'Select photos to mark for trash'
+            ) : (
+              <>
+                <span className="font-semibold text-surface-800">{trashCount}</span> photo
+                {trashCount !== 1 ? 's' : ''} selected
+              </>
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-[12px] font-medium text-surface-400 hover:text-surface-700 cursor-default transition-colors duration-150"
+          >
+            Start over
+          </button>
+        </div>
         <div className="flex items-center gap-3">
           {trashCount > 0 && (
             <button

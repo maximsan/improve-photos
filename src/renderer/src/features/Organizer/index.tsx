@@ -11,7 +11,7 @@ import { DoneView } from './components/DoneView'
 
 function Organizer(): React.JSX.Element {
   const { photos } = usePhotos()
-  const { status, ops, movedCount, error, handlePreview, handleConfirm, setStatus } =
+  const { status, ops, movedCount, error, handlePreview, handleConfirm, handleReset, setStatus } =
     useOrganizerState()
 
   const hasPhotos = photos.length > 0
@@ -24,7 +24,7 @@ function Organizer(): React.JSX.Element {
       return <SpinnerView message="Moving files…" />
     }
     if (status === 'done') {
-      return <DoneView count={movedCount} />
+      return <DoneView count={movedCount} onReset={handleReset} />
     }
 
     if (status === 'preview') {

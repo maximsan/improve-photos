@@ -12,6 +12,7 @@ export type QualityReviewState = {
   selectAll: (paths: string[], select: boolean) => void
   handleScore: () => Promise<void>
   handleConfirmTrash: () => Promise<void>
+  handleReset: () => void
   setStatus: React.Dispatch<React.SetStateAction<QualityStatus>>
 }
 
@@ -70,6 +71,13 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     }
   }
 
+  function handleReset(): void {
+    setStatus('idle')
+    setScores({})
+    setSelected(new Set())
+    setError(null)
+  }
+
   return {
     status,
     scores,
@@ -79,6 +87,7 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     selectAll,
     handleScore,
     handleConfirmTrash,
+    handleReset,
     setStatus
   }
 }

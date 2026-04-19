@@ -11,6 +11,7 @@ export type OrganizerState = {
   error: string | null
   handlePreview: () => Promise<void>
   handleConfirm: () => Promise<void>
+  handleReset: () => void
   setStatus: React.Dispatch<React.SetStateAction<OrganizerStatus>>
 }
 
@@ -62,5 +63,12 @@ export function useOrganizerState(): OrganizerState {
     }
   }
 
-  return { status, ops, movedCount, error, handlePreview, handleConfirm, setStatus }
+  function handleReset(): void {
+    setStatus('idle')
+    setOps([])
+    setMovedCount(0)
+    setError(null)
+  }
+
+  return { status, ops, movedCount, error, handlePreview, handleConfirm, handleReset, setStatus }
 }

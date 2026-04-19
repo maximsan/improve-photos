@@ -62,6 +62,9 @@ export function useExporterState(): ExporterState {
 
   function reset(): void {
     setStatus('idle')
+    setProgress(null)
+    setExportedCount(0)
+    setError(null)
   }
 
   return { status, outDir, progress, exportedCount, error, handlePickFolder, handleExport, reset }
