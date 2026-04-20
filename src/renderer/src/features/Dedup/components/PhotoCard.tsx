@@ -20,7 +20,7 @@ export function PhotoCard({
 }: PhotoCardProps): React.JSX.Element {
   return (
     <div
-      className={`relative flex flex-col rounded-xl overflow-hidden border transition-all duration-150 cursor-default select-none ${
+      className={`relative flex flex-col rounded-xl overflow-hidden border transition-all duration-150 cursor-pointer select-none ${
         markedForTrash
           ? 'border-red-300 shadow-sm shadow-red-100 opacity-70'
           : 'border-surface-200 hover:border-surface-300'

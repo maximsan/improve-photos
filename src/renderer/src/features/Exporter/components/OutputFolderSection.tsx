@@ -17,7 +17,7 @@ export function OutputFolderSection({
       <button
         type="button"
         onClick={onPickFolder}
-        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-surface-200 bg-white hover:border-surface-300 transition-colors cursor-default"
+        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-surface-200 bg-white hover:border-surface-300 transition-colors cursor-pointer"
       >
         <FolderOpen size={16} className="text-primary-500 shrink-0" />
         <span

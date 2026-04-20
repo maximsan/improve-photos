@@ -34,7 +34,7 @@ export function ProgressView({
       {onCancel && (
         <button
           onClick={onCancel}
-          className="px-4 py-1.5 rounded-md text-[12px] font-medium text-surface-500 border border-surface-300 hover:border-surface-400 hover:text-surface-700 transition-colors duration-150 cursor-default"
+          className="px-4 py-1.5 rounded-md text-[12px] font-medium text-surface-500 border border-surface-300 hover:border-surface-400 hover:text-surface-700 transition-colors duration-150 cursor-pointer"
         >
           Cancel
         </button>

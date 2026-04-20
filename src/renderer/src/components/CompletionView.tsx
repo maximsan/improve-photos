@@ -23,7 +23,7 @@ export function CompletionView({
       {action && (
         <button
           onClick={action.onClick}
-          className="text-[12px] font-medium text-primary-600 hover:text-primary-700 cursor-default transition-colors"
+          className="text-[12px] font-medium text-primary-600 hover:text-primary-700 cursor-pointer transition-colors"
         >
           {action.label}
         </button>

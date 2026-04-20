@@ -22,7 +22,7 @@ export function TreeNodeView({ node, depth }: TreeNodeViewProps): React.JSX.Elem
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 w-full text-left py-1 hover:bg-surface-100 rounded transition-colors cursor-default"
+          className="flex items-center gap-2 w-full text-left py-1 hover:bg-surface-100 rounded transition-colors cursor-pointer"
           style={{ paddingLeft: `${indent}px` }}
         >
           <FolderDisclosureIcon expandable={expandable} open={open} />

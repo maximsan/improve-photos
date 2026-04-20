@@ -72,7 +72,7 @@ export function PresetRow({
           <button
             key={fmt}
             onClick={() => set({ format: fmt })}
-            className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wide cursor-default transition-colors ${
+            className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wide cursor-pointer transition-colors ${
               preset.format === fmt
                 ? 'bg-primary-500 text-white'
                 : 'bg-white text-surface-500 hover:bg-surface-50'
@@ -86,7 +86,7 @@ export function PresetRow({
       <button
         onClick={onRemove}
         disabled={!canRemove}
-        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-surface-400 hover:text-red-400 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-default"
+        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-surface-400 hover:text-red-400 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
       >
         <X size={12} strokeWidth={2} />
       </button>

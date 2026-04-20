@@ -1,4 +1,4 @@
-import { ScanSearch, Copy, CalendarCheck, Sparkles, Upload, type LucideIcon } from 'lucide-react'
+import { ScanSearch, Copy, CalendarCheck, Sparkles, Upload, BrushCleaning, type LucideIcon } from 'lucide-react'
 import type { Tab } from '../types'
 
 const NAV_ITEMS: { id: Tab; label: string; Icon: LucideIcon }[] = [
@@ -21,11 +21,18 @@ function Sidebar({ activeTab, onTabChange }: SidebarProps): React.JSX.Element {
       <div className="titlebar-drag h-10.5 shrink-0" />
 
       {/* App logo */}
-      <div className="titlebar-no-drag px-5 pb-4">
-        <span className="font-display text-[17px] tracking-tight text-surface-100">Cleanup</span>
-        <span className="ml-2 text-[10px] font-semibold tracking-widest uppercase text-primary-500">
-          Photos
-        </span>
+      <div className="titlebar-no-drag px-5 pb-4 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-xl bg-linear-to-br from-primary-400 to-orange-500 flex items-center justify-center shrink-0 shadow-sm">
+          <BrushCleaning size={16} strokeWidth={2} className="text-white" />
+        </div>
+        <div className="flex flex-col leading-none gap-0.5">
+          <span className="text-[9px] font-bold tracking-[0.18em] uppercase text-primary-500">
+            Photos
+          </span>
+          <span className="font-display text-[16px] tracking-tight bg-linear-to-r from-primary-300 to-orange-400 bg-clip-text text-transparent">
+            Cleanup
+          </span>
+        </div>
       </div>
 
       {/* Divider */}
@@ -39,7 +46,7 @@ function Sidebar({ activeTab, onTabChange }: SidebarProps): React.JSX.Element {
             <button
               key={id}
               onClick={() => onTabChange(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.25 rounded-lg text-[13px] font-medium transition-colors duration-150 cursor-default text-left ${
+              className={`w-full flex items-center gap-3 px-3 py-2.25 rounded-lg text-[13px] font-medium transition-colors duration-150 cursor-pointer text-left ${
                 isActive ? 'nav-active text-primary-400' : 'nav-inactive text-surface-500'
               }`}
             >

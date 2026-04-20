@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import { formatBytes, fileUrl } from '@renderer/lib/format'
 import { scoreLabel } from '../scoreLabel'
 import type { PhotoRecord, BlurScores } from '@shared/ipc'
@@ -25,9 +25,10 @@ export function ReviewScreen({
       <div className="flex items-center gap-3 px-5 py-3.5 border-b border-surface-200 bg-white shrink-0">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-[12px] font-medium text-surface-500 hover:text-surface-800 transition-colors cursor-default"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
         >
-          ← Back
+          <ArrowLeft size={13} strokeWidth={2} />
+          Back
         </button>
         <span className="text-[13px] font-semibold text-surface-800">
           Review {trashList.length} photo{trashList.length !== 1 ? 's' : ''} to trash
@@ -65,7 +66,7 @@ export function ReviewScreen({
       <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white">
         <button
           onClick={onConfirm}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors duration-150 cursor-default"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors duration-150 cursor-pointer"
         >
           <Trash2 size={14} strokeWidth={2} />
           Move {trashList.length} photo{trashList.length !== 1 ? 's' : ''} to Trash

@@ -21,7 +21,7 @@ export function TrashOverlay({ onDeselect, onTrash }: TrashOverlayProps): React.
     >
       <div
         title="Click to keep"
-        className="group w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-md transition-colors duration-150 cursor-default"
+        className="group w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-md transition-colors duration-150 cursor-pointer"
       >
         <Trash2 size={16} strokeWidth={2} className="text-white group-hover:hidden" />
         <X size={16} strokeWidth={2} className="text-white hidden group-hover:block" />

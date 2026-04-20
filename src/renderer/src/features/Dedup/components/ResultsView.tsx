@@ -49,38 +49,38 @@ export function ResultsView({
       </div>
 
       <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <p className="text-[12px] text-surface-500">
-            {trashCount === 0 ? (
-              'Select photos to mark for trash'
-            ) : (
-              <>
-                <span className="font-semibold text-surface-800">{trashCount}</span> photo
-                {trashCount !== 1 ? 's' : ''} selected
-              </>
-            )}
-          </p>
+        <p className="text-[12px] text-surface-500">
+          {trashCount === 0 ? (
+            'Select photos to mark for trash'
+          ) : (
+            <>
+              <span className="font-semibold text-surface-800">{trashCount}</span> photo
+              {trashCount !== 1 ? 's' : ''} selected
+            </>
+          )}
+        </p>
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onReset}
-            className="text-[12px] font-medium text-surface-400 hover:text-surface-700 cursor-default transition-colors duration-150"
+            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
           >
             Start over
           </button>
-        </div>
-        <div className="flex items-center gap-3">
           {trashCount > 0 && (
             <button
+              type="button"
               onClick={onReview}
-              className="text-[12px] text-surface-500 hover:text-surface-800 transition-colors duration-150 cursor-default"
+              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
             >
-              Review →
+              Review
             </button>
           )}
           <button
+            type="button"
             onClick={onTrash}
             disabled={trashCount === 0}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-default"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
           >
             <Trash2 size={13} strokeWidth={2} />
             {trashCount > 0

@@ -97,7 +97,7 @@ export function ResultsGrid({
           <button
             type="button"
             onClick={onClear}
-            className="text-[12px] font-medium text-surface-400 hover:text-surface-700 cursor-pointer transition-colors duration-150"
+            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-500 bg-white border border-dashed border-surface-300 hover:border-surface-400 hover:text-surface-700 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
           >
             Reset
           </button>

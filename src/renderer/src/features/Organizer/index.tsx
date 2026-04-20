@@ -40,7 +40,7 @@ function Organizer(): React.JSX.Element {
                 <button
                   type="button"
                   onClick={() => setStatus('idle')}
-                  className="text-[12px] font-medium text-surface-500 hover:text-surface-700 cursor-default transition-colors"
+                  className="text-[12px] font-medium text-surface-500 hover:text-surface-700 cursor-pointer transition-colors"
                 >
                   Back
                 </button>

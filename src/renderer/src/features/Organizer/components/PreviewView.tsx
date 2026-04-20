@@ -48,14 +48,14 @@ export function PreviewView({ ops, onConfirm, onCancel }: PreviewViewProps): Rea
       <div className="shrink-0 px-5 py-4 border-t border-surface-200 bg-white flex items-center justify-between gap-3">
         <button
           onClick={onCancel}
-          className="text-[12px] font-medium text-surface-500 hover:text-surface-800 transition-colors cursor-default"
+          className="text-[12px] font-medium text-surface-500 hover:text-surface-800 transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           onClick={onConfirm}
           disabled={moveCount === 0}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white bg-primary-500 hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 cursor-default"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold text-white bg-primary-500 hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
         >
           <CalendarCheck size={14} strokeWidth={2} />
           Move {moveCount} File{moveCount !== 1 ? 's' : ''}

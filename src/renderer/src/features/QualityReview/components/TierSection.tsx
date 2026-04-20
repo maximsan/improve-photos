@@ -36,13 +36,13 @@ export function TierSection({
         </span>
         <button
           onClick={() => onSelectAll(paths, !allSelected)}
-          className="text-[11px] font-medium text-surface-400 hover:text-surface-700 transition-colors cursor-default ml-3"
+          className="text-[11px] font-medium text-surface-400 hover:text-surface-700 transition-colors cursor-pointer ml-3"
         >
           {allSelected ? 'Deselect all' : 'Select all'}
         </button>
         <button
           onClick={() => setCollapsed((prev) => !prev)}
-          className="text-surface-400 hover:text-surface-600 transition-colors cursor-default ml-1"
+          className="text-surface-400 hover:text-surface-600 transition-colors cursor-pointer ml-1"
         >
           <ChevronDown
             size={14}

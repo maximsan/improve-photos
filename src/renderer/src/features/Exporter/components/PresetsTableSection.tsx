@@ -24,7 +24,7 @@ export function PresetsTableSection({
         <button
           type="button"
           onClick={onAddPreset}
-          className="flex items-center gap-1 text-[11px] font-semibold text-primary-600 hover:text-primary-700 cursor-default transition-colors"
+          className="flex items-center gap-1 text-[11px] font-semibold text-primary-600 hover:text-primary-700 cursor-pointer transition-colors"
         >
           <Plus size={12} strokeWidth={2.5} />
           Add Preset

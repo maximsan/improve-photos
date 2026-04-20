@@ -87,7 +87,7 @@ export function ScanResults({
           <button
             type="button"
             onClick={onReset}
-            className="shrink-0 text-[12px] font-medium text-surface-400 hover:text-surface-700 cursor-default transition-colors duration-150"
+            className="shrink-0 text-[12px] font-medium text-surface-400 hover:text-surface-700 cursor-pointer transition-colors duration-150"
           >
             Clear scan
           </button>
@@ -99,7 +99,7 @@ export function ScanResults({
           <button
             type="button"
             onClick={onChoose}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-default"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
           >
             <FolderOpen size={13} strokeWidth={2} />
             Choose different folder
@@ -107,7 +107,7 @@ export function ScanResults({
           <button
             type="button"
             onClick={onRescan}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-primary-500 hover:bg-primary-600 transition-colors duration-150 cursor-default"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold text-white bg-primary-500 hover:bg-primary-600 transition-colors duration-150 cursor-pointer"
           >
             <RotateCcw size={13} strokeWidth={2} />
             Rescan
