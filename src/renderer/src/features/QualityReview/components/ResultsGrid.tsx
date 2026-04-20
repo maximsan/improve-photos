@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, FolderOpen, RotateCcw } from 'lucide-react'
 import { TierSection } from './TierSection'
 import { PhotoTile } from './PhotoTile'
 import { TIERS } from '../tiers'
@@ -104,16 +104,18 @@ export function ResultsGrid({
           <button
             type="button"
             onClick={onClear}
-            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-500 bg-white border border-dashed border-surface-300 hover:border-surface-400 hover:text-surface-700 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-500 bg-white border border-dashed border-surface-300 hover:border-surface-400 hover:text-surface-700 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
           >
-            Reset
+            <FolderOpen size={12} strokeWidth={2} />
+            Change photos
           </button>
           <button
             type="button"
             onClick={onReset}
-            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
           >
-            Start over
+            <RotateCcw size={12} strokeWidth={2} />
+            Re-analyse
           </button>
           {!isScoring && selected.size > 0 && (
             <button
