@@ -19,7 +19,7 @@ export const TIERS: Tier[] = [
     label: 'Very Blurry',
     dotColor: 'bg-red-500',
     countColor: 'text-red-500',
-    test: (s) => s < BLUR_SCORE_VERY_BLURRY_THRESHOLD,
+    test: (s) => s >= 0 && s < BLUR_SCORE_VERY_BLURRY_THRESHOLD,
     defaultCollapsed: false
   },
   {

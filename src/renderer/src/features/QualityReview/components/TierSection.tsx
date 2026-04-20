@@ -11,6 +11,7 @@ interface TierSectionProps {
   selected: Set<string>
   onToggle: (path: string) => void
   onSelectAll: (paths: string[], select: boolean) => void
+  defaultCollapsed?: boolean
 }
 
 export function TierSection({
@@ -19,9 +20,10 @@ export function TierSection({
   scores,
   selected,
   onToggle,
-  onSelectAll
+  onSelectAll,
+  defaultCollapsed
 }: TierSectionProps): React.JSX.Element {
-  const [collapsed, setCollapsed] = useState(tier.defaultCollapsed)
+  const [collapsed, setCollapsed] = useState(defaultCollapsed ?? tier.defaultCollapsed)
 
   const paths = tierPhotos.map((p) => p.path)
   const allSelected = paths.every((p) => selected.has(p))

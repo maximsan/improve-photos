@@ -7,19 +7,26 @@ import { IPC } from '@shared/ipc'
 const MAX_CONCURRENT = 4
 
 /**
- * High-frequency energy measure: stdev of the image minus stdev after a Gaussian blur.
- * Sharp images have lots of fine detail that blurring destroys → large difference.
- * Blurry images already lack fine detail → small difference.
- * Uses stats() only (no raw buffer) so it works reliably with HEIC files.
+ * High-frequency energy measure: stdev(original) − stdev(blur_3px).
+ * Sharp images have fine detail that blurring destroys → large difference.
+ * Blurry images already lack detail → small difference.
+ *
+ * Decodes the HEIC once to a raw greyscale buffer, then runs both stats
+ * computations on that in-memory buffer — avoids clone() issues and double
+ * file reads.
  */
 export async function computeBlurScore(filePath: string): Promise<number> {
-  const base = sharp(filePath, { failOn: 'error' })
+  const { data, info } = await sharp(filePath, { failOn: 'error' })
     .greyscale()
     .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+
+  const rawInput = { raw: { width: info.width, height: info.height, channels: 1 as const } }
 
   const [original, blurred] = await Promise.all([
-    base.clone().stats(),
-    base.clone().blur(3).stats()
+    sharp(data, rawInput).stats(),
+    sharp(data, rawInput).blur(3).stats()
   ])
 
   return original.channels[0].stdev - blurred.channels[0].stdev

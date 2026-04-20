@@ -56,22 +56,29 @@ export function ResultsGrid({
             ))}
           </div>
         ) : (
-          TIERS.map((tier) => {
-            const tierPhotos = sorted.filter((p) => tier.test(scores[p.path] ?? -1))
-            if (tierPhotos.length === 0) return null
+          (() => {
+            let firstRendered = false
+            return TIERS.map((tier) => {
+              const tierPhotos = sorted.filter((p) => tier.test(scores[p.path] ?? -1))
+              if (tierPhotos.length === 0) return null
 
-            return (
-              <TierSection
-                key={tier.key}
-                tier={tier}
-                tierPhotos={tierPhotos}
-                scores={scores}
-                selected={selected}
-                onToggle={onToggle}
-                onSelectAll={onSelectAll}
-              />
-            )
-          })
+              const isFirst = !firstRendered
+              firstRendered = true
+
+              return (
+                <TierSection
+                  key={tier.key}
+                  tier={tier}
+                  tierPhotos={tierPhotos}
+                  scores={scores}
+                  selected={selected}
+                  onToggle={onToggle}
+                  onSelectAll={onSelectAll}
+                  defaultCollapsed={isFirst ? false : undefined}
+                />
+              )
+            })
+          })()
         )}
       </div>
 
