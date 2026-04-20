@@ -28,7 +28,7 @@ export const TIERS: Tier[] = [
     dotColor: 'bg-orange-500',
     countColor: 'text-orange-500',
     test: (s) => s >= BLUR_SCORE_VERY_BLURRY_THRESHOLD && s < BLUR_SCORE_BLURRY_THRESHOLD,
-    defaultCollapsed: false
+    defaultCollapsed: true
   },
   {
     key: 'soft',
@@ -36,7 +36,7 @@ export const TIERS: Tier[] = [
     dotColor: 'bg-amber-500',
     countColor: 'text-amber-500',
     test: (s) => s >= BLUR_SCORE_BLURRY_THRESHOLD && s < BLUR_SCORE_SOFT_THRESHOLD,
-    defaultCollapsed: false
+    defaultCollapsed: true
   },
   {
     key: 'sharp',
@@ -44,6 +44,14 @@ export const TIERS: Tier[] = [
     dotColor: 'bg-emerald-500',
     countColor: 'text-emerald-500',
     test: (s) => s >= BLUR_SCORE_SOFT_THRESHOLD,
+    defaultCollapsed: true
+  },
+  {
+    key: 'failed',
+    label: 'Unable to Analyse',
+    dotColor: 'bg-surface-300',
+    countColor: 'text-surface-400',
+    test: (s) => s < 0,
     defaultCollapsed: true
   }
 ]

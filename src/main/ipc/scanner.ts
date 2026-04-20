@@ -58,7 +58,7 @@ export async function buildPhotoRecord(filePath: string): Promise<PhotoRecord | 
   try {
     const [fileStat, metadata, exif] = await Promise.all([
       stat(filePath),
-      sharp(filePath).metadata(),
+      sharp(filePath, { failOn: 'error' }).metadata(),
       exifr
         .parse(filePath, { pick: ['DateTimeOriginal', 'Make', 'Model'] })
         .catch(() => null) as Promise<{

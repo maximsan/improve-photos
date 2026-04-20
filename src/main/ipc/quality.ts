@@ -6,33 +6,23 @@ import { IPC } from '@shared/ipc'
 
 const MAX_CONCURRENT = 4
 
-const LAPLACIAN_2D = {
-  width: 3,
-  height: 3,
-  // Standard 2D Laplacian kernel — detects edges in all directions
-  kernel: [0, 1, 0, 1, -4, 1, 0, 1, 0],
-  scale: 1,
-  // Offset so the neutral (zero-Laplacian) value is 128 in the output buffer
-  offset: 128
-}
-
 /**
- * Computes a sharpness score for a single image.
- *
- * Uses the standard deviation of the 2D Laplacian response at 1024×1024.
- * Sharp images have high edge energy → high stdev; blurry images have low
- * edge energy → low stdev.
- *
- * Returns a non-negative number — lower means blurrier.
+ * High-frequency energy measure: stdev of the image minus stdev after a Gaussian blur.
+ * Sharp images have lots of fine detail that blurring destroys → large difference.
+ * Blurry images already lack fine detail → small difference.
+ * Uses stats() only (no raw buffer) so it works reliably with HEIC files.
  */
 export async function computeBlurScore(filePath: string): Promise<number> {
-  const stats = await sharp(filePath)
+  const base = sharp(filePath, { failOn: 'error' })
     .greyscale()
-    .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
-    .convolve(LAPLACIAN_2D)
-    .stats()
+    .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
 
-  return stats.channels[0].stdev
+  const [original, blurred] = await Promise.all([
+    base.clone().stats(),
+    base.clone().blur(3).stats()
+  ])
+
+  return original.channels[0].stdev - blurred.channels[0].stdev
 }
 
 export function registerQualityHandlers(): void {
@@ -48,11 +38,14 @@ export function registerQualityHandlers(): void {
       async function worker(): Promise<void> {
         for (const p of { [Symbol.iterator]: () => iter }) {
           try {
-            scores[p] = await computeBlurScore(p)
+            const score = await computeBlurScore(p)
+            scores[p] = score
+            event.sender.send(IPC.QUALITY_SCORE_ITEM, { path: p, score })
           } catch (e) {
             if (is.dev) {
               console.warn('[quality] failed to score file:', p, e)
             }
+            event.sender.send(IPC.QUALITY_SCORE_ITEM, { path: p, score: -1 })
           }
           done++
           event.sender.send(IPC.QUALITY_PROGRESS, { done, total, current: p })

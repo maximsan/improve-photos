@@ -10,6 +10,7 @@ export type QualityReviewState = {
   selected: Set<string>
   error: string | null
   progress: QualityProgress | null
+  isScoring: boolean
   toggleSelect: (path: string) => void
   selectAll: (paths: string[], select: boolean) => void
   handleScore: () => Promise<void>
@@ -25,12 +26,15 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<QualityProgress | null>(null)
+  const [isScoring, setIsScoring] = useState(false)
   const unsubscribeRef = useRef<(() => void) | null>(null)
+  const unsubscribeItemRef = useRef<(() => void) | null>(null)
   const lastRevisionRef = useRef(scanRevision)
 
   useEffect(() => {
     return () => {
       unsubscribeRef.current?.()
+      unsubscribeItemRef.current?.()
     }
   }, [])
 
@@ -72,22 +76,28 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
   async function handleScore(): Promise<void> {
     setError(null)
     setSelected(new Set())
+    setScores({})
     setProgress(null)
-    setStatus('scoring')
+    setIsScoring(true)
+    setStatus('results')
 
     unsubscribeRef.current = window.api.onQualityProgress(setProgress)
+    unsubscribeItemRef.current = window.api.onQualityScoreItem((item) => {
+      setScores((prev) => ({ ...prev, [item.path]: item.score }))
+    })
 
     try {
-      const result = await window.api.getBlurScores(photos.map((p) => p.path))
-      setScores(result)
-      setStatus('results')
+      await window.api.getBlurScores(photos.map((p) => p.path))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Scoring failed')
       setStatus('idle')
     } finally {
       unsubscribeRef.current?.()
       unsubscribeRef.current = null
+      unsubscribeItemRef.current?.()
+      unsubscribeItemRef.current = null
       setProgress(null)
+      setIsScoring(false)
     }
   }
 
@@ -108,6 +118,7 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     setSelected(new Set())
     setError(null)
     setProgress(null)
+    setIsScoring(false)
   }
 
   return {
@@ -116,6 +127,7 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     selected,
     error,
     progress,
+    isScoring,
     toggleSelect,
     selectAll,
     handleScore,

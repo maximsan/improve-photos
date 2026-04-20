@@ -18,6 +18,7 @@ function QualityReview(): React.JSX.Element {
     selected,
     error,
     progress,
+    isScoring,
     toggleSelect,
     selectAll,
     handleScore,
@@ -29,12 +30,6 @@ function QualityReview(): React.JSX.Element {
   const hasPhotos = photos.length > 0
 
   function renderBody(): React.JSX.Element {
-    if (status === 'scoring') {
-      const percent = progress ? Math.round((progress.done / progress.total) * 100) : 0
-      const label = progress ? `Scoring photo ${progress.done} of ${progress.total}` : 'Starting…'
-      const current = progress?.current.split(/[\\/]/).pop()
-      return <ProgressView label={label} percent={percent} current={current} />
-    }
     if (status === 'trashing') {
       return <ProgressView label="Moving files to Trash…" percent={100} />
     }
@@ -65,10 +60,13 @@ function QualityReview(): React.JSX.Element {
           photos={photos}
           scores={scores}
           selected={selected}
+          isScoring={isScoring}
+          progress={progress}
           onToggle={toggleSelect}
           onSelectAll={selectAll}
           onReview={() => setStatus('reviewing')}
-          onReset={handleReset}
+          onReset={handleScore}
+          onClear={handleReset}
         />
       )
     }

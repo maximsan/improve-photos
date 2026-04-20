@@ -1,10 +1,13 @@
-// Thresholds for stdev of the 2D Laplacian response on 1024×1024 greyscale images.
-// Higher stdev = more edge energy = sharper photo.
-export const BLUR_SCORE_VERY_BLURRY_THRESHOLD = 3
-export const BLUR_SCORE_BLURRY_THRESHOLD = 8
-export const BLUR_SCORE_SOFT_THRESHOLD = 16
+// Thresholds for stdev(original) - stdev(blur(3px)) on 512×512 greyscale thumbnails.
+// Sharp images lose much more stdev from blurring than already-blurry ones.
+export const BLUR_SCORE_VERY_BLURRY_THRESHOLD = 2
+export const BLUR_SCORE_BLURRY_THRESHOLD = 6
+export const BLUR_SCORE_SOFT_THRESHOLD = 12
 
 export function scoreLabel(score: number): { label: string; color: string } {
+  if (score < 0) {
+    return { label: 'Unable to analyse', color: 'text-surface-400' }
+  }
   if (score < BLUR_SCORE_VERY_BLURRY_THRESHOLD) {
     return { label: 'Very blurry', color: 'text-red-500' }
   }

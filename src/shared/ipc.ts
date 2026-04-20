@@ -61,6 +61,12 @@ export interface QualityProgress {
   current: string
 }
 
+/** Per-photo score emitted as each file is processed (before the full batch resolves). */
+export interface QualityScoreItem {
+  path: string
+  score: number
+}
+
 /** Progress event emitted after each file is read during a folder scan. */
 export interface ScanProgress {
   done: number
@@ -114,6 +120,7 @@ export const IPC = {
   CANCEL_HASHES: 'dedup:cancel-hashes',
   CONFIRM_TRASH: 'dedup:confirm-trash',
   QUALITY_PROGRESS: 'quality:progress',
+  QUALITY_SCORE_ITEM: 'quality:score-item',
   SCAN_PROGRESS: 'scanner:progress'
 } as const
 
@@ -135,6 +142,8 @@ export interface ElectronAPI {
   onHashProgress: (cb: (progress: HashProgress) => void) => () => void
   /** Subscribe to per-file quality-scoring progress events. Returns an unsubscribe function. */
   onQualityProgress: (cb: (progress: QualityProgress) => void) => () => void
+  /** Subscribe to individual photo score events (fires per photo as scored). Returns an unsubscribe function. */
+  onQualityScoreItem: (cb: (item: QualityScoreItem) => void) => () => void
   /** Subscribe to per-file scan progress events. Returns an unsubscribe function. */
   onScanProgress: (cb: (progress: ScanProgress) => void) => () => void
   /** Cancel an in-progress `computeHashes` call. */
