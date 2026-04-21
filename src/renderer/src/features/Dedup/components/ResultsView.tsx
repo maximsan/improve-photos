@@ -1,4 +1,4 @@
-import { ShieldCheck, Trash2 } from 'lucide-react'
+import { ShieldCheck, Trash2, RotateCcw } from 'lucide-react'
 import EmptyState from '../../../components/EmptyState'
 import { DuplicateGroupCard } from './DuplicateGroupCard'
 import type { DuplicateGroup } from '@shared/ipc'
@@ -9,7 +9,7 @@ interface ResultsViewProps {
   onToggle: (path: string) => void
   onTrash: () => void
   onReview: () => void
-  onReset: () => void
+  onReanalyze: () => void
 }
 
 export function ResultsView({
@@ -18,7 +18,7 @@ export function ResultsView({
   onToggle,
   onTrash,
   onReview,
-  onReset
+  onReanalyze
 }: ResultsViewProps): React.JSX.Element {
   const trashCount = toTrash.size
 
@@ -62,10 +62,11 @@ export function ResultsView({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onReset}
-            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
+            onClick={onReanalyze}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
           >
-            Start over
+            <RotateCcw size={12} strokeWidth={2} />
+            Re-scan
           </button>
           {trashCount > 0 && (
             <button
