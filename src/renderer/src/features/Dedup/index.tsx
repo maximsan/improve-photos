@@ -6,7 +6,7 @@ import { usePhotos } from '../../context/photos'
 import { useDedupState } from './hooks/useDedupState'
 import { ComputingView } from './components/ComputingView'
 import { DoneView } from './components/DoneView'
-import { ReviewScreen } from './components/ReviewScreen'
+import { DuplicateTrashReview } from './components/DuplicateTrashReview'
 import { ResultsView } from './components/ResultsView'
 
 function Dedup(): React.JSX.Element {
@@ -40,7 +40,7 @@ function Dedup(): React.JSX.Element {
 
     if (status === 'reviewing') {
       return (
-        <ReviewScreen
+        <DuplicateTrashReview
           groups={groups}
           toTrash={toTrash}
           onBack={() => setStatus('results')}

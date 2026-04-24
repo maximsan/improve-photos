@@ -1,12 +1,12 @@
 import { CheckCircle2 } from 'lucide-react'
 import { CompletionView } from '@renderer/components/CompletionView'
 
-interface DoneViewProps {
+interface OrganizeDoneViewProps {
   count: number
   onReset: () => void
 }
 
-export function DoneView({ count, onReset }: DoneViewProps): React.JSX.Element {
+export function OrganizeDoneView({ count, onReset }: OrganizeDoneViewProps): React.JSX.Element {
   return (
     <CompletionView
       icon={<CheckCircle2 size={34} strokeWidth={1.4} className="text-primary-600" />}

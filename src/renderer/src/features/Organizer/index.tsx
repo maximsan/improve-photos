@@ -7,7 +7,7 @@ import { FormErrorText } from '../../components/FormErrorText'
 import { usePhotos } from '../../context/photos'
 import { useOrganizerState } from './hooks/useOrganizerState'
 import { PreviewView } from './components/PreviewView'
-import { DoneView } from './components/DoneView'
+import { OrganizeDoneView } from './components/OrganizeDoneView'
 
 function Organizer(): React.JSX.Element {
   const { photos } = usePhotos()
@@ -24,7 +24,7 @@ function Organizer(): React.JSX.Element {
       return <SpinnerView message="Moving files…" />
     }
     if (status === 'done') {
-      return <DoneView count={movedCount} onReset={handleReset} />
+      return <OrganizeDoneView count={movedCount} onReset={handleReset} />
     }
 
     if (status === 'preview') {

@@ -8,8 +8,16 @@ import { useScannerState } from './hooks/useScannerState'
 import { ScanResults } from './components/ScanResults'
 
 function Scanner(): React.JSX.Element {
-  const { status, localPhotos, folderPath, error, progress, handleChooseFolder, handleRescan, handleReset } =
-    useScannerState()
+  const {
+    status,
+    localPhotos,
+    folderPath,
+    error,
+    progress,
+    handleChooseFolder,
+    handleRescan,
+    handleReset
+  } = useScannerState()
 
   function renderBody(): React.JSX.Element | null {
     if (status === 'scanning') {

@@ -60,7 +60,9 @@ export function ResultsGrid({
             let firstRendered = false
             return TIERS.map((tier) => {
               const tierPhotos = sorted.filter((p) => tier.test(scores[p.path] ?? -1))
-              if (tierPhotos.length === 0) return null
+              if (tierPhotos.length === 0) {
+                return null
+              }
 
               const isFirst = !firstRendered
               firstRendered = true
@@ -86,8 +88,7 @@ export function ResultsGrid({
         <p className="text-[12px] text-surface-500">
           {isScoring ? (
             <>
-              Scoring{' '}
-              <span className="font-semibold text-surface-800">{progress?.done ?? 0}</span>
+              Scoring <span className="font-semibold text-surface-800">{progress?.done ?? 0}</span>
               {' / '}
               {progress?.total ?? photos.length}…
             </>

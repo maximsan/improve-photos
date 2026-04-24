@@ -4,7 +4,7 @@ import { usePhotos } from '../../context/photos'
 import { useExporterState } from './hooks/useExporterState'
 import { usePresets } from './hooks/usePresets'
 import { ExportingView } from './components/ExportingView'
-import { DoneView } from './components/DoneView'
+import { ExportDoneView } from './components/ExportDoneView'
 import { ExporterLayout } from './components/ExporterLayout'
 import { OutputFolderSection } from './components/OutputFolderSection'
 import { PresetsTableSection } from './components/PresetsTableSection'
@@ -31,7 +31,7 @@ function Exporter(): React.JSX.Element {
   if (status === 'done') {
     return (
       <ExporterLayout>
-        <DoneView count={exportedCount} outDir={outDir ?? ''} onReset={reset} />
+        <ExportDoneView count={exportedCount} outDir={outDir ?? ''} onReset={reset} />
       </ExporterLayout>
     )
   }

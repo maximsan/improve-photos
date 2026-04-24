@@ -7,7 +7,9 @@ type ScanStatus = 'idle' | 'scanning' | 'done'
 const MAX_FILENAME_CHARS = 40
 
 function truncateMiddle(name: string): string {
-  if (name.length <= MAX_FILENAME_CHARS) return name
+  if (name.length <= MAX_FILENAME_CHARS) {
+    return name
+  }
   const half = Math.floor((MAX_FILENAME_CHARS - 1) / 2)
   return `${name.slice(0, half)}…${name.slice(-half)}`
 }
@@ -49,7 +51,9 @@ export function useScannerState(): ScannerState {
     setError(null)
     try {
       const path = await window.api.pickFolder()
-      if (!path) return
+      if (!path) {
+        return
+      }
 
       setFolderPath(path)
       setStatus('scanning')
@@ -68,7 +72,9 @@ export function useScannerState(): ScannerState {
   }
 
   async function handleRescan(): Promise<void> {
-    if (!folderPath) return
+    if (!folderPath) {
+      return
+    }
     setError(null)
     setStatus('scanning')
     startProgress()
@@ -95,5 +101,14 @@ export function useScannerState(): ScannerState {
     bumpScanRevision()
   }
 
-  return { status, localPhotos, folderPath, error, progress, handleChooseFolder, handleRescan, handleReset }
+  return {
+    status,
+    localPhotos,
+    folderPath,
+    error,
+    progress,
+    handleChooseFolder,
+    handleRescan,
+    handleReset
+  }
 }

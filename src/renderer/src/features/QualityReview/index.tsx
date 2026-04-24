@@ -7,7 +7,7 @@ import { usePhotos } from '../../context/photos'
 import { useQualityReviewState } from './hooks/useQualityReviewState'
 import { qualityReviewSubtitle } from './lib/qualityReviewSubtitle'
 import { DoneView } from './components/DoneView'
-import { ReviewScreen } from './components/ReviewScreen'
+import { QualityTrashReview } from './components/QualityTrashReview'
 import { ResultsGrid } from './components/ResultsGrid'
 
 function QualityReview(): React.JSX.Element {
@@ -40,7 +40,7 @@ function QualityReview(): React.JSX.Element {
     if (status === 'reviewing') {
       return (
         <>
-          <ReviewScreen
+          <QualityTrashReview
             photos={photos}
             scores={scores}
             selected={selected}

@@ -1,12 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// vi.mock() is hoisted before imports, so these run before scanner.ts is loaded
-vi.mock('electron', () => ({
-  ipcMain: { handle: vi.fn() },
-  dialog: { showOpenDialog: vi.fn() },
-  BrowserWindow: { fromWebContents: vi.fn() }
-}))
-
 vi.mock('sharp', () => ({
   default: vi.fn()
 }))

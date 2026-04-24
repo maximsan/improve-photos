@@ -33,7 +33,10 @@ export function PhotoTile({
           : 'border-surface-200 hover:border-surface-300'
       }`}
     >
-      <div ref={containerRef} className="relative w-full aspect-square bg-surface-100 overflow-hidden">
+      <div
+        ref={containerRef}
+        className="relative w-full aspect-square bg-surface-100 overflow-hidden"
+      >
         <img
           src={visible ? fileUrl(photo.path) : undefined}
           alt={photo.name}

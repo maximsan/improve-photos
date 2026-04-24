@@ -6,6 +6,8 @@ out
 *.log*
 *.mjs
 docs/glossary.md
+docs/react-component-architecture-plan.md
+docs/go-to-market-plan.md
 coverage
 *.tsbuildinfo
 *.map

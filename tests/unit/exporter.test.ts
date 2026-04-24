@@ -17,7 +17,6 @@ const { mockToFile, sharpChain } = vi.hoisted(() => {
 })
 
 vi.mock('sharp', () => ({ default: vi.fn().mockReturnValue(sharpChain) }))
-vi.mock('electron', () => ({ ipcMain: { handle: vi.fn() } }))
 vi.mock('fs/promises', () => ({ mkdir: vi.fn().mockResolvedValue(undefined) }))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

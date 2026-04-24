@@ -1,17 +1,9 @@
-import { ShieldCheck } from 'lucide-react'
-import { CompletionView } from '@renderer/components/CompletionView'
+import { TrashDonePanel } from '@renderer/components/TrashDonePanel'
 
 interface DoneViewProps {
   onFindMore: () => void
 }
 
 export function DoneView({ onFindMore }: DoneViewProps): React.JSX.Element {
-  return (
-    <CompletionView
-      icon={<ShieldCheck size={34} strokeWidth={1.4} className="text-primary-600" />}
-      title="Files moved to Trash"
-      body="You can undo this from the macOS Trash if needed."
-      action={{ label: 'Find more duplicates', onClick: onFindMore }}
-    />
-  )
+  return <TrashDonePanel actionLabel="Find more duplicates" onAction={onFindMore} />
 }

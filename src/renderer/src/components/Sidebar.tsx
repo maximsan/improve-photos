@@ -1,4 +1,12 @@
-import { ScanSearch, Copy, CalendarCheck, Sparkles, Upload, BrushCleaning, type LucideIcon } from 'lucide-react'
+import {
+  ScanSearch,
+  Copy,
+  CalendarCheck,
+  Sparkles,
+  Upload,
+  BrushCleaning,
+  type LucideIcon
+} from 'lucide-react'
 import type { Tab } from '../types'
 
 const NAV_ITEMS: { id: Tab; label: string; Icon: LucideIcon }[] = [

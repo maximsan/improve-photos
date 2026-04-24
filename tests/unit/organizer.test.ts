@@ -2,8 +2,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { deriveTargetPath } from '../../src/main/ipc/organizer'
 import type { PhotoRecord } from '../../src/shared/ipc'
 
-// organizer.ts imports these — mock them so the module loads in a Node test env
-vi.mock('electron', () => ({ ipcMain: { handle: vi.fn() } }))
 vi.mock('fs/promises', () => ({
   rename: vi.fn(),
   access: vi.fn(),

@@ -26,9 +26,7 @@ export function ProgressView({
           />
         </div>
 
-        <p className="text-[11px] text-surface-400 truncate text-center min-h-4">
-          {current ?? ''}
-        </p>
+        <p className="text-[11px] text-surface-400 truncate text-center min-h-4">{current ?? ''}</p>
       </div>
 
       {onCancel && (
