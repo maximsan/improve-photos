@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { createElement } from 'react'
+import { createElement, type ReactElement, type ReactNode } from 'react'
 import { PhotosContext } from '../../src/renderer/src/context/photos'
 import { useQualityReviewState } from '../../src/renderer/src/features/QualityReview/hooks/useQualityReviewState'
 import type { PhotoRecord, QualityScoreItem } from '../../src/shared/ipc'
@@ -24,11 +24,14 @@ const mockApi = {
   trashFiles: vi.fn()
 }
 
-function wrapper({ children }: { children: React.ReactNode }) {
-  return createElement(PhotosContext.Provider, {
-    value: { photos: [], scanRevision: 0, setPhotos: vi.fn(), bumpScanRevision: vi.fn() },
+function wrapper({ children }: { children: ReactNode }): ReactElement {
+  return createElement(
+    PhotosContext.Provider,
+    {
+      value: { photos: [], scanRevision: 0, setPhotos: vi.fn(), bumpScanRevision: vi.fn() }
+    },
     children
-  })
+  )
 }
 
 beforeEach(() => {

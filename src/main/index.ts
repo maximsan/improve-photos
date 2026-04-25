@@ -9,6 +9,12 @@ import { registerQualityHandlers } from './ipc/quality'
 import { registerExporterHandlers } from './ipc/exporter'
 import { registerAppProtocol } from './localProtocol'
 
+/** Playwright e2e: recent Electron rejects `--remote-debugging-port` on the CLI; set via switch before ready. */
+const e2eCdpPort = process.env['CLEANUP_PHOTOS_E2E_CDP_PORT']
+if (e2eCdpPort) {
+  app.commandLine.appendSwitch('remote-debugging-port', e2eCdpPort)
+}
+
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, bypassCSP: true, stream: true } }
 ])
