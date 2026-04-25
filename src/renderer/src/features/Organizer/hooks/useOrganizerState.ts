@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { usePhotos } from '../../../context/photos'
 import type { MoveOperation } from '@shared/ipc'
 
-export type OrganizerStatus = 'idle' | 'previewing' | 'preview' | 'moving' | 'done'
+export type OrganizerStatus =
+  | 'idle'
+  | 'previewing'
+  | 'preview'
+  | 'moving'
+  | 'done'
+  | 'undoing'
+  | 'undone'
 
 export type OrganizerState = {
   status: OrganizerStatus
@@ -11,6 +18,7 @@ export type OrganizerState = {
   error: string | null
   handlePreview: () => Promise<void>
   handleConfirm: () => Promise<void>
+  handleUndo: () => Promise<void>
   handleReset: () => void
   setStatus: React.Dispatch<React.SetStateAction<OrganizerStatus>>
 }
@@ -21,6 +29,7 @@ export function useOrganizerState(): OrganizerState {
   const [ops, setOps] = useState<MoveOperation[]>([])
   const [movedCount, setMovedCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [movedPairs, setMovedPairs] = useState<{ from: string; to: string }[]>([])
   const lastRevisionRef = useRef(scanRevision)
 
   useEffect(() => {
@@ -62,6 +71,7 @@ export function useOrganizerState(): OrganizerState {
         { moved: 0, movedPaths: new Map() }
       )
       setMovedCount(moved)
+      setMovedPairs(Array.from(movedPaths.entries()).map(([from, to]) => ({ from, to })))
       setPhotos(
         photos.map((p) => {
           const newPath = movedPaths.get(p.path)
@@ -75,12 +85,42 @@ export function useOrganizerState(): OrganizerState {
     }
   }
 
+  async function handleUndo(): Promise<void> {
+    setError(null)
+    setStatus('undoing')
+    try {
+      await window.api.undoOrganize(movedPairs)
+      setPhotos(
+        photos.map((p) => {
+          const pair = movedPairs.find((mp) => mp.to === p.path)
+          return pair ? { ...p, path: pair.from, name: pair.from.split('/').pop() ?? p.name } : p
+        })
+      )
+      setMovedPairs([])
+      setStatus('undone')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Undo failed')
+      setStatus('done')
+    }
+  }
+
   function handleReset(): void {
     setStatus('idle')
     setOps([])
     setMovedCount(0)
+    setMovedPairs([])
     setError(null)
   }
 
-  return { status, ops, movedCount, error, handlePreview, handleConfirm, handleReset, setStatus }
+  return {
+    status,
+    ops,
+    movedCount,
+    error,
+    handlePreview,
+    handleConfirm,
+    handleUndo,
+    handleReset,
+    setStatus
+  }
 }

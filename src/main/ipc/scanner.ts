@@ -22,6 +22,9 @@ export const IMAGE_EXTENSIONS = new Set([
 /** In-memory cache — populated by the last successful scan. */
 let photoCache: PhotoRecord[] = []
 
+/** Set by CANCEL_SCAN to interrupt the active SCAN call. */
+let activeScanController: { cancelled: boolean } | null = null
+
 export function getCachedPhotos(): PhotoRecord[] {
   return photoCache
 }
@@ -93,6 +96,12 @@ export async function buildPhotoRecord(filePath: string): Promise<PhotoRecord | 
 }
 
 export function registerScannerHandlers(): void {
+  ipcMain.handle(IPC.CANCEL_SCAN, () => {
+    if (activeScanController) {
+      activeScanController.cancelled = true
+    }
+  })
+
   ipcMain.handle(IPC.PICK_FOLDER, async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender) ?? BrowserWindow.getFocusedWindow()
 
@@ -108,6 +117,9 @@ export function registerScannerHandlers(): void {
   })
 
   ipcMain.handle(IPC.SCAN, async (event, folderPath: string): Promise<PhotoRecord[]> => {
+    const controller = { cancelled: false }
+    activeScanController = controller
+
     allowDirectory(folderPath)
 
     const paths = await walkDir(folderPath)
@@ -118,6 +130,7 @@ export function registerScannerHandlers(): void {
     async function worker(): Promise<(PhotoRecord | null)[]> {
       const results: (PhotoRecord | null)[] = []
       for (const p of { [Symbol.iterator]: () => iter }) {
+        if (controller.cancelled) break
         const record = await buildPhotoRecord(p)
         results.push(record)
         done++
@@ -131,6 +144,7 @@ export function registerScannerHandlers(): void {
     const records = chunks.flat()
 
     photoCache = records.filter((r): r is PhotoRecord => r !== null)
+    activeScanController = null
 
     if (is.dev) {
       const failed = records.length - photoCache.length

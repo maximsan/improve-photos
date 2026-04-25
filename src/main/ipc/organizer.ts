@@ -56,18 +56,24 @@ export function registerOrganizerHandlers(): void {
 
   ipcMain.handle(IPC.EXECUTE_ORGANIZE, async (_event, ops: MoveOperation[]): Promise<void> => {
     const { mkdir } = await import('fs/promises')
-    await Promise.all(
-      ops
-        .filter((op) => !op.conflict)
-        .map(async (op) => {
-          await mkdir(dirname(op.targetPath), { recursive: true })
-          await rename(op.photo.path, op.targetPath)
-        })
-    )
+    const pending = ops.filter((op) => !op.conflict)
+    const movedPaths = new Map<string, string>()
+    const errors: string[] = []
 
-    // Refresh the in-memory cache with updated paths
+    // Process sequentially so a mid-batch failure doesn't leave the cache out
+    // of sync: we update cache for every file that actually moved before throwing.
+    for (const op of pending) {
+      try {
+        await mkdir(dirname(op.targetPath), { recursive: true })
+        await rename(op.photo.path, op.targetPath)
+        movedPaths.set(op.photo.path, op.targetPath)
+      } catch (err) {
+        errors.push(`${op.photo.path}: ${err instanceof Error ? err.message : String(err)}`)
+      }
+    }
+
+    // Refresh the in-memory cache for every file that succeeded
     const cached = getCachedPhotos()
-    const movedPaths = new Map(ops.map((op) => [op.photo.path, op.targetPath]))
     for (const record of cached) {
       const newPath = movedPaths.get(record.path)
       if (newPath) {
@@ -75,5 +81,43 @@ export function registerOrganizerHandlers(): void {
         record.name = basename(newPath)
       }
     }
+
+    if (errors.length > 0) {
+      throw new Error(
+        `${errors.length} of ${pending.length} file(s) could not be moved:\n${errors.join('\n')}`
+      )
+    }
   })
+
+  ipcMain.handle(
+    IPC.UNDO_ORGANIZE,
+    async (_event, pairs: { from: string; to: string }[]): Promise<void> => {
+      const errors: string[] = []
+      const reversedPaths = new Map<string, string>()
+
+      for (const { from, to } of pairs) {
+        try {
+          await rename(to, from)
+          reversedPaths.set(to, from)
+        } catch (err) {
+          errors.push(`${to}: ${err instanceof Error ? err.message : String(err)}`)
+        }
+      }
+
+      const cached = getCachedPhotos()
+      for (const record of cached) {
+        const originalPath = reversedPaths.get(record.path)
+        if (originalPath) {
+          record.path = originalPath
+          record.name = basename(originalPath)
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new Error(
+          `${errors.length} of ${pairs.length} file(s) could not be reverted:\n${errors.join('\n')}`
+        )
+      }
+    }
+  )
 }

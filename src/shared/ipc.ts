@@ -118,6 +118,9 @@ export const IPC = {
   EXPORT_PROGRESS: 'export-progress',
   HASH_PROGRESS: 'dedup:hash-progress',
   CANCEL_HASHES: 'dedup:cancel-hashes',
+  CANCEL_SCAN: 'scanner:cancel',
+  CANCEL_EXPORT: 'export:cancel',
+  UNDO_ORGANIZE: 'undo-organize',
   CONFIRM_TRASH: 'dedup:confirm-trash',
   QUALITY_PROGRESS: 'quality:progress',
   QUALITY_SCORE_ITEM: 'quality:score-item',
@@ -148,6 +151,12 @@ export interface ElectronAPI {
   onScanProgress: (cb: (progress: ScanProgress) => void) => () => void
   /** Cancel an in-progress `computeHashes` call. */
   cancelHashes: () => Promise<void>
+  /** Cancel an in-progress `scan` call. */
+  cancelScan: () => Promise<void>
+  /** Reverse a previous `executeOrganize` call by moving files back to their original paths. */
+  undoOrganize: (pairs: { from: string; to: string }[]) => Promise<void>
+  /** Cancel an in-progress `exportBatch` call. */
+  cancelExport: () => Promise<void>
   /** Show a native macOS confirmation dialog before trashing. Resolves to true if confirmed. */
   confirmTrash: (count: number) => Promise<boolean>
 }

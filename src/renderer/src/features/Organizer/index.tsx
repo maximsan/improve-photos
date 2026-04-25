@@ -11,8 +11,17 @@ import { OrganizeDoneView } from './components/OrganizeDoneView'
 
 function Organizer(): React.JSX.Element {
   const { photos } = usePhotos()
-  const { status, ops, movedCount, error, handlePreview, handleConfirm, handleReset, setStatus } =
-    useOrganizerState()
+  const {
+    status,
+    ops,
+    movedCount,
+    error,
+    handlePreview,
+    handleConfirm,
+    handleUndo,
+    handleReset,
+    setStatus
+  } = useOrganizerState()
 
   const hasPhotos = photos.length > 0
 
@@ -23,8 +32,22 @@ function Organizer(): React.JSX.Element {
     if (status === 'moving') {
       return <SpinnerView message="Moving files…" />
     }
+    if (status === 'undoing') {
+      return <SpinnerView message="Reverting files…" />
+    }
     if (status === 'done') {
-      return <OrganizeDoneView count={movedCount} onReset={handleReset} />
+      return (
+        <OrganizeDoneView
+          count={movedCount}
+          variant="organized"
+          onReset={handleReset}
+          onUndo={handleUndo}
+          error={error}
+        />
+      )
+    }
+    if (status === 'undone') {
+      return <OrganizeDoneView count={movedCount} variant="reverted" onReset={handleReset} />
     }
 
     if (status === 'preview') {
@@ -62,7 +85,7 @@ function Organizer(): React.JSX.Element {
         idleIcon={<CalendarCheck size={34} strokeWidth={1.4} className="text-surface-500" />}
         readyIcon={<CalendarCheck size={34} strokeWidth={1.4} className="text-primary-600" />}
         titleNeedsScan="Organize by date"
-        titleReady="Ready to organise"
+        titleReady="Ready to organize"
         bodyNeedsScan={
           <>
             Preview the proposed <span className="font-mono">YYYY/MM/DD</span> folder structure

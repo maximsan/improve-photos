@@ -82,6 +82,13 @@ const api: ElectronAPI = {
 
   cancelHashes: () => ipcRenderer.invoke(IPC.CANCEL_HASHES),
 
+  cancelScan: () => ipcRenderer.invoke(IPC.CANCEL_SCAN),
+
+  undoOrganize: (pairs: { from: string; to: string }[]) =>
+    ipcRenderer.invoke(IPC.UNDO_ORGANIZE, pairs),
+
+  cancelExport: () => ipcRenderer.invoke(IPC.CANCEL_EXPORT),
+
   confirmTrash: (count: number) => ipcRenderer.invoke(IPC.CONFIRM_TRASH, count)
 }
 

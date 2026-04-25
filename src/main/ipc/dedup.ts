@@ -136,6 +136,18 @@ export function registerDedupHandlers(): void {
   })
 
   ipcMain.handle(IPC.TRASH_FILES, async (_event, paths: string[]): Promise<void> => {
-    await Promise.all(paths.map((p) => shell.trashItem(p)))
+    const errors: string[] = []
+    for (const p of paths) {
+      try {
+        await shell.trashItem(p)
+      } catch (err) {
+        errors.push(`${p}: ${err instanceof Error ? err.message : String(err)}`)
+      }
+    }
+    if (errors.length > 0) {
+      throw new Error(
+        `${errors.length} of ${paths.length} file(s) could not be trashed:\n${errors.join('\n')}`
+      )
+    }
   })
 }
