@@ -90,4 +90,33 @@ describe('computeBlurScore', () => {
     expect(sharpChain.toBuffer).toHaveBeenCalledWith({ resolveWithObject: true })
     expect(sharpChain.stats).toHaveBeenCalled()
   })
+
+  it('returns 0 for a uniform image where blurring does not change stdev', async () => {
+    mockToBuffer.mockResolvedValue({
+      data: uniformBuffer(128, 32 * 32),
+      info: { width: 32, height: 32, channels: 1 }
+    })
+    mockStats
+      .mockResolvedValueOnce({ channels: [{ stdev: 0 }] })
+      .mockResolvedValueOnce({ channels: [{ stdev: 0 }] })
+    const score = await computeBlurScore('/uniform.jpg')
+    expect(score).toBe(0)
+  })
+
+  it('returns 0 when original and blurred stdev are equal', async () => {
+    mockToBuffer.mockResolvedValue({
+      data: uniformBuffer(128, 32 * 32),
+      info: { width: 32, height: 32, channels: 1 }
+    })
+    mockStats
+      .mockResolvedValueOnce({ channels: [{ stdev: 42 }] })
+      .mockResolvedValueOnce({ channels: [{ stdev: 42 }] })
+    const score = await computeBlurScore('/flat.jpg')
+    expect(score).toBe(0)
+  })
+
+  it('propagates a sharp decode error without swallowing it', async () => {
+    mockToBuffer.mockRejectedValueOnce(new Error('unsupported image format'))
+    await expect(computeBlurScore('/bad.heic')).rejects.toThrow('unsupported image format')
+  })
 })

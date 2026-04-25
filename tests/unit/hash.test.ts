@@ -18,6 +18,21 @@ const { mockToBuffer, sharpChain } = vi.hoisted(() => {
 
 vi.mock('sharp', () => ({ default: vi.fn().mockReturnValue(sharpChain) }))
 
+// ─── child_process + fs mocks (for HEIC sips fallback) ───────────────────────
+
+const { mockExecFile, mockUnlink } = vi.hoisted(() => {
+  // Grab the callback from the last argument position (promisify convention).
+  const mockExecFile = vi.fn((...args: unknown[]) => {
+    const cb = args[args.length - 1] as (err: null, stdout: string, stderr: string) => void
+    cb(null, '', '')
+  })
+  const mockUnlink = vi.fn().mockResolvedValue(undefined)
+  return { mockExecFile, mockUnlink }
+})
+
+vi.mock('node:child_process', () => ({ execFile: mockExecFile }))
+vi.mock('node:fs/promises', () => ({ default: { unlink: mockUnlink } }))
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Build a 32×32 pixel buffer filled with a uniform grey value. */
@@ -133,5 +148,83 @@ describe('computePHash', () => {
     expect(sharpChain.greyscale).toHaveBeenCalled()
     expect(sharpChain.raw).toHaveBeenCalled()
     expect(sharpChain.toBuffer).toHaveBeenCalledWith({ resolveWithObject: true })
+  })
+})
+
+// ─── computePHash — HEIC sips fallback ────────────────────────────────────────
+
+describe('computePHash — HEIC sips fallback', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sharpChain.resize.mockReturnThis()
+    sharpChain.greyscale.mockReturnThis()
+    sharpChain.raw.mockReturnThis()
+    mockExecFile.mockImplementation((...args: unknown[]) => {
+      const cb = args[args.length - 1] as (err: null, stdout: string, stderr: string) => void
+      cb(null, '', '')
+    })
+    mockUnlink.mockResolvedValue(undefined)
+  })
+
+  it('re-throws a sharp error for non-HEIC extensions without calling sips', async () => {
+    mockToBuffer.mockRejectedValueOnce(new Error('unsupported format'))
+    await expect(computePHash('/photo.png')).rejects.toThrow('unsupported format')
+    expect(mockExecFile).not.toHaveBeenCalled()
+  })
+
+  it('re-throws a sharp error for .jpg without calling sips', async () => {
+    mockToBuffer.mockRejectedValueOnce(new Error('corrupt'))
+    await expect(computePHash('/photo.jpg')).rejects.toThrow('corrupt')
+    expect(mockExecFile).not.toHaveBeenCalled()
+  })
+
+  it('falls back to sips for .heic and returns a valid hash', async () => {
+    mockToBuffer
+      .mockRejectedValueOnce(new Error('hevc not supported'))
+      .mockResolvedValueOnce({ data: gradientBuffer() })
+    const hash = await computePHash('/photo.heic')
+    expect(hash).toMatch(/^[0-9a-f]{16}$/)
+    expect(mockExecFile).toHaveBeenCalledOnce()
+  })
+
+  it('falls back to sips for .heif and returns a valid hash', async () => {
+    mockToBuffer
+      .mockRejectedValueOnce(new Error('hevc not supported'))
+      .mockResolvedValueOnce({ data: gradientBuffer() })
+    const hash = await computePHash('/photo.heif')
+    expect(hash).toMatch(/^[0-9a-f]{16}$/)
+    expect(mockExecFile).toHaveBeenCalledOnce()
+  })
+
+  it('calls sips with resize-to-32 and png format flags', async () => {
+    mockToBuffer
+      .mockRejectedValueOnce(new Error('hevc not supported'))
+      .mockResolvedValueOnce({ data: gradientBuffer() })
+    await computePHash('/Users/me/photo.heic')
+    const [cmd, args] = mockExecFile.mock.calls[0] as [string, string[]]
+    expect(cmd).toBe('sips')
+    expect(args).toContain('-z')
+    expect(args).toContain('32')
+    expect(args).toContain('-s')
+    expect(args).toContain('format')
+    expect(args).toContain('png')
+    expect(args).toContain('/Users/me/photo.heic')
+  })
+
+  it('deletes the temp PNG after a successful HEIC hash', async () => {
+    mockToBuffer
+      .mockRejectedValueOnce(new Error('hevc not supported'))
+      .mockResolvedValueOnce({ data: gradientBuffer() })
+    await computePHash('/photo.heic')
+    expect(mockUnlink).toHaveBeenCalledOnce()
+    expect(String(mockUnlink.mock.calls[0][0])).toMatch(/cleanup-photos-.+\.png$/)
+  })
+
+  it('deletes the temp PNG even when the second hash call throws', async () => {
+    mockToBuffer
+      .mockRejectedValueOnce(new Error('hevc not supported'))
+      .mockRejectedValueOnce(new Error('corrupt png'))
+    await expect(computePHash('/photo.heic')).rejects.toThrow('corrupt png')
+    expect(mockUnlink).toHaveBeenCalledOnce()
   })
 })
