@@ -5,6 +5,7 @@ import {
   Sparkles,
   Upload,
   BrushCleaning,
+  Settings,
   type LucideIcon
 } from 'lucide-react'
 import type { Tab } from '../types'
@@ -14,7 +15,8 @@ const NAV_ITEMS: { id: Tab; label: string; Icon: LucideIcon }[] = [
   { id: 'dedup', label: 'Duplicates', Icon: Copy },
   { id: 'organizer', label: 'Organize', Icon: CalendarCheck },
   { id: 'quality', label: 'Quality', Icon: Sparkles },
-  { id: 'exporter', label: 'Export', Icon: Upload }
+  { id: 'exporter', label: 'Export', Icon: Upload },
+  { id: 'settings', label: 'Settings', Icon: Settings }
 ]
 
 interface SidebarProps {

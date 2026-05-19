@@ -103,6 +103,14 @@ export interface HashProgress {
   current: string
 }
 
+// ─── Release feature gates ──────────────────────────────────────────────────
+
+export interface ReleaseFeatureFlags {
+  paymentsEnabled: boolean
+  autoUpdatesEnabled: boolean
+  releasePublishingEnabled: boolean
+}
+
 // ─── IPC channel names (single source of truth) ──────────────────────────────
 
 export const IPC = {
@@ -124,7 +132,8 @@ export const IPC = {
   CONFIRM_TRASH: 'dedup:confirm-trash',
   QUALITY_PROGRESS: 'quality:progress',
   QUALITY_SCORE_ITEM: 'quality:score-item',
-  SCAN_PROGRESS: 'scanner:progress'
+  SCAN_PROGRESS: 'scanner:progress',
+  GET_RELEASE_FEATURE_FLAGS: 'release:get-feature-flags'
 } as const
 
 // ─── Typed window.api surface (matches preload contextBridge) ────────────────
@@ -159,6 +168,8 @@ export interface ElectronAPI {
   cancelExport: () => Promise<void>
   /** Show a native macOS confirmation dialog before trashing. Resolves to true if confirmed. */
   confirmTrash: (count: number) => Promise<boolean>
+  /** Read release-mode feature gates. Disabled gates must not make network calls. */
+  getReleaseFeatureFlags: () => Promise<ReleaseFeatureFlags>
 }
 
 declare global {

@@ -7,6 +7,7 @@ import { registerDedupHandlers } from './ipc/dedup'
 import { registerOrganizerHandlers } from './ipc/organizer'
 import { registerQualityHandlers } from './ipc/quality'
 import { registerExporterHandlers } from './ipc/exporter'
+import { registerReleaseFeatureFlagHandlers } from './ipc/releaseFeatureFlags'
 import { registerAppProtocol } from './localProtocol'
 
 /** Playwright e2e: recent Electron rejects `--remote-debugging-port` on the CLI; set via switch before ready. */
@@ -82,6 +83,7 @@ app.whenReady().then(async () => {
   registerOrganizerHandlers()
   registerQualityHandlers()
   registerExporterHandlers()
+  registerReleaseFeatureFlagHandlers()
 
   createWindow()
 

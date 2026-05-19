@@ -9,7 +9,8 @@ import type {
   ScanProgress,
   PhotoRecord,
   MoveOperation,
-  ExportPreset
+  ExportPreset,
+  ReleaseFeatureFlags
 } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 
@@ -89,7 +90,10 @@ const api: ElectronAPI = {
 
   cancelExport: () => ipcRenderer.invoke(IPC.CANCEL_EXPORT),
 
-  confirmTrash: (count: number) => ipcRenderer.invoke(IPC.CONFIRM_TRASH, count)
+  confirmTrash: (count: number) => ipcRenderer.invoke(IPC.CONFIRM_TRASH, count),
+
+  getReleaseFeatureFlags: (): Promise<ReleaseFeatureFlags> =>
+    ipcRenderer.invoke(IPC.GET_RELEASE_FEATURE_FLAGS)
 }
 
 if (process.contextIsolated) {

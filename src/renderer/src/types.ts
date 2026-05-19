@@ -1,5 +1,5 @@
-/** The five top-level navigation tabs in the app shell. */
-export type Tab = 'scanner' | 'dedup' | 'organizer' | 'quality' | 'exporter'
+/** The top-level navigation tabs in the app shell. */
+export type Tab = 'scanner' | 'dedup' | 'organizer' | 'quality' | 'exporter' | 'settings'
 
 /** Maps every tab to its feature component. */
 export interface FeatureMap {
@@ -8,4 +8,5 @@ export interface FeatureMap {
   organizer: React.ComponentType
   quality: React.ComponentType
   exporter: React.ComponentType
+  settings: React.ComponentType
 }

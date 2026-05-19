@@ -6,6 +6,7 @@ import Dedup from './features/Dedup'
 import Organizer from './features/Organizer'
 import QualityReview from './features/QualityReview'
 import Exporter from './features/Exporter'
+import Settings from './features/Settings'
 import { PhotosContext } from './context/photos'
 import { NavigationContext } from './context/navigation'
 import type { PhotoRecord } from '@shared/ipc'
@@ -15,7 +16,8 @@ const FEATURES: FeatureMap = {
   dedup: Dedup,
   organizer: Organizer,
   quality: QualityReview,
-  exporter: Exporter
+  exporter: Exporter,
+  settings: Settings
 }
 
 function App(): React.JSX.Element {
