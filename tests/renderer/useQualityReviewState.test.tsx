@@ -20,7 +20,7 @@ const PHOTO_B: PhotoRecord = { ...PHOTO_A, path: '/p/b.jpg', name: 'b.jpg' }
 const mockApi = {
   getBlurScores: vi.fn(),
   onQualityProgress: vi.fn(() => vi.fn()),
-  onQualityScoreItem: vi.fn(() => vi.fn()),
+  onQualityScoreItem: vi.fn<(cb: (item: QualityScoreItem) => void) => () => void>(() => vi.fn()),
   trashFiles: vi.fn()
 }
 

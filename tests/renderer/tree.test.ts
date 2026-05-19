@@ -1,9 +1,19 @@
 import { describe, it, expect } from 'vitest'
 import { buildTree, shortPath } from '../../src/renderer/src/features/Organizer/utils/tree'
-import type { MoveOperation } from '@shared/ipc'
+import type { MoveOperation, PhotoRecord } from '@shared/ipc'
 
 function op(targetPath: string): MoveOperation {
-  return { sourcePath: '/src' + targetPath, targetPath }
+  const srcPath = '/src' + targetPath
+  const photo: PhotoRecord = {
+    path: srcPath,
+    name: srcPath.split('/').pop()!,
+    size: 0,
+    dateTaken: null,
+    width: null,
+    height: null,
+    camera: null
+  }
+  return { photo, targetPath, conflict: false }
 }
 
 describe('buildTree', () => {

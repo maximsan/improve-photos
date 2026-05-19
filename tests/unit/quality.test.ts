@@ -1,9 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { computeBlurScore } from '../../src/main/ipc/quality'
+// ─── Sharp mock (must be before `import` of modules that `import` sharp) ─────
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest'
 
-// ─── Sharp mock ───────────────────────────────────────────────────────────────
-
-const { mockToBuffer, mockStats, sharpChain } = vi.hoisted(() => {
+const { mockToBuffer, mockStats, sharpChain, sharpDefault } = vi.hoisted(() => {
   const mockToBuffer = vi.fn()
   const mockStats = vi.fn()
   const sharpChain = {
@@ -14,10 +12,22 @@ const { mockToBuffer, mockStats, sharpChain } = vi.hoisted(() => {
     toBuffer: mockToBuffer,
     stats: mockStats
   }
-  return { mockToBuffer, mockStats, sharpChain }
+  const sharpDefault = Object.assign(vi.fn().mockReturnValue(sharpChain), {
+    cache: vi.fn()
+  })
+  return { mockToBuffer, mockStats, sharpChain, sharpDefault }
 })
+vi.mock('sharp', () => ({ default: sharpDefault }))
 
-vi.mock('sharp', () => ({ default: vi.fn().mockReturnValue(sharpChain) }))
+import { computeBlurScore } from '../../src/main/ipc/quality'
+
+// On macOS, production uses `sips` for HEVC HEIC; tests expect `sharp` directly.
+beforeAll(() => {
+  process.env['CLEANUP_PHOTOS_NO_SIPS_HEIC'] = '1'
+})
+afterAll(() => {
+  delete process.env['CLEANUP_PHOTOS_NO_SIPS_HEIC']
+})
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@shared': resolve(__dirname, 'src/shared'),
+      '@renderer': resolve(__dirname, 'src/renderer/src'),
       electron: resolve(__dirname, 'tests/shims/electron.ts'),
       '@electron-toolkit/utils': resolve(__dirname, 'tests/shims/electron-toolkit-utils.ts')
     }
