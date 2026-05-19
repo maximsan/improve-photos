@@ -1,10 +1,10 @@
 # Codebase review and development plan
 
 **Project:** cleanup-photos — Electron desktop app for organizing and cleaning photo libraries.  
-**Stack (from `package.json`):** Electron ^41.3.0, electron-vite ^5.0.0, React ^19.2.1, TypeScript ^5.9.3, Vite ^8.0.10, Tailwind ^4.2.2, Sharp ^0.34.5, exifr ^7.1.3, Vitest ^4.1.5, `@playwright/test` ^1.59.1, `@vitejs/plugin-react` ^6.0.1.
+**Stack (from `package.json`):** Electron ^41.3.0, electron-vite ^5.0.0, React ^19.2.6, TypeScript ^5.9.3, Vite ^8.0.13, Tailwind ^4.3.0, Sharp ^0.34.5, exifr ^7.1.3, Vitest ^4.1.6, `@playwright/test` ^1.60.0, `@vitejs/plugin-react` ^6.0.2.
 
 **Initial review:** 2026-04-19  
-**Last verified against repo:** 2026-04-25 — `pnpm test` (9 files, 75 tests, all passing); `pnpm test:coverage` (~30% statements/lines on included paths); `pnpm build` + `pnpm test:e2e` (6 Playwright tests); `.github/workflows/ci.yml` (`ci` + `e2e` jobs); `vitest.config.ts` (React plugin, `tests/**/*.test.{ts,tsx}`, coverage thresholds); `tests/shims/*`; `@testing-library/react` + `happy-dom`.
+**Last verified against repo:** 2026-05-19 — `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test` (17 files, 170 tests, all passing), `pnpm test:coverage` (50.65% statements / 25.86% branches), and `pnpm test:e2e` (6 smoke tests, all passing with loopback CDP).
 
 ### Keeping this doc current
 
@@ -16,15 +16,15 @@ After meaningful changes, re-run **`pnpm test`**, **`pnpm test:coverage`** (if t
 
 ## At-a-glance status
 
-- [x] **Unit + hook tests:** all pass (**9** files, **75** tests — **6** under `tests/unit/`, **3** under `tests/renderer/`)
+- [x] **Unit + hook tests:** all pass (**17** files, **170** tests — **7** under `tests/unit/`, **10** under `tests/renderer/`)
 - [x] **Main process in Vitest:** `resolve.alias` maps `electron` and `@electron-toolkit/utils` → `tests/shims/*.ts` (avoids ESM/CJS import failures)
 - [x] **`package.json` scripts:** `test`, `test:watch`, `test:coverage`, **`test:e2e`** (Playwright)
 - [x] **CI:** `.github/workflows/ci.yml` — job **`ci`:** install → `typecheck` → `lint` → `test` on `macos-latest`; job **`e2e`** (after `ci`): install → `build` → `test:e2e`
 - [x] **`vitest.config.ts`:** `@vitejs/plugin-react`; `coverage.include` / `exclude`; soft thresholds (statements 25%, lines 25%, functions 15%, branches 10%)
-- [x] **Renderer hook tests:** `@testing-library/react` + `happy-dom`; `useScannerState`, `useDedupState`, `useQualityReviewState` (per-file `// @vitest-environment happy-dom`)
-- [x] **E2E smoke:** Playwright **`tests/e2e/app.spec.ts`** — spawns Electron with **`CLEANUP_PHOTOS_E2E_CDP_PORT`** + CDP connect (see file header); covers shell, five sidebar tabs, default Scanner empty state, tab navigation
+- [x] **Renderer hook tests:** `@testing-library/react` + `happy-dom`; `useScannerState`, `useDedupState`, `useQualityReviewState`, **`useOrganizerState`** (incl. undo flow), **`useExporterState`**; **`OrganizeDoneView`** component RTL (organized/reverted variants, undo button, error display)
+- [x] **E2E smoke:** Playwright **`tests/e2e/app.spec.ts`** — spawns Electron with **`CLEANUP_PHOTOS_E2E_CDP_PORT`** + loopback CDP connect on `127.0.0.1`; covers shell, five sidebar tabs, default Scanner empty state, tab navigation
 - [ ] **E2E deeper flows:** folder pick → scan, export batch, organize/trash (not automated yet)
-- [x] **Coverage (latest `test:coverage`):** ~**30%** statements / ~**30%** lines across `src/main` + `src/shared` + `src/renderer/src`; hook files strong (~87–93% lines on tested hooks); most **`.tsx` UI** and **`useOrganizerState` / `useExporterState`** still ~**0%**
+- [x] **Coverage:** **50.65%** statements / **50.79%** lines / **25.86%** branches; hooks and targeted main-process tests carry most coverage, while many `.tsx` UI components remain thin
 
 ---
 
@@ -61,7 +61,7 @@ After meaningful changes, re-run **`pnpm test`**, **`pnpm test:coverage`** (if t
 3. **Feature modularity:** Each major workflow lives under `features/<Name>/` with hooks and components colocated.
 4. **AGENTS.md discipline:** Hooks for orchestration, no business logic in JSX, component size constraints — aligns with maintainability.
 5. **Testing:** Vitest + `@vitest/coverage-v8`; unit tests cover hash, exporter, scanner helpers, quality (`computeBlurScore`), organizer (`deriveTargetPath` + IPC), **IPC parity**; **electron/toolkit shims** keep the runner stable; **React plugin** in Vitest for `*.test.tsx`.
-6. **E2E smoke:** Playwright drives a **built** app via CDP (workaround for Electron 41+ / debugging-port behavior); same suite runs in CI after `pnpm build`.
+6. **E2E smoke:** Playwright drives a **built** app via loopback CDP on `127.0.0.1` (workaround for Electron 41+ / debugging-port behavior); same suite runs in CI after `pnpm build`.
 
 ---
 
@@ -71,10 +71,10 @@ After meaningful changes, re-run **`pnpm test`**, **`pnpm test:coverage`** (if t
 
 - [x] **`package.json` scripts** — `test`, `test:watch`, `test:coverage`, `test:e2e`.
 - [x] **CI workflow** — `.github/workflows/ci.yml`: **`ci`** (`typecheck` → `lint` → `test`); **`e2e`** (`build` → `test:e2e`) on push/PR to `main`.
-- [x] **Vitest + main-process imports** — **`tests/shims/`** + **`vitest.config.ts`** aliases; **9** test files run.
+- [x] **Vitest + main-process imports** — **`tests/shims/`** + **`vitest.config.ts`** aliases; **16** test files run.
 - [x] **Renderer hooks tested** — `useScannerState`, `useDedupState`, `useQualityReviewState` with `@testing-library/react` + `happy-dom`.
 - [x] **E2E smoke automated** — shell + navigation + empty Scanner (not full workflows).
-- [ ] **Coverage breadth** — ~**30%** statements overall; **organizer/quality/scanner IPC** handlers and **`localProtocol`** still thin; **UI components** and **`useOrganizerState` / `useExporterState`** largely untested; **branches** ~**12%** (threshold 10% — monitor regressions).
+- [ ] **Coverage breadth** — **50.65%** statements overall; scanner, organizer, exporter, and `localProtocol` now have targeted main-process coverage; dedup/quality IPC paths and many **UI components** remain thin; **branches** **25.86%** (threshold 10%).
 
 ### 3.2 Coupling and evolution
 
@@ -88,9 +88,9 @@ After meaningful changes, re-run **`pnpm test`**, **`pnpm test:coverage`** (if t
 
 ### 3.4 Product hardening (typical next steps)
 
-- [ ] **Undo / dry-run** for destructive operations (organize, trash) if not already surfaced in UX.
-- [ ] **Large-library performance:** progress cancellation exists for hashes (`CANCEL_HASHES`); verify parity for scan/export where users expect abort.
-- [ ] **Error surfaces:** IPC failures propagate to user-visible messages consistently across features.
+- [x] **Undo / dry-run** — **dry-run** is `PREVIEW_ORGANIZE` (already shown before any files move); **undo for organize** is now implemented: `UNDO_ORGANIZE` IPC channel reverses renames sequentially, updates the cache for files that succeeded, and the renderer shows an "Undo" button in the done state that transitions through `undoing → undone`. Trash goes to macOS Trash which is recoverable by the user — no additional undo needed.
+- [x] **Cancellation parity:** `CANCEL_SCAN` and `CANCEL_EXPORT` IPC channels added (main handlers + preload stubs), matching the existing `CANCEL_HASHES` pattern. Renderer UI hookup is a separate step.
+- [x] **Error surfaces:** `EXECUTE_ORGANIZE` now processes files sequentially and updates the cache for those that succeeded before any failure; `EXPORT_BATCH` continues on per-file errors and reports a summary; `TRASH_FILES` continues per-item and reports failures — all three throw a structured error string that the renderer hooks already surface via their `error` state.
 
 ---
 
@@ -112,24 +112,24 @@ Check off when meaningful tests exist and stay green in CI.
 
 **Tier A — Fast, deterministic**
 
-- [ ] `main/lib/hash.ts` — close remaining branch/line gaps (tests exist; tighten to full branch coverage)
+- [x] `main/lib/hash.ts` — HEIC sips fallback branches now covered: non-HEIC error re-throw, `.heic`/`.heif` fallback success, sips args, temp-file cleanup on success and on failure (`tests/unit/hash.test.ts`)
 - [x] **Organizer paths:** `deriveTargetPath` — covered in `tests/unit/organizer.test.ts`
-- [ ] **Quality:** direct tests for **`laplacianVariance`** (if kept exported) — today **`computeBlurScore`** is covered in `tests/unit/quality.test.ts`
-- [ ] Pure helpers: renderer `features/Organizer/utils/tree.ts`, `lib/format.ts`, quality `scoreLabel.ts` / `tiers.ts` / subtitle helpers
-- [x] **`IPC` invoke parity** — `tests/unit/ipc-parity.test.ts` exercises all **11** `ipcRenderer.invoke` channels used by preload (`PICK_FOLDER` … `CONFIRM_TRASH`)
+- [x] **Quality:** `computeBlurScore` edge cases added — zero standard deviation (uniform image), equal standard deviation, decode error propagation (`tests/unit/quality.test.ts`)
+- [x] Pure helpers: `tree.ts` (`buildTree`, `shortPath`), `format.ts` (`formatBytes`, `fileUrl`), `scoreLabel.ts`, `tiers.ts` — all covered in `tests/renderer/`; `scoreLabel` boundary values, tier exhaustiveness (no gaps/overlaps), `formatBytes` KB/MB/GB boundaries
+- [x] **`IPC` invoke parity** — `tests/unit/ipc-parity.test.ts` exercises all **14** `ipcRenderer.invoke` channels used by preload (`PICK_FOLDER` … `CONFIRM_TRASH`)
 
 **Tier B — Main process with mocks**
 
-- [ ] Scanner: extend beyond helpers into IPC handler paths / edge cases
+- [x] Scanner: extend beyond helpers into IPC handler paths / edge cases
 - [ ] Dedup: grouping/sorting from hash map fixtures
-- [ ] Exporter: extend preset + path edge cases
-- [ ] Organizer / quality: IPC handlers — conflicts, errors, not only exported helpers
+- [x] Exporter: extend IPC failure/progress paths
+- [ ] Organizer / quality: IPC handlers — organizer conflicts/errors covered; quality IPC still pending
 
 **Tier C — Renderer**
 
 - [x] Hooks: `useScannerState`, `useDedupState`, `useQualityReviewState` with mocked `window.api`
-- [ ] Hooks: `useOrganizerState`, `useExporterState`
-- [ ] Critical UI states: empty, loading, error, completion (component-level RTL)
+- [x] Hooks: `useOrganizerState` (preview, confirm, undo success/failure, reset, conflict exclusion, `setPhotos` path update), `useExporterState` (pick folder, export success/failure, progress subscription, unsubscribe in finally, reset)
+- [x] Critical UI states: `OrganizeDoneView` component RTL — organized/reverted variants, undo button presence, click handlers, singular/plural count, error display, "Done" vs "Organize again" label
 
 **Tier D — E2E**
 
@@ -151,7 +151,7 @@ Check off when meaningful tests exist and stay green in CI.
 
 - [x] Configure **coverage** `include`/`exclude` for `src/main`, `src/shared`, `src/renderer/src`
 - [x] Introduce **soft coverage thresholds** (statements 25%, lines 25%, functions 15%, branches 10%); raise over time
-- [x] Add **preload ↔ main parity checks** — `tests/unit/ipc-parity.test.ts` uses `it.each` over all **11** invoke channels; registers all `register*Handlers()` and asserts `ipcMain.handle` coverage
+- [x] Add **preload ↔ main parity checks** — `tests/unit/ipc-parity.test.ts` uses `it.each` over all **14** invoke channels; registers all `register*Handlers()` and asserts `ipcMain.handle` coverage
 
 ### Phase 2 — Renderer tests
 
@@ -161,7 +161,7 @@ Check off when meaningful tests exist and stay green in CI.
 ### Phase 3 — E2E and release confidence
 
 - [x] **Playwright + Electron** smoke — `tests/e2e/app.spec.ts`, `playwright.config.ts`, `pnpm test:e2e`; **CI `e2e` job** on `macos-latest` after `build`
-- [ ] Document **manual QA checklist** for releases (large folders, HEIC, permissions, cancel mid-scan)
+- [x] Document **manual QA checklist** for releases (large folders, HEIC, permissions, cancel mid-scan)
 
 ### Phase 4 — Architecture follow-ups (as needed)
 
@@ -180,7 +180,7 @@ Check off when meaningful tests exist and stay green in CI.
 
 ## 8. Summary
 
-The codebase is **well-structured for a multi-feature Electron app**, with a **strong shared IPC contract** and **clear separation** between preload and React. **Phases 0–2 are done:** scripts, Vitest (including React tests), coverage config with thresholds, IPC parity tests, three renderer hook suites (**75** tests in **9** files). **Phase 3 is partially done:** Playwright **smoke** (shell + tabs + Scanner empty state) runs locally after **`pnpm build`** and in CI via a dedicated **`e2e`** job. Remaining debt: **~30% overall line/statement coverage**, weak **branch** coverage, **Organizer/Exporter hooks** and most **`.tsx`** still untested, **no workflow-level E2E**. Sensible next steps: Tier A/B gaps, **`useOrganizerState` / `useExporterState`**, then optional **workflow E2E** and a **manual QA** doc.
+The codebase is **well-structured for a multi-feature Electron app**, with a **strong shared IPC contract** and **clear separation** between preload and React. **Phases 0–3 are done** and §3.4 hardening is largely complete: **170 tests** across **17 files**; Tier A pure-helper and branch-gap tests added (`hash.ts` HEIC fallback, `computeBlurScore` edge cases, `tree.ts`, `format.ts`, `scoreLabel.ts`, `tiers.ts`); targeted main-process tests now cover `localProtocol`, scanner progress/cancel, organizer conflict/error paths, and exporter failure progress. Coverage is at **50.65% statements**, **50.79% lines**, and **25.86% branches**. Remaining debt: dedup/quality IPC paths and many **`.tsx`** components are still thin; **no workflow-level E2E**; cancellation renderer UI not yet connected.
 
 ---
 

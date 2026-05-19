@@ -14,9 +14,16 @@ vi.mock('fs/promises', () => ({
 }))
 
 import { readdir, stat } from 'fs/promises'
+import { ipcMain } from 'electron'
 import sharp from 'sharp'
 import exifr from 'exifr'
-import { walkDir, buildPhotoRecord, IMAGE_EXTENSIONS } from '../../src/main/ipc/scanner'
+import { IPC } from '@shared/ipc'
+import {
+  walkDir,
+  buildPhotoRecord,
+  IMAGE_EXTENSIONS,
+  registerScannerHandlers
+} from '../../src/main/ipc/scanner'
 
 // ─── IMAGE_EXTENSIONS ────────────────────────────────────────────────────────
 
@@ -152,5 +159,74 @@ describe('buildPhotoRecord', () => {
     const record = await buildPhotoRecord('/photos/scan.jpg')
     expect(record?.camera).toBeNull()
     expect(record?.dateTaken).not.toBeNull()
+  })
+})
+
+// ─── IPC handlers ────────────────────────────────────────────────────────────
+
+type IpcHandler = (
+  event: { sender: { send: ReturnType<typeof vi.fn> } },
+  ...args: never[]
+) => unknown
+
+function registerScannerTestHandlers(): Map<string, IpcHandler> {
+  const handlers = new Map<string, IpcHandler>()
+  vi.spyOn(ipcMain, 'handle').mockImplementation((channel, handler) => {
+    handlers.set(channel, handler as IpcHandler)
+  })
+  registerScannerHandlers()
+  return handlers
+}
+
+describe('scanner IPC handlers', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    vi.clearAllMocks()
+  })
+
+  it('emits scan progress for each processed photo', async () => {
+    vi.mocked(readdir).mockResolvedValueOnce([
+      { name: 'a.jpg', isDirectory: () => false },
+      { name: 'b.png', isDirectory: () => false }
+    ] as never)
+    vi.mocked(stat).mockResolvedValue({ size: 1_024 } as never)
+    vi.mocked(sharp).mockReturnValue({
+      metadata: vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    } as never)
+    vi.mocked(exifr.parse).mockResolvedValue(null)
+
+    const handlers = registerScannerTestHandlers()
+    const event = { sender: { send: vi.fn() } }
+
+    const result = await handlers.get(IPC.SCAN)!(event, '/photos' as never)
+    const progressCalls = event.sender.send.mock.calls.filter(
+      ([channel]) => channel === IPC.SCAN_PROGRESS
+    )
+
+    expect(result).toHaveLength(2)
+    expect(progressCalls).toHaveLength(2)
+    expect(progressCalls.map(([, progress]) => progress)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ done: 1, total: 2 }),
+        expect.objectContaining({ done: 2, total: 2 })
+      ])
+    )
+  })
+
+  it('cancels an active scan before records are processed', async () => {
+    vi.mocked(readdir).mockResolvedValueOnce([{ name: 'a.jpg', isDirectory: () => false }] as never)
+
+    const handlers = registerScannerTestHandlers()
+    const event = { sender: { send: vi.fn() } }
+    const scan = handlers.get(IPC.SCAN)!(event, '/photos' as never)
+
+    handlers.get(IPC.CANCEL_SCAN)!({ sender: { send: vi.fn() } })
+
+    await expect(scan).resolves.toEqual([])
+    expect(stat).not.toHaveBeenCalled()
+    expect(event.sender.send).not.toHaveBeenCalledWith(
+      IPC.SCAN_PROGRESS,
+      expect.objectContaining({ total: 1 })
+    )
   })
 })

@@ -167,9 +167,7 @@ describe('useOrganizerState', () => {
     await act(() => result.current.handleConfirm())
     await act(() => result.current.handleUndo())
 
-    expect(mockApi.undoOrganize).toHaveBeenCalledWith([
-      { from: PHOTO_A.path, to: OP_A.targetPath }
-    ])
+    expect(mockApi.undoOrganize).toHaveBeenCalledWith([{ from: PHOTO_A.path, to: OP_A.targetPath }])
   })
 
   it('handleUndo on failure returns to done with error', async () => {

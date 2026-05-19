@@ -1,6 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
-import { deriveTargetPath } from '../../src/main/ipc/organizer'
-import type { PhotoRecord } from '../../src/shared/ipc'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { access, mkdir, rename } from 'fs/promises'
+import { ipcMain } from 'electron'
+import { deriveTargetPath, registerOrganizerHandlers } from '../../src/main/ipc/organizer'
+import { IPC } from '../../src/shared/ipc'
+import type { MoveOperation, PhotoRecord } from '../../src/shared/ipc'
 
 vi.mock('fs/promises', () => ({
   rename: vi.fn(),
@@ -66,5 +69,59 @@ describe('deriveTargetPath', () => {
     // 2024-07-15T23:00:00Z = July 15 UTC, but July 16 in UTC+1
     const photo = makePhoto({ dateTaken: '2024-07-15T23:00:00.000Z' })
     expect(deriveTargetPath(photo, '/root')).toContain('/2024/07/15/')
+  })
+})
+
+// ─── IPC handlers ────────────────────────────────────────────────────────────
+
+type IpcHandler = (_event: unknown, ...args: never[]) => unknown
+
+function registerOrganizerTestHandlers(): Map<string, IpcHandler> {
+  const handlers = new Map<string, IpcHandler>()
+  vi.spyOn(ipcMain, 'handle').mockImplementation((channel, handler) => {
+    handlers.set(channel, handler as IpcHandler)
+  })
+  registerOrganizerHandlers()
+  return handlers
+}
+
+describe('organizer IPC handlers', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    vi.clearAllMocks()
+  })
+
+  it('marks preview operations as conflicts when the target path already exists', async () => {
+    vi.mocked(access).mockResolvedValue(undefined)
+    const handlers = registerOrganizerTestHandlers()
+    const photo = makePhoto({
+      path: '/library/imports/IMG_001.jpg',
+      dateTaken: '2024-07-15T10:30:00.000Z'
+    })
+
+    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!({}, [
+      photo
+    ] as never)) as MoveOperation[]
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({
+      targetPath: '/library/2024/07/15/IMG_001.jpg',
+      conflict: true
+    })
+  })
+
+  it('reports move failures without hiding the failed source path', async () => {
+    vi.mocked(mkdir).mockResolvedValue(undefined)
+    vi.mocked(rename).mockRejectedValue(new Error('permission denied'))
+    const handlers = registerOrganizerTestHandlers()
+    const op: MoveOperation = {
+      photo: makePhoto({ path: '/library/imports/IMG_001.jpg' }),
+      targetPath: '/library/2024/07/15/IMG_001.jpg',
+      conflict: false
+    }
+
+    await expect(handlers.get(IPC.EXECUTE_ORGANIZE)!({}, [op] as never)).rejects.toThrow(
+      '1 of 1 file(s) could not be moved:\n/library/imports/IMG_001.jpg: permission denied'
+    )
   })
 })

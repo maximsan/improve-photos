@@ -28,10 +28,9 @@ const PRESET: Preset = { id: 'p1', name: 'Web', format: 'jpeg', quality: 80 }
 const mockUnsubscribe = vi.fn()
 const mockApi = {
   pickFolder: vi.fn<() => Promise<string | null>>(),
-  exportBatch: vi.fn<(photos: PhotoRecord[], presets: ExportPreset[], outDir: string) => Promise<void>>(),
-  onExportProgress: vi.fn<(cb: (p: ExportProgress) => void) => () => void>(
-    () => mockUnsubscribe
-  )
+  exportBatch:
+    vi.fn<(photos: PhotoRecord[], presets: ExportPreset[], outDir: string) => Promise<void>>(),
+  onExportProgress: vi.fn<(cb: (p: ExportProgress) => void) => () => void>(() => mockUnsubscribe)
 }
 
 function wrapper({ children }: { children: ReactNode }): ReactElement {

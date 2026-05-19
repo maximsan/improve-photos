@@ -1,34 +1,54 @@
-# react-ts
+# Cleanup Photos
 
-An Electron application with React and TypeScript
+Cleanup Photos is an Electron desktop app for scanning photo folders, finding duplicates, reviewing blurry images, organizing files by capture date, and exporting resized copies.
 
 ## Recommended IDE Setup
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- VS Code
+- ESLint extension
+- Prettier extension
 
 ## Project Setup
 
-### Install
+Install dependencies:
 
 ```bash
-$ pnpm install
+pnpm install
 ```
 
-### Development
+Run the app in development:
 
 ```bash
-$ pnpm dev
+pnpm dev
 ```
 
-### Build
+Run local checks:
 
 ```bash
-# For windows
-$ pnpm build:win
-
-# For macOS
-$ pnpm build:mac
-
-# For Linux
-$ pnpm build:linux
+pnpm lint
+pnpm typecheck
+pnpm test
 ```
+
+Build compiled Electron output:
+
+```bash
+pnpm build
+```
+
+Run the Electron smoke tests after building:
+
+```bash
+pnpm test:e2e
+```
+
+Build a local macOS arm64 DMG:
+
+```bash
+pnpm build:mac
+```
+
+## Notes
+
+- `pnpm test:e2e` expects compiled output in `out/`, so run `pnpm build` first.
+- The distributable build currently targets macOS arm64.

@@ -22,11 +22,12 @@ const ELECTRON_BIN = resolve(
   readFileSync(resolve(__dirname, '../../node_modules/electron/path.txt'), 'utf-8').trim()
 )
 const PROJECT_ROOT = resolve(__dirname, '../..')
+const CDP_HOST = '127.0.0.1'
 
 async function findFreePort(): Promise<number> {
   return new Promise((res) => {
     const s = createServer()
-    s.listen(0, () => {
+    s.listen(0, CDP_HOST, () => {
       const { port } = s.address() as { port: number }
       s.close(() => res(port))
     })
@@ -72,7 +73,7 @@ function navButton(label: string): Locator {
 
 test.beforeAll(async () => {
   const port = await findFreePort()
-  const cdpEndpoint = `http://localhost:${port}`
+  const cdpEndpoint = `http://${CDP_HOST}:${port}`
   const electronEnv = { ...process.env, CLEANUP_PHOTOS_E2E_CDP_PORT: String(port) }
   delete electronEnv.ELECTRON_RUN_AS_NODE
   let electronOutput = ''

@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { buildOutputPath, processExport } from '../../src/main/ipc/exporter'
+import { ipcMain } from 'electron'
+import { mkdir } from 'fs/promises'
+import { IPC } from '@shared/ipc'
+import {
+  buildOutputPath,
+  processExport,
+  registerExporterHandlers
+} from '../../src/main/ipc/exporter'
 import type { PhotoRecord, ExportPreset } from '../../src/shared/ipc'
 
 // ─── Sharp mock ───────────────────────────────────────────────────────────────
@@ -156,5 +163,59 @@ describe('processExport', () => {
     const preset = makePreset()
     await processExport(photo, preset, '/exports/web/IMG_001.jpg')
     expect(mockToFile).toHaveBeenCalledWith('/exports/web/IMG_001.jpg')
+  })
+})
+
+// ─── IPC handlers ────────────────────────────────────────────────────────────
+
+type IpcHandler = (
+  event: { sender: { send: ReturnType<typeof vi.fn>; isDestroyed: () => boolean } },
+  ...args: never[]
+) => unknown
+
+function registerExporterTestHandlers(): Map<string, IpcHandler> {
+  const handlers = new Map<string, IpcHandler>()
+  vi.spyOn(ipcMain, 'handle').mockImplementation((channel, handler) => {
+    handlers.set(channel, handler as IpcHandler)
+  })
+  registerExporterHandlers()
+  return handlers
+}
+
+describe('exporter IPC handlers', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    vi.clearAllMocks()
+    vi.mocked(mkdir).mockResolvedValue(undefined)
+    sharpChain.resize.mockReturnThis()
+    sharpChain.jpeg.mockReturnThis()
+    sharpChain.webp.mockReturnThis()
+    sharpChain.png.mockReturnThis()
+  })
+
+  it('continues reporting progress and throws a summary when an export item fails', async () => {
+    mockToFile.mockRejectedValue(new Error('cannot write output'))
+    const handlers = registerExporterTestHandlers()
+    const event = { sender: { send: vi.fn(), isDestroyed: () => false } }
+    const photo = makePhoto()
+    const preset = makePreset()
+
+    await expect(
+      handlers.get(IPC.EXPORT_BATCH)!(
+        event,
+        [photo] as never,
+        [preset] as never,
+        '/exports' as never
+      )
+    ).rejects.toThrow('1 of 1 export(s) failed:\nIMG_001.jpg (web): cannot write output')
+
+    expect(event.sender.send).toHaveBeenCalledWith(
+      IPC.EXPORT_PROGRESS,
+      expect.objectContaining({
+        done: 1,
+        total: 1,
+        currentPath: '/exports/web/IMG_001.jpg'
+      })
+    )
   })
 })

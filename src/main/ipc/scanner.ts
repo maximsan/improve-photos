@@ -130,7 +130,9 @@ export function registerScannerHandlers(): void {
     async function worker(): Promise<(PhotoRecord | null)[]> {
       const results: (PhotoRecord | null)[] = []
       for (const p of { [Symbol.iterator]: () => iter }) {
-        if (controller.cancelled) break
+        if (controller.cancelled) {
+          break
+        }
         const record = await buildPhotoRecord(p)
         results.push(record)
         done++

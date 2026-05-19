@@ -50,6 +50,16 @@ Returns PhotoRecord[] back up the same chain
 - **`shell.trashItem()`** — Electron built-in for moving files to system Trash. Cross-platform safe.
 - **`path.join()` / `path.resolve()`** — all file paths are constructed with these, never with string concatenation, so the app works on any OS.
 
+## Current Electron security posture
+
+The renderer still reaches native capabilities only through the typed preload API in `src/preload/index.ts`; React code should not import Node.js or Electron modules directly.
+
+- `sandbox: false` is set in `BrowserWindow` so the preload script can use Electron APIs with the current `@electron-toolkit/preload` bridge. Before enabling sandbox mode, verify every preload API still works and update tests around `window.api`.
+- `contextIsolation` uses Electron's default enabled setting. Keep renderer-to-main access behind `contextBridge.exposeInMainWorld('api', ...)`.
+- The custom `app://images/` protocol serves image previews only from directories registered after a scan. It currently has `secure`, `stream`, and `bypassCSP` privileges; review image loading and HEIC preview behavior before removing `bypassCSP`.
+- The renderer Content Security Policy lives in `src/renderer/index.html`. It allows app images, data URLs, local scripts, inline styles required by the current CSS path, and Google font hosts.
+- External windows are denied in `setWindowOpenHandler`; URLs are handed to `shell.openExternal`. If user-controlled links are added later, validate allowed protocols before calling `openExternal`.
+
 ## Build pipeline
 
 Getting from source code to an installable `.dmg` is two separate stages:
@@ -73,7 +83,7 @@ node_modules (including native modules like sharp)
 
 The result is a self-contained `.app` — the user who installs it needs nothing else (no Node.js, no pnpm).
 
-`pnpm dev` skips both stages entirely and runs the TypeScript source directly with hot reload. `pnpm build:mac` runs Stage 1 then Stage 2.
+`pnpm dev` skips both stages entirely and runs the TypeScript source directly with hot reload. `pnpm build:mac` runs `pnpm build` first, then packages the macOS arm64 app.
 
 > **Why `sharp` needs a special build step:** native modules like `sharp` contain compiled C++ code. They must be compiled against the exact Node.js version bundled inside Electron — not the system Node.js. `electron-builder install-app-deps` (run automatically after `pnpm install`) handles this recompilation.
 
@@ -86,3 +96,7 @@ The result is a self-contained `.app` — the user who installs it needs nothing
 3. Add the `window.api.<method>` stub to `src/preload/index.ts`
 4. Build the React UI in `src/renderer/src/features/<Feature>/`
 5. Add a unit test in `tests/unit/<feature>.test.ts`
+
+## E2E smoke tests
+
+`tests/e2e/app.spec.ts` drives a built Electron app through the Chrome DevTools Protocol. The test picks a free loopback port on `127.0.0.1`, passes it through `CLEANUP_PHOTOS_E2E_CDP_PORT`, and the main process enables `remote-debugging-port` before `app.whenReady()`.
