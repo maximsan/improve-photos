@@ -2,7 +2,7 @@ import { Settings as SettingsIcon } from 'lucide-react'
 import PanelHeader from '../../components/PanelHeader'
 import EmptyState from '../../components/EmptyState'
 import { FormErrorText } from '../../components/FormErrorText'
-import { SpinnerView } from '../../components/SpinnerView'
+import SpinnerView from '../../components/SpinnerView'
 import ReleaseGatesPanel from './components/ReleaseGatesPanel'
 import { useReleaseFeatureFlags } from './hooks/useReleaseFeatureFlags'
 
@@ -11,7 +11,7 @@ function Settings(): React.JSX.Element {
 
   function renderBody(): React.JSX.Element {
     if (status === 'loading') {
-      return <SpinnerView label="Loading release gates..." />
+      return <SpinnerView message="Loading release gates..." />
     }
 
     if (status === 'error' || !flags) {

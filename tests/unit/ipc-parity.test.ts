@@ -18,6 +18,7 @@ import { registerDedupHandlers } from '../../src/main/ipc/dedup'
 import { registerOrganizerHandlers } from '../../src/main/ipc/organizer'
 import { registerQualityHandlers } from '../../src/main/ipc/quality'
 import { registerExporterHandlers } from '../../src/main/ipc/exporter'
+import { registerReleaseFeatureFlagHandlers } from '../../src/main/ipc/releaseFeatureFlags'
 
 /** Every channel the preload calls via ipcRenderer.invoke must have a handler. */
 const INVOKE_CHANNELS = [
@@ -34,7 +35,8 @@ const INVOKE_CHANNELS = [
   IPC.CANCEL_SCAN,
   IPC.CANCEL_EXPORT,
   IPC.UNDO_ORGANIZE,
-  IPC.CONFIRM_TRASH
+  IPC.CONFIRM_TRASH,
+  IPC.GET_RELEASE_FEATURE_FLAGS
 ] as const
 
 describe('IPC parity: preload ↔ main', () => {
@@ -51,6 +53,7 @@ describe('IPC parity: preload ↔ main', () => {
     registerOrganizerHandlers()
     registerQualityHandlers()
     registerExporterHandlers()
+    registerReleaseFeatureFlagHandlers()
   })
 
   it.each(INVOKE_CHANNELS)('channel "%s" has a handler registered in main', (channel) => {

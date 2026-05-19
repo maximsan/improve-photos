@@ -109,8 +109,8 @@ test('window opens and renders the app shell', async () => {
   await expect(page.locator('body')).toBeVisible()
 })
 
-test('sidebar shows all five navigation tabs', async () => {
-  for (const label of ['Scan', 'Duplicates', 'Organize', 'Quality', 'Export']) {
+test('sidebar shows all navigation tabs', async () => {
+  for (const label of ['Scan', 'Duplicates', 'Organize', 'Quality', 'Export', 'Settings']) {
     await expect(navButton(label)).toBeVisible()
   }
 })
@@ -137,7 +137,8 @@ test('all remaining tabs open without error', async () => {
   for (const [label, heading] of [
     ['Organize', 'Organize'],
     ['Quality', 'Quality'],
-    ['Export', 'Export']
+    ['Export', 'Export'],
+    ['Settings', 'Settings']
   ] as const) {
     await navButton(label).click()
     await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
