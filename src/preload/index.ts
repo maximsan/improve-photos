@@ -10,7 +10,11 @@ import type {
   PhotoRecord,
   MoveOperation,
   ExportPreset,
-  ReleaseFeatureFlags
+  ReleaseFeatureFlags,
+  LicenseStatus,
+  EntitlementStatus,
+  PhotoCountDecision,
+  UpdateStatus
 } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 
@@ -91,10 +95,39 @@ const api: ElectronAPI = {
 
   cancelExport: () => ipcRenderer.invoke(IPC.CANCEL_EXPORT),
 
+  cancelQuality: () => ipcRenderer.invoke(IPC.CANCEL_QUALITY),
+
   confirmTrash: (count: number) => ipcRenderer.invoke(IPC.CONFIRM_TRASH, count),
 
   getReleaseFeatureFlags: (): Promise<ReleaseFeatureFlags> =>
-    ipcRenderer.invoke(IPC.GET_RELEASE_FEATURE_FLAGS)
+    ipcRenderer.invoke(IPC.GET_RELEASE_FEATURE_FLAGS),
+
+  getLicenseStatus: (): Promise<LicenseStatus> => ipcRenderer.invoke(IPC.GET_LICENSE_STATUS),
+
+  activateLicense: (licenseKey: string): Promise<LicenseStatus> =>
+    ipcRenderer.invoke(IPC.ACTIVATE_LICENSE, licenseKey),
+
+  deactivateLicense: (): Promise<LicenseStatus> => ipcRenderer.invoke(IPC.DEACTIVATE_LICENSE),
+
+  getEntitlementStatus: (): Promise<EntitlementStatus> =>
+    ipcRenderer.invoke(IPC.GET_ENTITLEMENT_STATUS),
+
+  canProcessPhotoCount: (photoCount: number): Promise<PhotoCountDecision> =>
+    ipcRenderer.invoke(IPC.CAN_PROCESS_PHOTO_COUNT, photoCount),
+
+  getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.GET_UPDATE_STATUS),
+
+  checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.CHECK_FOR_UPDATES),
+
+  downloadUpdate: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.DOWNLOAD_UPDATE),
+
+  installUpdate: (): Promise<void> => ipcRenderer.invoke(IPC.INSTALL_UPDATE),
+
+  onUpdateStatus: (cb: (status: UpdateStatus) => void) => {
+    const handler = (_event: IpcRendererEvent, status: UpdateStatus): void => cb(status)
+    ipcRenderer.on(IPC.UPDATE_STATUS, handler)
+    return () => ipcRenderer.removeListener(IPC.UPDATE_STATUS, handler)
+  }
 }
 
 if (process.contextIsolated) {

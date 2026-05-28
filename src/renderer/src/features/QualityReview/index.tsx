@@ -22,6 +22,7 @@ function QualityReview(): React.JSX.Element {
     toggleSelect,
     selectAll,
     handleScore,
+    handleCancelScore,
     handleConfirmTrash,
     handleReset,
     setStatus
@@ -66,6 +67,7 @@ function QualityReview(): React.JSX.Element {
           onSelectAll={selectAll}
           onReview={() => setStatus('reviewing')}
           onReset={handleScore}
+          onCancel={handleCancelScore}
           onClear={handleReset}
         />
       )
@@ -85,7 +87,7 @@ function QualityReview(): React.JSX.Element {
             Sharpness is measured by Laplacian variance — blurry photos score lower.
           </>
         }
-        actionLabel="Analyse Sharpness"
+        actionLabel="Analyze Sharpness"
         actionIcon={<Sparkles size={15} strokeWidth={2} />}
         onAction={handleScore}
         error={error}

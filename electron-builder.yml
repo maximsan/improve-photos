@@ -27,7 +27,7 @@ mac:
   target:
     - target: dmg
       arch:
-        - arm64
+        - universal
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.

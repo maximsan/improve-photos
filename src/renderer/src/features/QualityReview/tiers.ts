@@ -48,7 +48,7 @@ export const TIERS: Tier[] = [
   },
   {
     key: 'failed',
-    label: 'Unable to Analyse',
+    label: 'Unable to Analyze',
     dotColor: 'bg-surface-300',
     countColor: 'text-surface-400',
     test: (s) => s < 0,

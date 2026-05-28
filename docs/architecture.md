@@ -35,14 +35,14 @@ Returns PhotoRecord[] back up the same chain
 
 ## Feature modules
 
-| Module    | Main file                   | What it does                               |
-| --------- | --------------------------- | ------------------------------------------ |
-| Scanner   | `src/main/ipc/scanner.ts`   | Walks a directory, reads EXIF + dimensions |
-| Dedup     | `src/main/ipc/dedup.ts`     | Groups photos by perceptual hash           |
-| Organizer | `src/main/ipc/organizer.ts` | Proposes and executes date-based moves     |
-| Quality   | `src/main/ipc/quality.ts`   | Scores photos by blur (Laplacian variance) |
-| Exporter  | `src/main/ipc/exporter.ts`  | Batch resizes/converts photos via presets  |
-| Settings  | `src/main/ipc/releaseFeatureFlags.ts` | Shows pre-v1 release feature gates |
+| Module    | Main file                             | What it does                               |
+| --------- | ------------------------------------- | ------------------------------------------ |
+| Scanner   | `src/main/ipc/scanner.ts`             | Walks a directory, reads EXIF + dimensions |
+| Dedup     | `src/main/ipc/dedup.ts`               | Groups photos by perceptual hash           |
+| Organizer | `src/main/ipc/organizer.ts`           | Proposes and executes date-based moves     |
+| Quality   | `src/main/ipc/quality.ts`             | Scores photos by blur (Laplacian variance) |
+| Exporter  | `src/main/ipc/exporter.ts`            | Batch resizes/converts photos via presets  |
+| Settings  | `src/main/ipc/releaseFeatureFlags.ts` | Shows pre-v1 release feature gates         |
 
 ## V1 release boundaries
 

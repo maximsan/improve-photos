@@ -98,6 +98,11 @@ test.beforeAll(async () => {
   const [ctx] = browser.contexts()
   page = ctx.pages()[0] ?? (await ctx.waitForEvent('page'))
   await page.waitForLoadState('domcontentloaded')
+
+  const startButton = page.getByRole('button', { name: 'Start with Scan' })
+  if (await startButton.isVisible()) {
+    await startButton.click()
+  }
 })
 
 test.afterAll(async () => {
@@ -110,7 +115,7 @@ test('window opens and renders the app shell', async () => {
 })
 
 test('sidebar shows all navigation tabs', async () => {
-  for (const label of ['Scan', 'Duplicates', 'Organize', 'Quality', 'Export', 'Settings']) {
+  for (const label of ['Scan', 'Duplicates', 'Organize', 'Quality', 'Export', 'Help', 'Settings']) {
     await expect(navButton(label)).toBeVisible()
   }
 })
@@ -138,6 +143,7 @@ test('all remaining tabs open without error', async () => {
     ['Organize', 'Organize'],
     ['Quality', 'Quality'],
     ['Export', 'Export'],
+    ['Help', 'Help'],
     ['Settings', 'Settings']
   ] as const) {
     await navButton(label).click()

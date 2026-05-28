@@ -3,7 +3,7 @@ import { is } from '@electron-toolkit/utils'
 import type { PhotoHashes, DuplicateGroup, HashProgress } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 import { computePHash, hammingDistance } from '../lib/hash'
-import { getCachedPhotos } from './scanner'
+import { getCachedPhotos, removeCachedPhotosByPath } from './scanner'
 
 /** Bit distance at or below which two photos are considered near-duplicates. */
 const DUPLICATE_THRESHOLD = 10
@@ -137,13 +137,16 @@ export function registerDedupHandlers(): void {
 
   ipcMain.handle(IPC.TRASH_FILES, async (_event, paths: string[]): Promise<void> => {
     const errors: string[] = []
+    const trashedPaths: string[] = []
     for (const p of paths) {
       try {
         await shell.trashItem(p)
+        trashedPaths.push(p)
       } catch (err) {
         errors.push(`${p}: ${err instanceof Error ? err.message : String(err)}`)
       }
     }
+    removeCachedPhotosByPath(trashedPaths)
     if (errors.length > 0) {
       throw new Error(
         `${errors.length} of ${paths.length} file(s) could not be trashed:\n${errors.join('\n')}`

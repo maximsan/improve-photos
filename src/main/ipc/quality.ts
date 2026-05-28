@@ -18,6 +18,7 @@ if (typeof sharp.cache === 'function') {
 const MAX_CONCURRENT = 4
 const HEIC_RE = /\.(heic|heif)$/i
 const execFileAsync = promisify(execFile)
+let activeQualityController: { cancelled: boolean } | null = null
 
 /**
  * Prebuilt `sharp` ships libvips without HEVC-in-HEIF decode (licensing; see
@@ -87,9 +88,17 @@ async function runBlurScorePipeline(input: string | Buffer): Promise<number> {
 }
 
 export function registerQualityHandlers(): void {
+  ipcMain.handle(IPC.CANCEL_QUALITY, () => {
+    if (activeQualityController) {
+      activeQualityController.cancelled = true
+    }
+  })
+
   ipcMain.handle(
     IPC.GET_BLUR_SCORES,
     async (event: IpcMainInvokeEvent, paths: string[]): Promise<BlurScores> => {
+      const controller = { cancelled: false }
+      activeQualityController = controller
       const scores: BlurScores = {}
       let done = 0
       const total = paths.length
@@ -98,6 +107,9 @@ export function registerQualityHandlers(): void {
 
       async function worker(): Promise<void> {
         for (const p of { [Symbol.iterator]: () => iter }) {
+          if (controller.cancelled) {
+            break
+          }
           try {
             const score = await computeBlurScore(p)
             scores[p] = score
@@ -114,6 +126,7 @@ export function registerQualityHandlers(): void {
       }
 
       await Promise.all(Array.from({ length: MAX_CONCURRENT }, worker))
+      activeQualityController = null
 
       if (is.dev) {
         const scored = Object.keys(scores).length

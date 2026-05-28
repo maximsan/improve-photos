@@ -30,7 +30,7 @@
     "build": "pnpm typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "pnpm build && electron-builder --dir",
-    "build:mac": "pnpm build && electron-builder --mac --dir --arm64 && bash scripts/create-dmg.sh"
+    "build:mac": "pnpm build && electron-builder --mac --dir --universal && bash scripts/create-dmg.sh universal"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -42,6 +42,8 @@
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "0.34.5",
+    "@img/sharp-darwin-x64": "0.34.5",
+    "@img/sharp-libvips-darwin-x64": "1.2.4",
     "@img/sharp-libvips-darwin-arm64": "1.2.4"
   },
   "devDependencies": {

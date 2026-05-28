@@ -6,7 +6,10 @@ import Dedup from './features/Dedup'
 import Organizer from './features/Organizer'
 import QualityReview from './features/QualityReview'
 import Exporter from './features/Exporter'
+import Help from './features/Help'
 import Settings from './features/Settings'
+import FirstRunOnboarding from './features/Onboarding'
+import { useFirstRunOnboarding } from './features/Onboarding/hooks/useFirstRunOnboarding'
 import { PhotosContext } from './context/photos'
 import { NavigationContext } from './context/navigation'
 import type { PhotoRecord } from '@shared/ipc'
@@ -17,6 +20,7 @@ const FEATURES: FeatureMap = {
   organizer: Organizer,
   quality: QualityReview,
   exporter: Exporter,
+  help: Help,
   settings: Settings
 }
 
@@ -25,14 +29,27 @@ function App(): React.JSX.Element {
   const [photos, setPhotos] = useState<PhotoRecord[]>([])
   const [scanRoot, setScanRoot] = useState<string | null>(null)
   const [scanRevision, setScanRevision] = useState(0)
+  const { shouldShowOnboarding, completeOnboarding } = useFirstRunOnboarding()
   function bumpScanRevision(): void {
     setScanRevision((r) => r + 1)
+  }
+  function removePhotosByPath(paths: string[]): void {
+    const trashedPaths = new Set(paths)
+    setPhotos((currentPhotos) => currentPhotos.filter((photo) => !trashedPaths.has(photo.path)))
   }
 
   return (
     <NavigationContext.Provider value={{ setActiveTab }}>
       <PhotosContext.Provider
-        value={{ photos, scanRoot, scanRevision, setPhotos, setScanRoot, bumpScanRevision }}
+        value={{
+          photos,
+          scanRoot,
+          scanRevision,
+          setPhotos,
+          setScanRoot,
+          removePhotosByPath,
+          bumpScanRevision
+        }}
       >
         <div className="flex h-full overflow-hidden">
           <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -43,6 +60,18 @@ function App(): React.JSX.Element {
               </div>
             ))}
           </main>
+          {shouldShowOnboarding ? (
+            <FirstRunOnboarding
+              onStart={() => {
+                completeOnboarding()
+                setActiveTab('scanner')
+              }}
+              onOpenHelp={() => {
+                completeOnboarding()
+                setActiveTab('help')
+              }}
+            />
+          ) : null}
         </div>
       </PhotosContext.Provider>
     </NavigationContext.Provider>

@@ -52,8 +52,15 @@ export function useOrganizerState(): OrganizerState {
       return
     }
 
-    setStatus('previewing')
     try {
+      const entitlement = await window.api.canProcessPhotoCount(photos.length)
+      if (!entitlement.allowed) {
+        setError(entitlement.reason ?? 'Photo limit exceeded')
+        setStatus('idle')
+        return
+      }
+
+      setStatus('previewing')
       const result = await window.api.previewOrganize(photos, scanRoot)
       setOps(result)
       setStatus('preview')
@@ -64,8 +71,16 @@ export function useOrganizerState(): OrganizerState {
   }
 
   async function handleConfirm(): Promise<void> {
-    setStatus('moving')
     try {
+      const movableCount = ops.filter((op) => !op.conflict).length
+      const entitlement = await window.api.canProcessPhotoCount(movableCount)
+      if (!entitlement.allowed) {
+        setError(entitlement.reason ?? 'Photo limit exceeded')
+        setStatus('preview')
+        return
+      }
+
+      setStatus('moving')
       await window.api.executeOrganize(ops)
       const { moved, movedPaths } = ops.reduce<{ moved: number; movedPaths: Map<string, string> }>(
         (acc, op) => {

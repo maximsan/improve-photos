@@ -23,11 +23,13 @@ const GROUP: DuplicateGroup = { hash: 'aabbcc', photos: [PHOTO_A, PHOTO_B] }
 const mockApi = {
   computeHashes: vi.fn(),
   getDuplicateGroups: vi.fn(),
+  canProcessPhotoCount: vi.fn(),
   onHashProgress: vi.fn(() => vi.fn()),
   cancelHashes: vi.fn(),
   confirmTrash: vi.fn(),
   trashFiles: vi.fn()
 }
+const removePhotosByPath = vi.fn()
 
 function wrapper({ children }: { children: ReactNode }): ReactElement {
   return createElement(
@@ -39,6 +41,7 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
         scanRevision: 0,
         setPhotos: vi.fn(),
         setScanRoot: vi.fn(),
+        removePhotosByPath,
         bumpScanRevision: vi.fn()
       }
     },
@@ -48,7 +51,9 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  removePhotosByPath.mockClear()
   mockApi.onHashProgress.mockReturnValue(vi.fn())
+  mockApi.canProcessPhotoCount.mockResolvedValue({ allowed: true, photoLimit: 100, reason: null })
   Object.defineProperty(window, 'api', { value: mockApi, writable: true, configurable: true })
 })
 
@@ -86,6 +91,21 @@ describe('useDedupState', () => {
     expect(result.current.error).toBe('hash error')
   })
 
+  it('handleAnalyze stops before hashing when the free limit is exceeded', async () => {
+    mockApi.canProcessPhotoCount.mockResolvedValue({
+      allowed: false,
+      photoLimit: 100,
+      reason: 'limit exceeded'
+    })
+    const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
+
+    await act(() => result.current.handleAnalyze())
+
+    expect(mockApi.computeHashes).not.toHaveBeenCalled()
+    expect(result.current.error).toBe('limit exceeded')
+    expect(result.current.status).toBe('idle')
+  })
+
   it('toggleTrash adds and removes a path', () => {
     const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
 
@@ -119,5 +139,17 @@ describe('useDedupState', () => {
     expect(result.current.status).toBe('idle')
     expect(result.current.groups).toEqual([])
     expect(result.current.toTrash.size).toBe(0)
+  })
+
+  it('removes trashed duplicate photos from shared photo state', async () => {
+    mockApi.trashFiles.mockResolvedValue(undefined)
+    const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
+
+    act(() => result.current.setStatus('reviewing'))
+    act(() => result.current.toggleTrash('/p/b.jpg'))
+    await act(() => result.current.handleConfirmTrash())
+
+    expect(mockApi.trashFiles).toHaveBeenCalledWith(['/p/b.jpg'])
+    expect(removePhotosByPath).toHaveBeenCalledWith(['/p/b.jpg'])
   })
 })

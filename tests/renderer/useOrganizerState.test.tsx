@@ -34,6 +34,7 @@ const OP_B: MoveOperation = { ...OP_A, photo: PHOTO_B, targetPath: '/root/2024/0
 const mockSetPhotos = vi.fn()
 
 const mockApi = {
+  canProcessPhotoCount: vi.fn(),
   previewOrganize: vi.fn(),
   executeOrganize: vi.fn(),
   undoOrganize: vi.fn()
@@ -50,6 +51,7 @@ function makeWrapper(scanRevision = 0, scanRoot: string | null = SCAN_ROOT) {
           scanRevision,
           setPhotos: mockSetPhotos,
           setScanRoot: vi.fn(),
+          removePhotosByPath: vi.fn(),
           bumpScanRevision: vi.fn()
         }
       },
@@ -60,6 +62,7 @@ function makeWrapper(scanRevision = 0, scanRoot: string | null = SCAN_ROOT) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockApi.canProcessPhotoCount.mockResolvedValue({ allowed: true, photoLimit: 100, reason: null })
   Object.defineProperty(window, 'api', { value: mockApi, writable: true, configurable: true })
 })
 

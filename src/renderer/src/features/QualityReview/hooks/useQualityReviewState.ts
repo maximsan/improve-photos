@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePhotos } from '../../../context/photos'
 import type { PhotoRecord, BlurScores, QualityProgress } from '@shared/ipc'
 
-export type QualityStatus = 'idle' | 'scoring' | 'results' | 'reviewing' | 'trashing' | 'done'
+export type QualityStatus = 'idle' | 'results' | 'reviewing' | 'trashing' | 'done'
 
 export type QualityReviewState = {
   status: QualityStatus
@@ -14,13 +14,14 @@ export type QualityReviewState = {
   toggleSelect: (path: string) => void
   selectAll: (paths: string[], select: boolean) => void
   handleScore: () => Promise<void>
+  handleCancelScore: () => void
   handleConfirmTrash: () => Promise<void>
   handleReset: () => void
   setStatus: React.Dispatch<React.SetStateAction<QualityStatus>>
 }
 
 export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState {
-  const { scanRevision } = usePhotos()
+  const { scanRevision, removePhotosByPath } = usePhotos()
   const [status, setStatus] = useState<QualityStatus>('idle')
   const [scores, setScores] = useState<BlurScores>({})
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -78,6 +79,15 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     setSelected(new Set())
     setScores({})
     setProgress(null)
+
+    const entitlement = await window.api.canProcessPhotoCount(photos.length)
+    if (!entitlement.allowed) {
+      setError(entitlement.reason ?? 'Photo limit exceeded')
+      setIsScoring(false)
+      setStatus('idle')
+      return
+    }
+
     setIsScoring(true)
     setStatus('results')
 
@@ -101,10 +111,34 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     }
   }
 
+  function handleCancelScore(): void {
+    window.api.cancelQuality()
+    unsubscribeRef.current?.()
+    unsubscribeRef.current = null
+    unsubscribeItemRef.current?.()
+    unsubscribeItemRef.current = null
+    setProgress(null)
+    setIsScoring(false)
+    setStatus('idle')
+  }
+
   async function handleConfirmTrash(): Promise<void> {
-    setStatus('trashing')
     try {
-      await window.api.trashFiles([...selected])
+      const trashedPaths = [...selected]
+      const entitlement = await window.api.canProcessPhotoCount(trashedPaths.length)
+      if (!entitlement.allowed) {
+        setError(entitlement.reason ?? 'Photo limit exceeded')
+        setStatus('reviewing')
+        return
+      }
+
+      const confirmed = await window.api.confirmTrash(trashedPaths.length)
+      if (!confirmed) {
+        return
+      }
+      setStatus('trashing')
+      await window.api.trashFiles(trashedPaths)
+      removePhotosByPath(trashedPaths)
       setStatus('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Trash failed')
@@ -131,6 +165,7 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
     toggleSelect,
     selectAll,
     handleScore,
+    handleCancelScore,
     handleConfirmTrash,
     handleReset,
     setStatus

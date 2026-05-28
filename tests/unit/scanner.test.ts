@@ -22,6 +22,8 @@ import {
   walkDir,
   buildPhotoRecord,
   IMAGE_EXTENSIONS,
+  getCachedPhotos,
+  removeCachedPhotosByPath,
   registerScannerHandlers
 } from '../../src/main/ipc/scanner'
 
@@ -213,6 +215,26 @@ describe('scanner IPC handlers', () => {
     )
   })
 
+  it('removes trashed paths from the scan cache', async () => {
+    vi.mocked(readdir).mockResolvedValueOnce([
+      { name: 'a.jpg', isDirectory: () => false },
+      { name: 'b.png', isDirectory: () => false }
+    ] as never)
+    vi.mocked(stat).mockResolvedValue({ size: 1_024 } as never)
+    vi.mocked(sharp).mockReturnValue({
+      metadata: vi.fn().mockResolvedValue({ width: 800, height: 600 })
+    } as never)
+    vi.mocked(exifr.parse).mockResolvedValue(null)
+
+    const handlers = registerScannerTestHandlers()
+    const event = { sender: { send: vi.fn() } }
+
+    await handlers.get(IPC.SCAN)!(event, '/photos' as never)
+    removeCachedPhotosByPath(['/photos/a.jpg'])
+
+    expect(getCachedPhotos().map((photo) => photo.path)).toEqual(['/photos/b.png'])
+  })
+
   it('cancels an active scan before records are processed', async () => {
     vi.mocked(readdir).mockResolvedValueOnce([{ name: 'a.jpg', isDirectory: () => false }] as never)
 
@@ -228,5 +250,23 @@ describe('scanner IPC handlers', () => {
       IPC.SCAN_PROGRESS,
       expect.objectContaining({ total: 1 })
     )
+  })
+
+  it('stops scan before reading photo metadata when the free limit is exceeded', async () => {
+    vi.mocked(readdir).mockResolvedValueOnce(
+      Array.from({ length: 101 }, (_, index) => ({
+        name: `photo-${index}.jpg`,
+        isDirectory: () => false
+      })) as never
+    )
+
+    const handlers = registerScannerTestHandlers()
+    const event = { sender: { send: vi.fn() } }
+
+    await expect(handlers.get(IPC.SCAN)!(event, '/photos' as never)).rejects.toThrow(
+      'Unlicensed use is limited'
+    )
+    expect(stat).not.toHaveBeenCalled()
+    expect(event.sender.send).not.toHaveBeenCalled()
   })
 })

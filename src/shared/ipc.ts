@@ -111,6 +111,50 @@ export interface ReleaseFeatureFlags {
   releasePublishingEnabled: boolean
 }
 
+// ─── Licensing ───────────────────────────────────────────────────────────────
+
+export const FREE_PHOTO_LIMIT = 100
+
+export type LicenseState = 'disabled' | 'unlicensed' | 'licensed'
+
+export interface LicenseStatus {
+  state: LicenseState
+  licenseKeyLast4: string | null
+  productName: string | null
+  customerEmail: string | null
+  activatedAt: string | null
+}
+
+export interface EntitlementStatus {
+  licensed: boolean
+  photoLimit: number | null
+}
+
+export interface PhotoCountDecision {
+  allowed: boolean
+  photoLimit: number | null
+  reason: string | null
+}
+
+// ─── Auto-updates ────────────────────────────────────────────────────────────
+
+export type UpdateState =
+  | 'disabled'
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'ready'
+  | 'error'
+
+export interface UpdateStatus {
+  state: UpdateState
+  version: string | null
+  percent: number | null
+  message: string | null
+}
+
 // ─── IPC channel names (single source of truth) ──────────────────────────────
 
 export const IPC = {
@@ -128,12 +172,23 @@ export const IPC = {
   CANCEL_HASHES: 'dedup:cancel-hashes',
   CANCEL_SCAN: 'scanner:cancel',
   CANCEL_EXPORT: 'export:cancel',
+  CANCEL_QUALITY: 'quality:cancel',
   UNDO_ORGANIZE: 'undo-organize',
   CONFIRM_TRASH: 'dedup:confirm-trash',
   QUALITY_PROGRESS: 'quality:progress',
   QUALITY_SCORE_ITEM: 'quality:score-item',
   SCAN_PROGRESS: 'scanner:progress',
-  GET_RELEASE_FEATURE_FLAGS: 'release:get-feature-flags'
+  GET_RELEASE_FEATURE_FLAGS: 'release:get-feature-flags',
+  GET_LICENSE_STATUS: 'license:get-status',
+  ACTIVATE_LICENSE: 'license:activate',
+  DEACTIVATE_LICENSE: 'license:deactivate',
+  GET_ENTITLEMENT_STATUS: 'entitlement:get-status',
+  CAN_PROCESS_PHOTO_COUNT: 'entitlement:can-process-photo-count',
+  GET_UPDATE_STATUS: 'updates:get-status',
+  CHECK_FOR_UPDATES: 'updates:check',
+  DOWNLOAD_UPDATE: 'updates:download',
+  INSTALL_UPDATE: 'updates:install',
+  UPDATE_STATUS: 'updates:status'
 } as const
 
 // ─── Typed window.api surface (matches preload contextBridge) ────────────────
@@ -166,10 +221,32 @@ export interface ElectronAPI {
   undoOrganize: (pairs: { from: string; to: string }[]) => Promise<void>
   /** Cancel an in-progress `exportBatch` call. */
   cancelExport: () => Promise<void>
+  /** Cancel an in-progress `getBlurScores` call. */
+  cancelQuality: () => Promise<void>
   /** Show a native macOS confirmation dialog before trashing. Resolves to true if confirmed. */
   confirmTrash: (count: number) => Promise<boolean>
   /** Read release-mode feature gates. Disabled gates must not make network calls. */
   getReleaseFeatureFlags: () => Promise<ReleaseFeatureFlags>
+  /** Read stored license state. */
+  getLicenseStatus: () => Promise<LicenseStatus>
+  /** Activate a one-time Lemon Squeezy license key. */
+  activateLicense: (licenseKey: string) => Promise<LicenseStatus>
+  /** Deactivate the stored Lemon Squeezy license instance. */
+  deactivateLicense: () => Promise<LicenseStatus>
+  /** Read current processing entitlement. */
+  getEntitlementStatus: () => Promise<EntitlementStatus>
+  /** Check whether a workflow can process the requested photo count. */
+  canProcessPhotoCount: (photoCount: number) => Promise<PhotoCountDecision>
+  /** Read current update state. */
+  getUpdateStatus: () => Promise<UpdateStatus>
+  /** Check GitHub Releases for updates when the auto-update gate is enabled. */
+  checkForUpdates: () => Promise<UpdateStatus>
+  /** Download an available update. */
+  downloadUpdate: () => Promise<UpdateStatus>
+  /** Install a downloaded update after user confirmation. */
+  installUpdate: () => Promise<void>
+  /** Subscribe to update status changes. Returns an unsubscribe function. */
+  onUpdateStatus: (cb: (status: UpdateStatus) => void) => () => void
 }
 
 declare global {

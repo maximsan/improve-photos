@@ -28,6 +28,7 @@ const PRESET: Preset = { id: 'p1', name: 'Web', format: 'jpeg', quality: 80 }
 const mockUnsubscribe = vi.fn()
 const mockApi = {
   pickFolder: vi.fn<() => Promise<string | null>>(),
+  canProcessPhotoCount: vi.fn(),
   exportBatch:
     vi.fn<(photos: PhotoRecord[], presets: ExportPreset[], outDir: string) => Promise<void>>(),
   onExportProgress: vi.fn<(cb: (p: ExportProgress) => void) => () => void>(() => mockUnsubscribe)
@@ -43,6 +44,7 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
         scanRevision: 0,
         setPhotos: vi.fn(),
         setScanRoot: vi.fn(),
+        removePhotosByPath: vi.fn(),
         bumpScanRevision: vi.fn()
       }
     },
@@ -53,6 +55,7 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
 beforeEach(() => {
   vi.clearAllMocks()
   mockApi.onExportProgress.mockReturnValue(mockUnsubscribe)
+  mockApi.canProcessPhotoCount.mockResolvedValue({ allowed: true, photoLimit: 100, reason: null })
   Object.defineProperty(window, 'api', { value: mockApi, writable: true, configurable: true })
 })
 

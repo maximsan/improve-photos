@@ -37,29 +37,20 @@
 # • Disabling the DMG target and shipping a plain .zip: works, but a DMG is
 #   the macOS convention and gives users the drag-to-install UX.
 #
-# ARM64 vs INTEL (x64) COVERAGE
-# ------------------------------
-# This script is intentionally arm64-only. ARCH and APP_BUNDLE are hardcoded
-# to arm64 to match electron-builder's --arm64 flag in the build:mac script.
-#
-# To add an Intel (x64) build you would:
-#   1. Change electron-builder --arm64 → --x64 (or --universal for a fat binary)
-#   2. Update ARCH and APP_BUNDLE here to match (mac-x64 or mac-universal)
-#   3. Add the corresponding x64 optionalDependencies to package.json
-#      (@img/sharp-darwin-x64 and @img/sharp-libvips-darwin-x64)
-#
-# A universal (fat) binary is ~2× the size but runs natively on both chips
-# without needing separate builds. For a personal/internal tool targeting
-# Apple Silicon only, the arm64-only build is the right trade-off.
+# UNIVERSAL MAC COVERAGE
+# ----------------------
+# The default build is universal so one DMG runs natively on Apple Silicon and
+# Intel Macs. Pass a different arch as the first argument only when debugging a
+# single-architecture package, e.g. `bash scripts/create-dmg.sh arm64`.
 # =============================================================================
 set -euo pipefail
 
 APP_NAME="Cleanup Photos"
 VERSION=$(node -p "require('./package.json').version")
-ARCH="arm64"
+ARCH="${1:-universal}"
 DMG_NAME="${APP_NAME}-${VERSION}-${ARCH}.dmg"
 VOLUME_NAME="${APP_NAME} ${VERSION}"
-APP_BUNDLE="dist/mac-arm64/${APP_NAME}.app"
+APP_BUNDLE="dist/mac-${ARCH}/${APP_NAME}.app"
 
 if [ ! -d "${APP_BUNDLE}" ]; then
   echo "ERROR: ${APP_BUNDLE} not found. Run electron-builder --dir first." >&2

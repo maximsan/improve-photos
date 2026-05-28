@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   Sparkles,
   Upload,
+  HelpCircle,
   BrushCleaning,
   Settings,
   type LucideIcon
@@ -16,6 +17,7 @@ const NAV_ITEMS: { id: Tab; label: string; Icon: LucideIcon }[] = [
   { id: 'organizer', label: 'Organize', Icon: CalendarCheck },
   { id: 'quality', label: 'Quality', Icon: Sparkles },
   { id: 'exporter', label: 'Export', Icon: Upload },
+  { id: 'help', label: 'Help', Icon: HelpCircle },
   { id: 'settings', label: 'Settings', Icon: Settings }
 ]
 

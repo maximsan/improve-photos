@@ -8,6 +8,9 @@ import { registerOrganizerHandlers } from './ipc/organizer'
 import { registerQualityHandlers } from './ipc/quality'
 import { registerExporterHandlers } from './ipc/exporter'
 import { registerReleaseFeatureFlagHandlers } from './ipc/releaseFeatureFlags'
+import { registerLicenseHandlers } from './ipc/license'
+import { registerEntitlementHandlers } from './ipc/entitlement'
+import { registerUpdateHandlers } from './ipc/updates'
 import { registerAppProtocol } from './localProtocol'
 
 const APP_USER_MODEL_ID = 'com.maksim.cleanup-photos'
@@ -86,6 +89,9 @@ app.whenReady().then(async () => {
   registerQualityHandlers()
   registerExporterHandlers()
   registerReleaseFeatureFlagHandlers()
+  registerLicenseHandlers()
+  registerEntitlementHandlers()
+  registerUpdateHandlers()
 
   createWindow()
 

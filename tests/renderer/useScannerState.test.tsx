@@ -36,6 +36,7 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
         scanRevision: 0,
         setPhotos: mockSetPhotos,
         setScanRoot: mockSetScanRoot,
+        removePhotosByPath: vi.fn(),
         bumpScanRevision: mockBump
       }
     },

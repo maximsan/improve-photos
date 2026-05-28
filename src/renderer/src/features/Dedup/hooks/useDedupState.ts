@@ -21,7 +21,7 @@ export type DedupState = {
 }
 
 export function useDedupState(photos: PhotoRecord[]): DedupState {
-  const { scanRevision } = usePhotos()
+  const { scanRevision, removePhotosByPath } = usePhotos()
   const [status, setStatus] = useState<DedupStatus>('idle')
   const [groups, setGroups] = useState<DuplicateGroup[]>([])
   const [toTrash, toggleTrash, clearTrash] = useSetToggle<string>()
@@ -50,6 +50,14 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   async function handleAnalyze(): Promise<void> {
     setError(null)
     setProgress(null)
+
+    const entitlement = await window.api.canProcessPhotoCount(photos.length)
+    if (!entitlement.allowed) {
+      setError(entitlement.reason ?? 'Photo limit exceeded')
+      setStatus('idle')
+      return
+    }
+
     setStatus('computing')
 
     unsubscribeRef.current = window.api.onHashProgress(setProgress)
@@ -78,6 +86,7 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   }
 
   function applyTrash(trashedPaths: Set<string>): void {
+    removePhotosByPath([...trashedPaths])
     const remainingGroups = groups
       .map((g) => ({ ...g, photos: g.photos.filter((p) => !trashedPaths.has(p.path)) }))
       .filter((g) => g.photos.length >= 2)
@@ -89,6 +98,13 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   /** Primary trash action — shows a native confirmation dialog first. */
   async function handleTrashWithConfirm(): Promise<void> {
     try {
+      const entitlement = await window.api.canProcessPhotoCount(toTrash.size)
+      if (!entitlement.allowed) {
+        setError(entitlement.reason ?? 'Photo limit exceeded')
+        setStatus('results')
+        return
+      }
+
       const confirmed = await window.api.confirmTrash(toTrash.size)
       if (!confirmed) {
         return
@@ -105,8 +121,15 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
 
   /** Used by ReviewScreen's confirm button after the user has inspected the list. */
   async function handleConfirmTrash(): Promise<void> {
-    setStatus('trashing')
     try {
+      const entitlement = await window.api.canProcessPhotoCount(toTrash.size)
+      if (!entitlement.allowed) {
+        setError(entitlement.reason ?? 'Photo limit exceeded')
+        setStatus('reviewing')
+        return
+      }
+
+      setStatus('trashing')
       const trashedPaths = new Set([...toTrash])
       await window.api.trashFiles([...trashedPaths])
       applyTrash(trashedPaths)

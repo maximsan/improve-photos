@@ -7,7 +7,9 @@ export const dialog = {
 }
 
 export const BrowserWindow = {
-  fromWebContents: () => null
+  fromWebContents: () => null,
+  getFocusedWindow: () => null,
+  getAllWindows: () => []
 }
 
 export const net = {

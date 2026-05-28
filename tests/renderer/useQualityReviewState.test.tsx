@@ -19,10 +19,14 @@ const PHOTO_B: PhotoRecord = { ...PHOTO_A, path: '/p/b.jpg', name: 'b.jpg' }
 
 const mockApi = {
   getBlurScores: vi.fn(),
+  canProcessPhotoCount: vi.fn(),
   onQualityProgress: vi.fn(() => vi.fn()),
   onQualityScoreItem: vi.fn<(cb: (item: QualityScoreItem) => void) => () => void>(() => vi.fn()),
+  cancelQuality: vi.fn(),
+  confirmTrash: vi.fn(),
   trashFiles: vi.fn()
 }
+const removePhotosByPath = vi.fn()
 
 function wrapper({ children }: { children: ReactNode }): ReactElement {
   return createElement(
@@ -34,6 +38,7 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
         scanRevision: 0,
         setPhotos: vi.fn(),
         setScanRoot: vi.fn(),
+        removePhotosByPath,
         bumpScanRevision: vi.fn()
       }
     },
@@ -43,8 +48,11 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  removePhotosByPath.mockClear()
   mockApi.onQualityProgress.mockReturnValue(vi.fn())
   mockApi.onQualityScoreItem.mockReturnValue(vi.fn())
+  mockApi.canProcessPhotoCount.mockResolvedValue({ allowed: true, photoLimit: 100, reason: null })
+  mockApi.confirmTrash.mockResolvedValue(true)
   Object.defineProperty(window, 'api', { value: mockApi, writable: true, configurable: true })
 })
 
@@ -92,6 +100,21 @@ describe('useQualityReviewState', () => {
     expect(result.current.isScoring).toBe(false)
   })
 
+  it('handleScore stops before scoring when the free limit is exceeded', async () => {
+    mockApi.canProcessPhotoCount.mockResolvedValue({
+      allowed: false,
+      photoLimit: 100,
+      reason: 'limit exceeded'
+    })
+    const { result } = renderHook(() => useQualityReviewState(PHOTOS), { wrapper })
+
+    await act(() => result.current.handleScore())
+
+    expect(mockApi.getBlurScores).not.toHaveBeenCalled()
+    expect(result.current.error).toBe('limit exceeded')
+    expect(result.current.status).toBe('idle')
+  })
+
   it('toggleSelect adds and removes paths', () => {
     const { result } = renderHook(() => useQualityReviewState(PHOTOS), { wrapper })
 
@@ -121,7 +144,22 @@ describe('useQualityReviewState', () => {
     await act(() => result.current.handleConfirmTrash())
 
     expect(mockApi.trashFiles).toHaveBeenCalledWith(['/p/b.jpg'])
+    expect(mockApi.confirmTrash).toHaveBeenCalledWith(1)
+    expect(removePhotosByPath).toHaveBeenCalledWith(['/p/b.jpg'])
     expect(result.current.status).toBe('done')
+  })
+
+  it('handleConfirmTrash stops when native confirmation is cancelled', async () => {
+    mockApi.confirmTrash.mockResolvedValue(false)
+    const { result } = renderHook(() => useQualityReviewState(PHOTOS), { wrapper })
+
+    act(() => result.current.setStatus('reviewing'))
+    act(() => result.current.toggleSelect('/p/b.jpg'))
+    await act(() => result.current.handleConfirmTrash())
+
+    expect(mockApi.trashFiles).not.toHaveBeenCalled()
+    expect(removePhotosByPath).not.toHaveBeenCalled()
+    expect(result.current.status).toBe('reviewing')
   })
 
   it('handleConfirmTrash sets error and stays on reviewing when trash fails', async () => {
@@ -133,6 +171,27 @@ describe('useQualityReviewState', () => {
 
     expect(result.current.status).toBe('reviewing')
     expect(result.current.error).toBe('trash error')
+  })
+
+  it('handleCancelScore cancels in-flight scoring and returns to idle', async () => {
+    const unsubscribeProgress = vi.fn()
+    const unsubscribeItem = vi.fn()
+    mockApi.onQualityProgress.mockReturnValue(unsubscribeProgress)
+    mockApi.onQualityScoreItem.mockReturnValue(unsubscribeItem)
+    mockApi.getBlurScores.mockReturnValue(new Promise(() => {}))
+    const { result } = renderHook(() => useQualityReviewState(PHOTOS), { wrapper })
+
+    await act(async () => {
+      void result.current.handleScore()
+      await Promise.resolve()
+    })
+    act(() => result.current.handleCancelScore())
+
+    expect(mockApi.cancelQuality).toHaveBeenCalledTimes(1)
+    expect(unsubscribeProgress).toHaveBeenCalledTimes(1)
+    expect(unsubscribeItem).toHaveBeenCalledTimes(1)
+    expect(result.current.status).toBe('idle')
+    expect(result.current.isScoring).toBe(false)
   })
 
   it('handleReset clears scores, selection, and error', async () => {

@@ -6,7 +6,7 @@ export const BLUR_SCORE_SOFT_THRESHOLD = 12
 
 export function scoreLabel(score: number): { label: string; color: string } {
   if (score < 0) {
-    return { label: 'Unable to analyse', color: 'text-surface-400' }
+    return { label: 'Unable to analyze', color: 'text-surface-400' }
   }
   if (score < BLUR_SCORE_VERY_BLURRY_THRESHOLD) {
     return { label: 'Very blurry', color: 'text-red-500' }

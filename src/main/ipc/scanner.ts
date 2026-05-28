@@ -7,6 +7,7 @@ import exifr from 'exifr'
 import type { PhotoRecord } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 import { allowDirectory } from '../localProtocol'
+import { canProcessPhotoCount } from '../entitlement'
 
 export const IMAGE_EXTENSIONS = new Set([
   '.jpg',
@@ -27,6 +28,11 @@ let activeScanController: { cancelled: boolean } | null = null
 
 export function getCachedPhotos(): PhotoRecord[] {
   return photoCache
+}
+
+export function removeCachedPhotosByPath(paths: string[]): void {
+  const removedPaths = new Set(paths)
+  photoCache = photoCache.filter((photo) => !removedPaths.has(photo.path))
 }
 
 /**
@@ -124,6 +130,10 @@ export function registerScannerHandlers(): void {
 
     const paths = await walkDir(folderPath)
     const total = paths.length
+    const entitlement = await canProcessPhotoCount(total)
+    if (!entitlement.allowed) {
+      throw new Error(entitlement.reason ?? 'Photo limit exceeded')
+    }
     let done = 0
     const iter = paths[Symbol.iterator]()
 

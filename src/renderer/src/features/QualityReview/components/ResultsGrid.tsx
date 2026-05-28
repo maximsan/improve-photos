@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Trash2, FolderOpen, RotateCcw } from 'lucide-react'
+import { Trash2, FolderOpen, RotateCcw, X } from 'lucide-react'
 import { TierSection } from './TierSection'
 import { PhotoTile } from './PhotoTile'
 import { TIERS } from '../tiers'
@@ -16,6 +16,8 @@ interface ResultsGridProps {
   onReview: () => void
   /** Re-run analysis with the same photos */
   onReset: () => void
+  /** Cancel in-flight scoring */
+  onCancel: () => void
   /** Return to the initial idle state */
   onClear: () => void
 }
@@ -30,6 +32,7 @@ export function ResultsGrid({
   onSelectAll,
   onReview,
   onReset,
+  onCancel,
   onClear
 }: ResultsGridProps): React.JSX.Element {
   const sorted = useMemo(
@@ -102,22 +105,35 @@ export function ResultsGrid({
           )}
         </p>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onClear}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-500 bg-white border border-dashed border-surface-300 hover:border-surface-400 hover:text-surface-700 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
-          >
-            <FolderOpen size={12} strokeWidth={2} />
-            Change photos
-          </button>
-          <button
-            type="button"
-            onClick={onReset}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
-          >
-            <RotateCcw size={12} strokeWidth={2} />
-            Re-analyse
-          </button>
+          {isScoring ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
+            >
+              <X size={12} strokeWidth={2} />
+              Cancel
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onClear}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-500 bg-white border border-dashed border-surface-300 hover:border-surface-400 hover:text-surface-700 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
+              >
+                <FolderOpen size={12} strokeWidth={2} />
+                Change photos
+              </button>
+              <button
+                type="button"
+                onClick={onReset}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-surface-700 bg-white border border-surface-200 hover:border-surface-300 hover:bg-surface-50 transition-colors duration-150 cursor-pointer"
+              >
+                <RotateCcw size={12} strokeWidth={2} />
+                Re-analyze
+              </button>
+            </>
+          )}
           {!isScoring && selected.size > 0 && (
             <button
               type="button"

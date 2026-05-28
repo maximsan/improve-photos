@@ -8,8 +8,8 @@ import {
 
 describe('scoreLabel', () => {
   it('returns failed label for negative score', () => {
-    expect(scoreLabel(-1).label).toBe('Unable to analyse')
-    expect(scoreLabel(-100).label).toBe('Unable to analyse')
+    expect(scoreLabel(-1).label).toBe('Unable to analyze')
+    expect(scoreLabel(-100).label).toBe('Unable to analyze')
   })
 
   it('returns very blurry for score = 0', () => {

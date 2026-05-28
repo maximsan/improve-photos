@@ -37,6 +37,14 @@ export function useExporterState(): ExporterState {
     }
     setError(null)
     setProgress(null)
+
+    const entitlement = await window.api.canProcessPhotoCount(photos.length)
+    if (!entitlement.allowed) {
+      setError(entitlement.reason ?? 'Photo limit exceeded')
+      setStatus('idle')
+      return
+    }
+
     setStatus('exporting')
 
     const ipcPresets = presets.map(({ name, width, height, quality, format }) => ({

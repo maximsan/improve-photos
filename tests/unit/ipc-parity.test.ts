@@ -10,6 +10,15 @@ vi.mock('fs/promises', () => ({
   mkdir: vi.fn(),
   writeFile: vi.fn()
 }))
+vi.mock('electron-updater', () => ({
+  autoUpdater: {
+    autoDownload: false,
+    on: vi.fn(),
+    checkForUpdates: vi.fn(),
+    downloadUpdate: vi.fn(),
+    quitAndInstall: vi.fn()
+  }
+}))
 
 import { ipcMain } from 'electron'
 import { IPC } from '@shared/ipc'
@@ -19,6 +28,9 @@ import { registerOrganizerHandlers } from '../../src/main/ipc/organizer'
 import { registerQualityHandlers } from '../../src/main/ipc/quality'
 import { registerExporterHandlers } from '../../src/main/ipc/exporter'
 import { registerReleaseFeatureFlagHandlers } from '../../src/main/ipc/releaseFeatureFlags'
+import { registerLicenseHandlers } from '../../src/main/ipc/license'
+import { registerEntitlementHandlers } from '../../src/main/ipc/entitlement'
+import { registerUpdateHandlers } from '../../src/main/ipc/updates'
 
 /** Every channel the preload calls via ipcRenderer.invoke must have a handler. */
 const INVOKE_CHANNELS = [
@@ -34,9 +46,19 @@ const INVOKE_CHANNELS = [
   IPC.CANCEL_HASHES,
   IPC.CANCEL_SCAN,
   IPC.CANCEL_EXPORT,
+  IPC.CANCEL_QUALITY,
   IPC.UNDO_ORGANIZE,
   IPC.CONFIRM_TRASH,
-  IPC.GET_RELEASE_FEATURE_FLAGS
+  IPC.GET_RELEASE_FEATURE_FLAGS,
+  IPC.GET_LICENSE_STATUS,
+  IPC.ACTIVATE_LICENSE,
+  IPC.DEACTIVATE_LICENSE,
+  IPC.GET_ENTITLEMENT_STATUS,
+  IPC.CAN_PROCESS_PHOTO_COUNT,
+  IPC.GET_UPDATE_STATUS,
+  IPC.CHECK_FOR_UPDATES,
+  IPC.DOWNLOAD_UPDATE,
+  IPC.INSTALL_UPDATE
 ] as const
 
 describe('IPC parity: preload ↔ main', () => {
@@ -54,6 +76,9 @@ describe('IPC parity: preload ↔ main', () => {
     registerQualityHandlers()
     registerExporterHandlers()
     registerReleaseFeatureFlagHandlers()
+    registerLicenseHandlers()
+    registerEntitlementHandlers()
+    registerUpdateHandlers()
   })
 
   it.each(INVOKE_CHANNELS)('channel "%s" has a handler registered in main', (channel) => {
