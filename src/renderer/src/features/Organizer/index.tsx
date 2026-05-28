@@ -15,6 +15,7 @@ function Organizer(): React.JSX.Element {
     status,
     ops,
     movedCount,
+    scanRoot,
     error,
     handlePreview,
     handleConfirm,
@@ -70,7 +71,12 @@ function Organizer(): React.JSX.Element {
               }
             />
           ) : (
-            <PreviewView ops={ops} onConfirm={handleConfirm} onCancel={() => setStatus('idle')} />
+            <PreviewView
+              ops={ops}
+              scanRoot={scanRoot}
+              onConfirm={handleConfirm}
+              onCancel={() => setStatus('idle')}
+            />
           )}
           {error ? (
             <FormErrorText className="shrink-0 px-5 pb-3 text-center">{error}</FormErrorText>

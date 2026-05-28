@@ -101,13 +101,43 @@ describe('organizer IPC handlers', () => {
 
     const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!({}, [
       photo
-    ] as never)) as MoveOperation[]
+    ] as never, '/library/imports' as never)) as MoveOperation[]
 
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({
-      targetPath: '/library/2024/07/15/IMG_001.jpg',
+      targetPath: '/library/imports/2024/07/15/IMG_001.jpg',
       conflict: true
     })
+  })
+
+  it('previews flat-library targets under the explicit scan root', async () => {
+    vi.mocked(access).mockRejectedValue(new Error('missing'))
+    const handlers = registerOrganizerTestHandlers()
+    const photo = makePhoto({
+      path: '/library/IMG_001.jpg',
+      dateTaken: '2024-07-15T10:30:00.000Z'
+    })
+
+    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!({}, [
+      photo
+    ] as never, '/library' as never)) as MoveOperation[]
+
+    expect(result[0]?.targetPath).toBe('/library/2024/07/15/IMG_001.jpg')
+  })
+
+  it('previews deeply nested photo targets under the explicit scan root', async () => {
+    vi.mocked(access).mockRejectedValue(new Error('missing'))
+    const handlers = registerOrganizerTestHandlers()
+    const photo = makePhoto({
+      path: '/library/imports/phone/2020/trip/IMG_001.jpg',
+      dateTaken: '2024-07-15T10:30:00.000Z'
+    })
+
+    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!({}, [
+      photo
+    ] as never, '/library' as never)) as MoveOperation[]
+
+    expect(result[0]?.targetPath).toBe('/library/2024/07/15/IMG_001.jpg')
   })
 
   it('reports move failures without hiding the failed source path', async () => {

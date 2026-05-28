@@ -15,6 +15,7 @@ export type OrganizerState = {
   status: OrganizerStatus
   ops: MoveOperation[]
   movedCount: number
+  scanRoot: string | null
   error: string | null
   handlePreview: () => Promise<void>
   handleConfirm: () => Promise<void>
@@ -24,7 +25,7 @@ export type OrganizerState = {
 }
 
 export function useOrganizerState(): OrganizerState {
-  const { photos, setPhotos, scanRevision } = usePhotos()
+  const { photos, scanRoot, setPhotos, scanRevision } = usePhotos()
   const [status, setStatus] = useState<OrganizerStatus>('idle')
   const [ops, setOps] = useState<MoveOperation[]>([])
   const [movedCount, setMovedCount] = useState(0)
@@ -45,9 +46,15 @@ export function useOrganizerState(): OrganizerState {
 
   async function handlePreview(): Promise<void> {
     setError(null)
+    if (!scanRoot) {
+      setError('Scan a folder before previewing organize changes')
+      setStatus('idle')
+      return
+    }
+
     setStatus('previewing')
     try {
-      const result = await window.api.previewOrganize(photos)
+      const result = await window.api.previewOrganize(photos, scanRoot)
       setOps(result)
       setStatus('preview')
     } catch (err) {
@@ -116,6 +123,7 @@ export function useOrganizerState(): OrganizerState {
     status,
     ops,
     movedCount,
+    scanRoot,
     error,
     handlePreview,
     handleConfirm,

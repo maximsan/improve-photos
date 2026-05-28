@@ -10,6 +10,8 @@ import { registerExporterHandlers } from './ipc/exporter'
 import { registerReleaseFeatureFlagHandlers } from './ipc/releaseFeatureFlags'
 import { registerAppProtocol } from './localProtocol'
 
+const APP_USER_MODEL_ID = 'com.maksim.cleanup-photos'
+
 /** Playwright e2e: recent Electron rejects `--remote-debugging-port` on the CLI; set via switch before ready. */
 const e2eCdpPort = process.env['CLEANUP_PHOTOS_E2E_CDP_PORT']
 if (e2eCdpPort) {
@@ -62,7 +64,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId(APP_USER_MODEL_ID)
 
   if (is.dev) {
     const { default: installExtension, REACT_DEVELOPER_TOOLS } =

@@ -36,14 +36,14 @@ async function fileExists(filePath: string): Promise<boolean> {
 export function registerOrganizerHandlers(): void {
   ipcMain.handle(
     IPC.PREVIEW_ORGANIZE,
-    async (_event, photos: PhotoRecord[]): Promise<MoveOperation[]> => {
-      // Determine the common root directory from the first photo's current path.
-      // All photos from a single scan share the same root.
-      const rootDir = dirname(dirname(photos[0].path))
+    async (_event, photos: PhotoRecord[], scanRoot: string): Promise<MoveOperation[]> => {
+      if (!scanRoot) {
+        throw new Error('Scan root is required to preview organize changes')
+      }
 
       const ops = await Promise.all(
         photos.map(async (photo): Promise<MoveOperation> => {
-          const targetPath = deriveTargetPath(photo, rootDir)
+          const targetPath = deriveTargetPath(photo, scanRoot)
           const conflict = targetPath !== photo.path && (await fileExists(targetPath))
           return { photo, targetPath, conflict }
         })

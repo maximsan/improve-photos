@@ -26,7 +26,7 @@ export type ScannerState = {
 }
 
 export function useScannerState(): ScannerState {
-  const { setPhotos, bumpScanRevision } = usePhotos()
+  const { setPhotos, setScanRoot, bumpScanRevision } = usePhotos()
   const [status, setStatus] = useState<ScanStatus>('idle')
   const [localPhotos, setLocalPhotos] = useState<PhotoRecord[]>([])
   const [folderPath, setFolderPath] = useState<string | null>(null)
@@ -61,6 +61,7 @@ export function useScannerState(): ScannerState {
       const result = await window.api.scan(path)
       setLocalPhotos(result)
       setPhotos(result)
+      setScanRoot(path)
       bumpScanRevision()
       setStatus('done')
     } catch (err) {
@@ -82,6 +83,7 @@ export function useScannerState(): ScannerState {
       const result = await window.api.scan(folderPath)
       setLocalPhotos(result)
       setPhotos(result)
+      setScanRoot(folderPath)
       bumpScanRevision()
       setStatus('done')
     } catch (err) {
@@ -98,6 +100,7 @@ export function useScannerState(): ScannerState {
     setFolderPath(null)
     setError(null)
     setPhotos([])
+    setScanRoot(null)
     bumpScanRevision()
   }
 

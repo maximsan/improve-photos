@@ -10,6 +10,8 @@ Run through this before cutting a release DMG. Each section maps to one feature 
 - [ ] Install the DMG on a clean macOS user account (not the dev machine)
 - [ ] Grant the app access to the test photo folder when macOS prompts
 - [ ] Run Electron smoke tests from built output: `pnpm build && pnpm test:e2e`
+- [ ] Confirm payments, auto-updates, and release publishing are disabled unless final v1 approval has explicitly enabled them
+- [ ] Confirm no release was created or published by local build, push, merge, test, or CI smoke runs
 
 `pnpm test:e2e` connects to Electron through a loopback Chrome DevTools Protocol port on `127.0.0.1`.
 
@@ -85,13 +87,35 @@ Run through this before cutting a release DMG. Each section maps to one feature 
 
 ---
 
-## 6. Edge cases and permissions
+## 6. Settings and release gates
 
 | # | Scenario | Expected |
 |---|----------|----------|
-| 6.1 | Folder on an external drive | Scans and processes correctly |
-| 6.2 | Filenames with Unicode or spaces | Displayed and processed without corruption |
-| 6.3 | Very deeply nested folders (5+ levels) | walkDir recurses; all images found |
-| 6.4 | Read-only output folder (for Organizer/Exporter) | Clear error message; no crash |
-| 6.5 | Revoke folder access in System Settings mid-scan | Error surface shown; app does not hang |
-| 6.6 | Very large individual file (50 MB+ TIFF) | Processed without memory spike visible in Activity Monitor |
+| 6.1 | Open Settings before final v1 approval | Payments, auto-updates, and release publishing are shown as paused or disabled |
+| 6.2 | Payments gate is disabled | No Lemon Squeezy activation or payment network request runs |
+| 6.3 | Auto-update gate is disabled | No GitHub Releases update check runs |
+| 6.4 | Release publishing gate is disabled | No release publishing workflow is available from ordinary build or test commands |
+
+---
+
+## 7. Licensing and free limit
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 7.1 | Unlicensed workflow action with 100 or fewer photos | Work can start |
+| 7.2 | Unlicensed workflow action with more than 100 photos | Upgrade prompt appears before work begins |
+| 7.3 | Licensed workflow action with more than 100 photos | Work can start without the free-limit prompt |
+| 7.4 | Payments are disabled | Core workflow testing is not blocked by license activation |
+
+---
+
+## 8. Edge cases and permissions
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 8.1 | Folder on an external drive | Scans and processes correctly |
+| 8.2 | Filenames with Unicode or spaces | Displayed and processed without corruption |
+| 8.3 | Very deeply nested folders (5+ levels) | walkDir recurses; all images found |
+| 8.4 | Read-only output folder (for Organizer/Exporter) | Clear error message; no crash |
+| 8.5 | Revoke folder access in System Settings mid-scan | Error surface shown; app does not hang |
+| 8.6 | Very large individual file (50 MB+ TIFF) | Processed without memory spike visible in Activity Monitor |

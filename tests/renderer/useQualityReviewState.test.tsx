@@ -28,7 +28,14 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
   return createElement(
     PhotosContext.Provider,
     {
-      value: { photos: [], scanRevision: 0, setPhotos: vi.fn(), bumpScanRevision: vi.fn() }
+      value: {
+        photos: [],
+        scanRoot: null,
+        scanRevision: 0,
+        setPhotos: vi.fn(),
+        setScanRoot: vi.fn(),
+        bumpScanRevision: vi.fn()
+      }
     },
     children
   )

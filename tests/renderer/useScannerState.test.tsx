@@ -23,13 +23,21 @@ const mockApi = {
 }
 
 const mockSetPhotos = vi.fn()
+const mockSetScanRoot = vi.fn()
 const mockBump = vi.fn()
 
 function wrapper({ children }: { children: ReactNode }): ReactElement {
   return createElement(
     PhotosContext.Provider,
     {
-      value: { photos: [], scanRevision: 0, setPhotos: mockSetPhotos, bumpScanRevision: mockBump }
+      value: {
+        photos: [],
+        scanRoot: null,
+        scanRevision: 0,
+        setPhotos: mockSetPhotos,
+        setScanRoot: mockSetScanRoot,
+        bumpScanRevision: mockBump
+      }
     },
     children
   )
@@ -72,6 +80,7 @@ describe('useScannerState', () => {
     expect(result.current.folderPath).toBe('/photos')
     expect(result.current.localPhotos).toEqual([PHOTO])
     expect(mockSetPhotos).toHaveBeenCalledWith([PHOTO])
+    expect(mockSetScanRoot).toHaveBeenCalledWith('/photos')
     expect(mockBump).toHaveBeenCalledTimes(1)
   })
 
@@ -104,6 +113,7 @@ describe('useScannerState', () => {
     await act(() => result.current.handleRescan())
 
     expect(result.current.localPhotos).toHaveLength(2)
+    expect(mockSetScanRoot).toHaveBeenLastCalledWith('/photos')
     expect(result.current.status).toBe('done')
   })
 
@@ -119,5 +129,6 @@ describe('useScannerState', () => {
     expect(result.current.localPhotos).toEqual([])
     expect(result.current.folderPath).toBeNull()
     expect(result.current.error).toBeNull()
+    expect(mockSetScanRoot).toHaveBeenLastCalledWith(null)
   })
 })

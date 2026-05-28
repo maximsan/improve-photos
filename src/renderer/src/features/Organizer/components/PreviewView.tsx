@@ -6,11 +6,17 @@ import type { MoveOperation } from '@shared/ipc'
 
 interface PreviewViewProps {
   ops: MoveOperation[]
+  scanRoot: string | null
   onConfirm: () => void
   onCancel: () => void
 }
 
-export function PreviewView({ ops, onConfirm, onCancel }: PreviewViewProps): React.JSX.Element {
+export function PreviewView({
+  ops,
+  scanRoot,
+  onConfirm,
+  onCancel
+}: PreviewViewProps): React.JSX.Element {
   const { conflictCount, moveCount, tree } = useMemo(() => {
     let conflictCount = 0
     let moveCount = 0
@@ -30,6 +36,11 @@ export function PreviewView({ ops, onConfirm, onCancel }: PreviewViewProps): Rea
         <span className="text-[12px] text-surface-600">
           <span className="font-semibold text-surface-900">{moveCount}</span> files to move
         </span>
+        {scanRoot ? (
+          <span className="min-w-0 truncate text-[12px] text-surface-500">
+            Root: <span className="font-mono text-surface-700">{scanRoot}</span>
+          </span>
+        ) : null}
         {conflictCount > 0 && (
           <span className="flex items-center gap-1.5 text-[12px] text-amber-700">
             <AlertTriangle size={12} className="text-amber-500" />

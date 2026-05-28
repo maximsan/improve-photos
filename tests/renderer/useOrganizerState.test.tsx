@@ -20,6 +20,7 @@ const PHOTO_A: PhotoRecord = {
 
 const PHOTO_B: PhotoRecord = { ...PHOTO_A, path: '/root/2024/b.jpg', name: 'b.jpg' }
 const PHOTOS = [PHOTO_A, PHOTO_B]
+const SCAN_ROOT = '/root'
 
 const OP_A: MoveOperation = {
   photo: PHOTO_A,
@@ -38,15 +39,17 @@ const mockApi = {
   undoOrganize: vi.fn()
 }
 
-function makeWrapper(scanRevision = 0) {
+function makeWrapper(scanRevision = 0, scanRoot: string | null = SCAN_ROOT) {
   return function wrapper({ children }: { children: ReactNode }): ReactElement {
     return createElement(
       PhotosContext.Provider,
       {
         value: {
           photos: PHOTOS,
+          scanRoot,
           scanRevision,
           setPhotos: mockSetPhotos,
+          setScanRoot: vi.fn(),
           bumpScanRevision: vi.fn()
         }
       },
@@ -68,6 +71,7 @@ describe('useOrganizerState', () => {
     expect(result.current.status).toBe('idle')
     expect(result.current.ops).toEqual([])
     expect(result.current.movedCount).toBe(0)
+    expect(result.current.scanRoot).toBe(SCAN_ROOT)
     expect(result.current.error).toBeNull()
   })
 
@@ -79,7 +83,19 @@ describe('useOrganizerState', () => {
 
     expect(result.current.status).toBe('preview')
     expect(result.current.ops).toEqual([OP_A, OP_B])
-    expect(mockApi.previewOrganize).toHaveBeenCalledWith(PHOTOS)
+    expect(mockApi.previewOrganize).toHaveBeenCalledWith(PHOTOS, SCAN_ROOT)
+  })
+
+  it('handlePreview stays idle when scan root is missing', async () => {
+    const { result } = renderHook(() => useOrganizerState(), {
+      wrapper: makeWrapper(0, null)
+    })
+
+    await act(() => result.current.handlePreview())
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.error).toBe('Scan a folder before previewing organize changes')
+    expect(mockApi.previewOrganize).not.toHaveBeenCalled()
   })
 
   it('handlePreview on failure returns to idle with error', async () => {

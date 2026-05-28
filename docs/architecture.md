@@ -42,6 +42,17 @@ Returns PhotoRecord[] back up the same chain
 | Organizer | `src/main/ipc/organizer.ts` | Proposes and executes date-based moves     |
 | Quality   | `src/main/ipc/quality.ts`   | Scores photos by blur (Laplacian variance) |
 | Exporter  | `src/main/ipc/exporter.ts`  | Batch resizes/converts photos via presets  |
+| Settings  | `src/main/ipc/releaseFeatureFlags.ts` | Shows pre-v1 release feature gates |
+
+## V1 release boundaries
+
+`docs/v1-ready-to-market-plan.md` is the source of truth for v1 scope.
+
+- The release target is a Universal macOS DMG distributed through GitHub Releases.
+- Payments, auto-updates, and release publishing are controlled by explicit feature gates and default to off.
+- No Lemon Squeezy request or update-check request should run while its gate is disabled.
+- No workflow should publish a release without explicit manual approval.
+- The app remains local-first: no photo upload and no telemetry by default.
 
 ## Key libraries
 
@@ -83,7 +94,7 @@ node_modules (including native modules like sharp)
 
 The result is a self-contained `.app` — the user who installs it needs nothing else (no Node.js, no pnpm).
 
-`pnpm dev` skips both stages entirely and runs the TypeScript source directly with hot reload. `pnpm build:mac` runs `pnpm build` first, then packages the macOS arm64 app.
+`pnpm dev` skips both stages entirely and runs the TypeScript source directly with hot reload. `pnpm build:mac` runs `pnpm build` first, then packages the current local macOS arm64 app. The v1 release target remains a Universal macOS DMG.
 
 > **Why `sharp` needs a special build step:** native modules like `sharp` contain compiled C++ code. They must be compiled against the exact Node.js version bundled inside Electron — not the system Node.js. `electron-builder install-app-deps` (run automatically after `pnpm install`) handles this recompilation.
 

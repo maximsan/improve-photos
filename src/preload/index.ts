@@ -34,7 +34,8 @@ const api: ElectronAPI = {
 
   getBlurScores: (paths: string[]) => ipcRenderer.invoke(IPC.GET_BLUR_SCORES, paths),
 
-  previewOrganize: (photos: PhotoRecord[]) => ipcRenderer.invoke(IPC.PREVIEW_ORGANIZE, photos),
+  previewOrganize: (photos: PhotoRecord[], scanRoot: string) =>
+    ipcRenderer.invoke(IPC.PREVIEW_ORGANIZE, photos, scanRoot),
 
   executeOrganize: (ops: MoveOperation[]) => ipcRenderer.invoke(IPC.EXECUTE_ORGANIZE, ops),
 

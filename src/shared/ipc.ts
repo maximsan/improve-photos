@@ -145,7 +145,7 @@ export interface ElectronAPI {
   computeHashes: (paths: string[]) => Promise<PhotoHashes>
   getDuplicateGroups: (hashes: PhotoHashes) => Promise<DuplicateGroup[]>
   getBlurScores: (paths: string[]) => Promise<BlurScores>
-  previewOrganize: (photos: PhotoRecord[]) => Promise<MoveOperation[]>
+  previewOrganize: (photos: PhotoRecord[], scanRoot: string) => Promise<MoveOperation[]>
   executeOrganize: (ops: MoveOperation[]) => Promise<void>
   trashFiles: (paths: string[]) => Promise<void>
   exportBatch: (photos: PhotoRecord[], presets: ExportPreset[], outDir: string) => Promise<void>

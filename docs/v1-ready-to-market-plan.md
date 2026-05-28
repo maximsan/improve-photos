@@ -38,30 +38,30 @@ This is the source-of-truth plan for v1. Older feature-specific improvement docs
 
 ## Documentation cleanup plan
 
-- [ ] **Step 1: Keep this document as the V1 source of truth**  
+- [x] **Step 1: Keep this document as the V1 source of truth**  
   **Definition of Done:** `docs/v1-ready-to-market-plan.md` contains final v1 scope, release boundary, licensing boundary, postponed features, public interface changes, and release gate.
 
-- [ ] **Step 2: Consolidate active feature-plan items into this plan**  
+- [x] **Step 2: Consolidate active feature-plan items into this plan**  
   **Definition of Done:** Active items from the former app shell, dedup, organizer, and quality plans are represented below; no active requirement exists only in a feature-specific plan.
 
-- [ ] **Step 3: Remove redundant completed planning docs**  
+- [x] **Step 3: Remove redundant completed planning docs**  
   **Definition of Done:** `docs/repository-tooling-improvements-plan.md` and `docs/react-component-architecture-plan.md` are removed after confirming their completed status is covered by `CODEBASE_REVIEW_AND_PLAN.md`, `AGENTS.md`, and current tests.
 
-- [ ] **Step 4: Remove superseded feature improvement docs**  
+- [x] **Step 4: Remove superseded feature improvement docs**  
   **Definition of Done:** `docs/app-shell-improvements-plan.md`, `docs/dedup-improvements-plan.md`, `docs/organizer-improvements-plan.md`, and `docs/quality-review-improvements-plan.md` are removed after their remaining v1 items are migrated into this plan.
 
-- [ ] **Step 5: Update surviving docs for market readiness**  
+- [x] **Step 5: Update surviving docs for market readiness**  
   **Definition of Done:** `README.md`, `docs/architecture.md`, `docs/glossary.md`, `docs/qa-checklist.md`, `docs/go-to-market-plan.md`, and `CODEBASE_REVIEW_AND_PLAN.md` agree on v1 scope, Universal Mac DMG, count-limited free use, licensing, auto-update, notarization, and postponed features.
 
 ## V1 implementation plan
 
-- [ ] **Step 6: Fix app identity and release metadata**  
+- [x] **Step 6: Fix app identity and release metadata**  
   **Definition of Done:** `package.json.homepage` no longer points to electron-vite, repository/bugs/support metadata exists, and `electronApp.setAppUserModelId` matches `electron-builder.yml` app id `com.maksim.cleanup-photos`.
 
-- [ ] **Step 7: Add explicit scanned library root to app state**  
+- [x] **Step 7: Add explicit scanned library root to app state**  
   **Definition of Done:** `PhotosContext` stores `scanRoot`; Scanner sets it after folder selection and clears it on reset; Organizer no longer infers root with `dirname(dirname(photo.path))`.
 
-- [ ] **Step 8: Update Organizer to use the explicit scan root**  
+- [x] **Step 8: Update Organizer to use the explicit scan root**  
   **Definition of Done:** `previewOrganize` receives the scanned root, target paths are generated under that root, Preview UI shows the resolved root directory, and tests cover flat and deeply nested libraries.
 
 - [ ] **Step 9: Keep photo state consistent after trash**  
@@ -76,7 +76,7 @@ This is the source-of-truth plan for v1. Older feature-specific improvement docs
 - [ ] **Step 12: Add lightweight Settings**  
   **Definition of Done:** Settings expose license status, update status, free limit status, confirm-before-trash preference, default export behavior, and app/support links; settings persist locally.
 
-- [ ] **Step 13: Add release-mode feature gates for payments and auto-updates**  
+- [x] **Step 13: Add release-mode feature gates for payments and auto-updates**  
   **Definition of Done:** Payments and auto-updates are controlled by explicit release flags or config values, both default to `off` in development and pre-v1 builds, and Settings clearly shows when either feature is disabled.
 
 - [ ] **Step 14: Implement Lemon Squeezy one-time license activation behind the payments gate**  
@@ -123,7 +123,29 @@ This is the source-of-truth plan for v1. Older feature-specific improvement docs
 - `window.api`: add license methods: `getLicenseStatus`, `activateLicense`, `deactivateLicense`.
 - `window.api`: add entitlement/free-limit methods: `getEntitlementStatus`, `canProcessPhotoCount`.
 - `window.api`: add update methods/events: `checkForUpdates`, `downloadUpdate`, `installUpdate`, `onUpdateStatus`.
-- Release config: add explicit flags for `paymentsEnabled`, `autoUpdatesEnabled`, and `releasePublishingEnabled`.
+- `window.api.getReleaseFeatureFlags`: added for `paymentsEnabled`, `autoUpdatesEnabled`, and `releasePublishingEnabled`.
+- Release config: add explicit flags for `paymentsEnabled`, `autoUpdatesEnabled`, and `releasePublishingEnabled`. Current pre-v1 implementation reads `CLEANUP_PHOTOS_PAYMENTS_ENABLED`, `CLEANUP_PHOTOS_AUTO_UPDATES_ENABLED`, and `CLEANUP_PHOTOS_RELEASE_PUBLISHING_ENABLED`; all default to `off`.
+
+## Current implementation notes
+
+Updated 2026-05-19:
+
+- Completed Steps 1-5 by keeping this plan as the canonical v1 source, confirming superseded docs were removed, and aligning surviving docs with Universal macOS DMG, GitHub Releases, gated licensing, gated auto-updates, notarization, the 100-photo free limit, and manual release approval.
+- Completed Step 6 by replacing the default electron-vite homepage, adding repository/bugs/support package metadata, and aligning `electronApp.setAppUserModelId` with `com.maksim.cleanup-photos`.
+- Completed Step 13 with runtime release feature gates exposed through IPC and shown in Settings.
+- Payments, auto-updates, and release publishing default to disabled unless explicitly enabled by environment flags.
+- Added tests for default-disabled and explicit-enabled gate behavior, IPC registration, and Settings rendering.
+- Intentional skip: no Lemon Squeezy activation, auto-update runtime checks, or release publishing workflow was added in this step.
+- Remaining related work: Step 14, Step 16, Step 19, Step 21 broader v1-critical coverage, and final Step 24 approval remain open.
+- Assumption: environment flags are acceptable for pre-v1 local testing; final release approval can replace or supplement them with release-build config.
+- Finding: the former feature-specific plans are already absent, so Step 2 was accepted based on the consolidated content now present in this plan rather than by re-reading deleted source files.
+
+Updated 2026-05-20:
+
+- Completed Step 7 by adding `scanRoot` to `PhotosContext`; Scanner stores the selected folder after successful scans and clears the root on reset.
+- Completed Step 8 by changing `window.api.previewOrganize` and the Organizer IPC handler to require the explicit scanned root instead of inferring it from photo paths.
+- Organizer preview now shows the resolved root directory, and tests cover flat and deeply nested libraries targeting paths under that root.
+- Intentional skip: post-trash photo removal remains Step 9, and no unrelated organizer/scanner refactor was added.
 
 ## Release gate
 

@@ -39,8 +39,10 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
     {
       value: {
         photos: PHOTOS,
+        scanRoot: null,
         scanRevision: 0,
         setPhotos: vi.fn(),
+        setScanRoot: vi.fn(),
         bumpScanRevision: vi.fn()
       }
     },
