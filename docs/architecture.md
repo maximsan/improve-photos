@@ -71,6 +71,11 @@ The renderer still reaches native capabilities only through the typed preload AP
 - The renderer Content Security Policy lives in `src/renderer/index.html`. It allows app images, data URLs, local scripts, inline styles required by the current CSS path, and Google font hosts.
 - External windows are denied in `setWindowOpenHandler`; URLs are handed to `shell.openExternal`. If user-controlled links are added later, validate allowed protocols before calling `openExternal`.
 
+## Architecture follow-ups
+
+- Organizer IPC currently reads the scanner cache through `getCachedPhotos`. If this coupling starts blocking features or tests, introduce a small main-process photo repository interface backed by the scanner cache.
+- Feature tabs stay mounted while hidden so each workflow keeps its local state. If startup cost or memory use becomes visible, evaluate lazy mounting with explicit state restore.
+
 ## Build pipeline
 
 Getting from source code to an installable `.dmg` is two separate stages:

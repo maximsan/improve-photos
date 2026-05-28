@@ -45,13 +45,13 @@ This is the source-of-truth plan for v1. Older feature-specific improvement docs
   **Definition of Done:** Active items from the former app shell, dedup, organizer, and quality plans are represented below; no active requirement exists only in a feature-specific plan.
 
 - [x] **Step 3: Remove redundant completed planning docs**  
-  **Definition of Done:** `docs/repository-tooling-improvements-plan.md` and `docs/react-component-architecture-plan.md` are removed after confirming their completed status is covered by `CODEBASE_REVIEW_AND_PLAN.md`, `AGENTS.md`, and current tests.
+  **Definition of Done:** `docs/repository-tooling-improvements-plan.md` and `docs/react-component-architecture-plan.md` are removed after confirming their completed status is covered by `AGENTS.md`, current tests, and surviving docs.
 
 - [x] **Step 4: Remove superseded feature improvement docs**  
   **Definition of Done:** `docs/app-shell-improvements-plan.md`, `docs/dedup-improvements-plan.md`, `docs/organizer-improvements-plan.md`, and `docs/quality-review-improvements-plan.md` are removed after their remaining v1 items are migrated into this plan.
 
 - [x] **Step 5: Update surviving docs for market readiness**  
-  **Definition of Done:** `README.md`, `docs/architecture.md`, `docs/glossary.md`, `docs/qa-checklist.md`, `docs/go-to-market-plan.md`, and `CODEBASE_REVIEW_AND_PLAN.md` agree on v1 scope, Universal Mac DMG, count-limited free use, licensing, auto-update, notarization, and postponed features.
+  **Definition of Done:** `README.md`, `docs/architecture.md`, `docs/glossary.md`, `docs/qa-checklist.md`, and `docs/go-to-market-plan.md` agree on v1 scope, Universal Mac DMG, count-limited free use, licensing, auto-update, notarization, and postponed features.
 
 ## V1 implementation plan
 
