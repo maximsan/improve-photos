@@ -32,7 +32,30 @@ mac:
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+  # Hardened runtime is required for Apple notarization. It is a no-op for
+  # unsigned local builds because the entitlements file already grants the
+  # JIT / dynamic-code allowances Electron needs at runtime.
+  hardenedRuntime: true
+  # Local Gatekeeper assessment runs *before* notarization stapling, so it
+  # always fails on a freshly signed-but-not-yet-stapled .app. Skip it and
+  # rely on `spctl --assess` post-stapling for the real check.
+  gatekeeperAssess: false
+  # The afterSign hook (build/notarize.cjs) owns notarization end-to-end,
+  # so electron-builder's built-in notarize must stay off to avoid double
+  # submission.
   notarize: false
+  # pnpm installs both @img/sharp-darwin-arm64 and @img/sharp-darwin-x64 into
+  # the same node_modules tree, so each per-arch build ends up with identical
+  # copies of every @img Mach-O binary. @electron/universal refuses to merge
+  # byte-identical Mach-O files unless they are covered by `x64ArchFiles`,
+  # so list the @img tree there to keep one copy from the x64 template (sharp
+  # picks the right .node at runtime by inspecting its own platform).
+  mergeASARs: true
+  x64ArchFiles: '**/@img/**'
+
+# Notarization is gated inside the hook by MAC_NOTARIZE + Apple credentials;
+# no-op without them so local unsigned builds are unaffected.
+afterSign: build/notarize.cjs
 
 dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}

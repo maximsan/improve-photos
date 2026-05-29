@@ -47,5 +47,13 @@ export default defineConfig(
     rules: {
       curly: ['error', 'all']
     }
+  },
+  {
+    // CommonJS hooks loaded by electron-builder (e.g. build/notarize.cjs)
+    // must use require() — that is the integration contract.
+    files: ['**/*.cjs'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off'
+    }
   }
 )

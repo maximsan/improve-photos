@@ -3,8 +3,10 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   ci:
@@ -49,3 +51,44 @@ jobs:
       - run: pnpm build
 
       - run: pnpm test:e2e
+
+  package-mac-universal:
+    # Universal DMG packaging smoke. Gated to release tags and manual runs so
+    # PR CI stays fast. Produces an unsigned DMG (no Apple credentials in CI).
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: macos-latest
+    needs: ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build:mac
+
+      - name: Verify Universal binary
+        run: |
+          APP="dist/mac-universal/Cleanup Photos.app/Contents/MacOS/Cleanup Photos"
+          lipo -info "$APP" | tee /tmp/lipo.out
+          grep -q "x86_64 arm64" /tmp/lipo.out || (echo "::error::App binary is not universal" && exit 1)
+
+      - name: Verify sharp binaries for both arches
+        run: |
+          ROOT="dist/mac-universal/Cleanup Photos.app/Contents/Resources/app.asar.unpacked/node_modules/@img"
+          test -f "$ROOT/sharp-darwin-arm64/lib/sharp-darwin-arm64.node" || (echo "::error::missing sharp arm64" && exit 1)
+          test -f "$ROOT/sharp-darwin-x64/lib/sharp-darwin-x64.node" || (echo "::error::missing sharp x64" && exit 1)
+
+      - name: Upload Universal DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanup-photos-universal-dmg
+          path: dist/*.dmg
+          if-no-files-found: error

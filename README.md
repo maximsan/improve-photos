@@ -51,14 +51,41 @@ Run the Electron smoke tests after building:
 pnpm test:e2e
 ```
 
-Build a local macOS arm64 DMG:
+Build a local Universal macOS DMG (runs natively on Intel `x64` and Apple Silicon `arm64`):
 
 ```bash
 pnpm build:mac
 ```
 
+This produces `dist/mac-universal/Cleanup Photos.app` and `dist/Cleanup Photos-<version>-universal.dmg`. Verify the result:
+
+```bash
+# Confirm both architectures are present in the app binary
+lipo -info "dist/mac-universal/Cleanup Photos.app/Contents/MacOS/Cleanup Photos"
+# Expected: Architectures in the fat file: x86_64 arm64
+
+# Inspect the signature (unsigned local builds will report "code object is not signed at all")
+codesign -dv --verbose=2 "dist/mac-universal/Cleanup Photos.app"
+```
+
+### Signed & notarized release (opt-in)
+
+Local builds are unsigned by default and require no Apple credentials. To produce a signed, notarized DMG suitable for distribution, set the following environment variables before running `pnpm build:mac`:
+
+```bash
+export MAC_NOTARIZE=1
+export CSC_IDENTITY_AUTO_DISCOVERY=true        # opt-in to Keychain identity lookup
+export APPLE_ID="your-apple-id@example.com"
+export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"   # https://appleid.apple.com → App-Specific Passwords
+export APPLE_TEAM_ID="ABCD123456"
+# If your Developer ID cert is not in the login Keychain:
+# export CSC_LINK="file:///path/to/DeveloperID.p12"
+# export CSC_KEY_PASSWORD="..."
+```
+
+Never commit these values. Without these env vars the build is unsigned and the notarize hook is a no-op. `CSC_IDENTITY_AUTO_DISCOVERY` defaults to `false` in `pnpm build:mac` so the build never accidentally picks up an "Apple Development" cert from the Keychain and fails partway through code signing.
+
 ## Notes
 
 - `pnpm test:e2e` expects compiled output in `out/`, so run `pnpm build` first.
-- The current local packaging script targets macOS arm64. The v1 release target is a Universal macOS DMG.
 - Do not publish or create public releases from local builds.

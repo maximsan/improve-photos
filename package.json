@@ -30,7 +30,7 @@
     "build": "pnpm typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "pnpm build && electron-builder --dir",
-    "build:mac": "pnpm build && electron-builder --mac --dir --universal && bash scripts/create-dmg.sh universal"
+    "build:mac": "pnpm build && CSC_IDENTITY_AUTO_DISCOVERY=${CSC_IDENTITY_AUTO_DISCOVERY:-false} electron-builder --mac --dir --universal && bash scripts/create-dmg.sh universal"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -50,6 +50,7 @@
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.1.0",
     "@electron-toolkit/tsconfig": "^2.0.0",
+    "@electron/notarize": "^3.1.1",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.3.0",
     "@testing-library/react": "^16.3.2",

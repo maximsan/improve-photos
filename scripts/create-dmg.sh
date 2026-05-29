@@ -18,24 +18,40 @@
 # hdiutil is a macOS-native command-line tool (ships with every macOS install,
 # no Homebrew required) that can create, mount, and convert disk images.
 # It is a universal binary — runs natively on both Intel and Apple Silicon.
-# We use it in three steps:
-#   1. create  — pack the .app into a writable UDRW (read-write) image
-#   2. attach  — mount the image so we can add an /Applications symlink
-#   3. convert — compress the result into a read-only UDZO image (zlib level 9)
-# The /Applications symlink is what shows users the "drag here to install"
-# affordance in Finder.
+# We use it in five steps:
+#   1. create  — create an empty writable HFS+ UDRW image sized for the bundle
+#   2. attach  — mount it
+#   3. ditto   — copy the .app in (preserves codesign metadata, xattrs, ACLs)
+#   4. detach  — unmount
+#   5. convert — compress into a read-only UDZO image (zlib level 9)
+# The /Applications symlink added in step 3 is what shows users the
+# "drag here to install" affordance in Finder.
+#
+# WHY NOT `hdiutil create -srcfolder`?
+# ------------------------------------
+# The single-call -srcfolder shortcut internally auto-mounts the new image to
+# populate it. On macOS 26 (Darwin 25.x) that auto-mount step fails partway
+# with "Resource busy" on non-trivial bundles — even after the dots-of-progress
+# output shows it almost made it. The explicit create→attach→ditto pattern
+# sidesteps the bug and is what create-dmg / dmg-light use under the hood.
+# HFS+ instead of APFS for the temp image avoids related APFS image quirks on
+# recent macOS and is fine for a transient build artifact (the final UDZO
+# output is the same either way).
+#
+# WHY `ditto` OVER `cp -R`?
+# -------------------------
+# ditto preserves resource forks, ACLs, extended attributes, and codesign
+# metadata. cp -R can silently strip xattrs and break the embedded signature.
 #
 # WHY NOT OTHER APPROACHES?
 # -------------------------
 # • create-dmg (npm package): adds a fancier DMG layout (background image,
-#   icon positioning) but requires additional setup and still calls hdiutil
-#   internally. Overkill for a simple distributable.
+#   icon positioning) but requires additional setup. Overkill for a simple
+#   distributable.
 # • appdmg: similar — declarative JSON config, calls hdiutil under the hood.
-# • Patching dmg-builder with x86 Rosetta + gettext: brittle — requires the
-#   developer to manually install x86 Homebrew alongside arm64 Homebrew,
-#   creating a dual-Homebrew setup that is fragile and hard to document.
-# • Disabling the DMG target and shipping a plain .zip: works, but a DMG is
-#   the macOS convention and gives users the drag-to-install UX.
+# • Patching dmg-builder with x86 Rosetta + gettext: brittle dual-Homebrew
+#   setup that is hard to document.
+# • Shipping a plain .zip: works, but a DMG is the macOS convention.
 #
 # UNIVERSAL MAC COVERAGE
 # ----------------------
@@ -51,6 +67,7 @@ ARCH="${1:-universal}"
 DMG_NAME="${APP_NAME}-${VERSION}-${ARCH}.dmg"
 VOLUME_NAME="${APP_NAME} ${VERSION}"
 APP_BUNDLE="dist/mac-${ARCH}/${APP_NAME}.app"
+TMP_DMG="dist/tmp-rw.dmg"
 
 if [ ! -d "${APP_BUNDLE}" ]; then
   echo "ERROR: ${APP_BUNDLE} not found. Run electron-builder --dir first." >&2
@@ -59,16 +76,26 @@ fi
 
 echo "→ Creating DMG: ${DMG_NAME}"
 
-# Temporary read-write image large enough for the .app
+# Always start clean — leftover tmp images from interrupted runs cause EBUSY.
+rm -f "${TMP_DMG}"
+
+# Compute image size: actual .app size in MB + 50 MB slack for filesystem
+# overhead, journal, and the /Applications symlink directory entry.
+APP_BYTES=$(du -sk "${APP_BUNDLE}" | awk '{print $1}')
+SIZE_MB=$(( (APP_BYTES / 1024) + 50 ))
+
+# Empty writable HFS+ image, sized for the bundle plus slack.
+# Note: with -size (no source), hdiutil produces a UDRW image by default and
+# rejects an explicit -format.
 hdiutil create \
+  -size "${SIZE_MB}m" \
+  -fs HFS+ \
   -volname "${VOLUME_NAME}" \
-  -srcfolder "${APP_BUNDLE}" \
   -ov \
-  -format UDRW \
-  "dist/tmp-rw.dmg"
+  "${TMP_DMG}"
 
 # Mount and capture the mount point (handle space in volume name)
-MOUNT_DIR=$(hdiutil attach "dist/tmp-rw.dmg" -readwrite -noverify -nobrowse | \
+MOUNT_DIR=$(hdiutil attach "${TMP_DMG}" -readwrite -noverify -nobrowse | \
   grep "/Volumes" | sed 's|.*\(/Volumes/.*\)|\1|' | tail -1)
 
 if [ -z "${MOUNT_DIR}" ]; then
@@ -78,18 +105,26 @@ fi
 
 echo "  mounted at: ${MOUNT_DIR}"
 
+# Always detach the mount on exit, even on failure — leaving it attached
+# blocks the next run with EBUSY.
+trap 'hdiutil detach "${MOUNT_DIR}" -quiet -force 2>/dev/null || true' EXIT
+
+# Copy the .app in with metadata-preserving ditto (xattrs, ACLs, signatures).
+ditto "${APP_BUNDLE}" "${MOUNT_DIR}/${APP_NAME}.app"
+
 # Add an /Applications symlink so users can drag-install
 ln -sf /Applications "${MOUNT_DIR}/Applications"
 
-# Unmount
+# Unmount before convert
 hdiutil detach "${MOUNT_DIR}" -quiet
+trap - EXIT
 
 # Convert to compressed read-only DMG (overwrite if it already exists)
-hdiutil convert "dist/tmp-rw.dmg" \
+hdiutil convert "${TMP_DMG}" \
   -format UDZO \
   -imagekey zlib-level=9 \
   -ov \
   -o "dist/${DMG_NAME}"
 
-rm "dist/tmp-rw.dmg"
+rm "${TMP_DMG}"
 echo "✓ dist/${DMG_NAME}"
