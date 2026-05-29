@@ -32,10 +32,13 @@ mac:
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  # Hardened runtime is required for Apple notarization. It is a no-op for
-  # unsigned local builds because the entitlements file already grants the
-  # JIT / dynamic-code allowances Electron needs at runtime.
-  hardenedRuntime: true
+  # Hardened runtime is required for Apple notarization but BREAKS unsigned
+  # local builds on macOS 26: with hardened runtime + ad-hoc signing + a
+  # non-platform library (the Electron Framework), dyld refuses to load the
+  # framework with "different Team IDs". Default off; the wrapper script
+  # `scripts/build-mac.sh` flips it on via `-c.mac.hardenedRuntime=true` when
+  # MAC_NOTARIZE=1 so the signed/notarized path still gets it.
+  hardenedRuntime: false
   # Local Gatekeeper assessment runs *before* notarization stapling, so it
   # always fails on a freshly signed-but-not-yet-stapled .app. Skip it and
   # rely on `spctl --assess` post-stapling for the real check.

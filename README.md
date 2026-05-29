@@ -81,9 +81,10 @@ export APPLE_TEAM_ID="ABCD123456"
 # If your Developer ID cert is not in the login Keychain:
 # export CSC_LINK="file:///path/to/DeveloperID.p12"
 # export CSC_KEY_PASSWORD="..."
+pnpm build:mac
 ```
 
-Never commit these values. Without these env vars the build is unsigned and the notarize hook is a no-op. `CSC_IDENTITY_AUTO_DISCOVERY` defaults to `false` in `pnpm build:mac` so the build never accidentally picks up an "Apple Development" cert from the Keychain and fails partway through code signing.
+Never commit these values. Without `MAC_NOTARIZE=1` the build is unsigned, hardened runtime is disabled (it crashes ad-hoc-signed apps on macOS 26 with a Team-ID error in dyld), `CSC_IDENTITY_AUTO_DISCOVERY` is forced to `false` (so a stray "Apple Development" cert in the Keychain cannot fail the build partway), and the notarize hook is a no-op. With `MAC_NOTARIZE=1` the wrapper flips hardened runtime on (required by notarization) and lets identity discovery proceed.
 
 ## Notes
 

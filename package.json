@@ -30,7 +30,7 @@
     "build": "pnpm typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "pnpm build && electron-builder --dir",
-    "build:mac": "pnpm build && CSC_IDENTITY_AUTO_DISCOVERY=${CSC_IDENTITY_AUTO_DISCOVERY:-false} electron-builder --mac --dir --universal && bash scripts/create-dmg.sh universal"
+    "build:mac": "bash scripts/build-mac.sh"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -38,6 +38,7 @@
     "electron-updater": "^6.8.3",
     "exifr": "^7.1.3",
     "lucide-react": "^1.16.0",
+    "ms": "^2.1.3",
     "sharp": "^0.34.5"
   },
   "optionalDependencies": {
