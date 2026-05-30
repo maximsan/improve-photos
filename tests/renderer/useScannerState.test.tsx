@@ -72,7 +72,7 @@ describe('useScannerState', () => {
 
   it('transitions to done and populates photos on success', async () => {
     mockApi.pickFolder.mockResolvedValue('/photos')
-    mockApi.scan.mockResolvedValue([PHOTO])
+    mockApi.scan.mockResolvedValue({ ok: true, photos: [PHOTO] })
     const { result } = renderHook(() => useScannerState(), { wrapper })
 
     await act(() => result.current.handleChooseFolder())
@@ -85,9 +85,24 @@ describe('useScannerState', () => {
     expect(mockBump).toHaveBeenCalledTimes(1)
   })
 
-  it('sets error and returns to idle when scan throws', async () => {
+  it('enters the limit state instead of erroring when the free limit is exceeded', async () => {
     mockApi.pickFolder.mockResolvedValue('/photos')
-    mockApi.scan.mockRejectedValue(new Error('disk error'))
+    mockApi.scan.mockResolvedValue({ ok: false, limit: { photoCount: 151, photoLimit: 100 } })
+    const { result } = renderHook(() => useScannerState(), { wrapper })
+
+    await act(() => result.current.handleChooseFolder())
+
+    expect(result.current.status).toBe('limit')
+    expect(result.current.limit).toEqual({ photoCount: 151, photoLimit: 100 })
+    expect(result.current.error).toBeNull()
+    expect(mockSetPhotos).not.toHaveBeenCalled()
+  })
+
+  it('strips the remote-method wrapper and returns to idle when scan throws', async () => {
+    mockApi.pickFolder.mockResolvedValue('/photos')
+    mockApi.scan.mockRejectedValue(
+      new Error("Error invoking remote method 'scan': Error: disk error")
+    )
     const { result } = renderHook(() => useScannerState(), { wrapper })
 
     await act(() => result.current.handleChooseFolder())
@@ -106,11 +121,14 @@ describe('useScannerState', () => {
 
   it('rescans and updates photos', async () => {
     mockApi.pickFolder.mockResolvedValue('/photos')
-    mockApi.scan.mockResolvedValue([PHOTO])
+    mockApi.scan.mockResolvedValue({ ok: true, photos: [PHOTO] })
     const { result } = renderHook(() => useScannerState(), { wrapper })
 
     await act(() => result.current.handleChooseFolder())
-    mockApi.scan.mockResolvedValue([PHOTO, { ...PHOTO, path: '/photos/img2.jpg' }])
+    mockApi.scan.mockResolvedValue({
+      ok: true,
+      photos: [PHOTO, { ...PHOTO, path: '/photos/img2.jpg' }]
+    })
     await act(() => result.current.handleRescan())
 
     expect(result.current.localPhotos).toHaveLength(2)
@@ -120,7 +138,7 @@ describe('useScannerState', () => {
 
   it('handleReset clears all state', async () => {
     mockApi.pickFolder.mockResolvedValue('/photos')
-    mockApi.scan.mockResolvedValue([PHOTO])
+    mockApi.scan.mockResolvedValue({ ok: true, photos: [PHOTO] })
     const { result } = renderHook(() => useScannerState(), { wrapper })
 
     await act(() => result.current.handleChooseFolder())

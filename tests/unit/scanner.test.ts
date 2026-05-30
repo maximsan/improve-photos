@@ -18,6 +18,7 @@ import { ipcMain } from 'electron'
 import sharp from 'sharp'
 import exifr from 'exifr'
 import { IPC } from '@shared/ipc'
+import type { ScanResult } from '@shared/ipc'
 import {
   walkDir,
   buildPhotoRecord,
@@ -200,12 +201,13 @@ describe('scanner IPC handlers', () => {
     const handlers = registerScannerTestHandlers()
     const event = { sender: { send: vi.fn() } }
 
-    const result = await handlers.get(IPC.SCAN)!(event, '/photos' as never)
+    const result = (await handlers.get(IPC.SCAN)!(event, '/photos' as never)) as ScanResult
     const progressCalls = event.sender.send.mock.calls.filter(
       ([channel]) => channel === IPC.SCAN_PROGRESS
     )
 
-    expect(result).toHaveLength(2)
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.photos).toHaveLength(2)
     expect(progressCalls).toHaveLength(2)
     expect(progressCalls.map(([, progress]) => progress)).toEqual(
       expect.arrayContaining([
@@ -244,7 +246,7 @@ describe('scanner IPC handlers', () => {
 
     handlers.get(IPC.CANCEL_SCAN)!({ sender: { send: vi.fn() } })
 
-    await expect(scan).resolves.toEqual([])
+    await expect(scan).resolves.toEqual({ ok: true, photos: [] })
     expect(stat).not.toHaveBeenCalled()
     expect(event.sender.send).not.toHaveBeenCalledWith(
       IPC.SCAN_PROGRESS,
@@ -252,7 +254,12 @@ describe('scanner IPC handlers', () => {
     )
   })
 
-  it('stops scan before reading photo metadata when the free limit is exceeded', async () => {
+  it('returns a limit result before reading metadata when an unlicensed scan exceeds the free limit', async () => {
+    // The free limit only applies when payments are enabled and no license is
+    // stored; otherwise licensing is off and scanning is unlimited.
+    const previousPaymentsEnabled = process.env.CLEANUP_PHOTOS_PAYMENTS_ENABLED
+    process.env.CLEANUP_PHOTOS_PAYMENTS_ENABLED = 'true'
+
     vi.mocked(readdir).mockResolvedValueOnce(
       Array.from({ length: 101 }, (_, index) => ({
         name: `photo-${index}.jpg`,
@@ -263,10 +270,14 @@ describe('scanner IPC handlers', () => {
     const handlers = registerScannerTestHandlers()
     const event = { sender: { send: vi.fn() } }
 
-    await expect(handlers.get(IPC.SCAN)!(event, '/photos' as never)).rejects.toThrow(
-      'Unlicensed use is limited'
-    )
-    expect(stat).not.toHaveBeenCalled()
-    expect(event.sender.send).not.toHaveBeenCalled()
+    try {
+      const result = (await handlers.get(IPC.SCAN)!(event, '/photos' as never)) as ScanResult
+
+      expect(result).toEqual({ ok: false, limit: { photoCount: 101, photoLimit: 100 } })
+      expect(stat).not.toHaveBeenCalled()
+      expect(event.sender.send).not.toHaveBeenCalled()
+    } finally {
+      process.env.CLEANUP_PHOTOS_PAYMENTS_ENABLED = previousPaymentsEnabled
+    }
   })
 })

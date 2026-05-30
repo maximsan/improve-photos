@@ -6,6 +6,7 @@ import { PrimaryButton } from '../../components/PrimaryButton'
 import { FormErrorText } from '../../components/FormErrorText'
 import { useScannerState } from './hooks/useScannerState'
 import { ScanResults } from './components/ScanResults'
+import { LimitReachedState } from './components/LimitReachedState'
 
 function Scanner(): React.JSX.Element {
   const {
@@ -13,6 +14,7 @@ function Scanner(): React.JSX.Element {
     localPhotos,
     folderPath,
     error,
+    limit,
     progress,
     handleChooseFolder,
     handleRescan,
@@ -24,6 +26,10 @@ function Scanner(): React.JSX.Element {
       const percent = progress ? Math.round((progress.done / progress.total) * 100) : 0
       const label = progress ? `Scanning photo ${progress.done} of ${progress.total}` : 'Starting…'
       return <ProgressView label={label} percent={percent} current={progress?.current} />
+    }
+
+    if (status === 'limit' && limit) {
+      return <LimitReachedState limit={limit} onChooseFolder={handleChooseFolder} />
     }
 
     if (status === 'done' && folderPath) {

@@ -1,10 +1,24 @@
 import { useRef, useState } from 'react'
 import { usePhotos } from '../../../context/photos'
-import type { PhotoRecord, ScanProgress } from '@shared/ipc'
+import type { PhotoRecord, ScanLimit, ScanProgress } from '@shared/ipc'
 
-type ScanStatus = 'idle' | 'scanning' | 'done'
+type ScanStatus = 'idle' | 'scanning' | 'done' | 'limit'
 
 const MAX_FILENAME_CHARS = 40
+
+/**
+ * Strips Electron's `Error invoking remote method 'scan': Error: …` wrapper so a
+ * genuine failure reads as a plain sentence in the UI. The full error is logged
+ * separately for debugging.
+ */
+const REMOTE_METHOD_PREFIX_PATTERN = /^Error invoking remote method '[^']*':\s*(?:Error:\s*)?/
+
+function toDisplayMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message.replace(REMOTE_METHOD_PREFIX_PATTERN, '')
+  }
+  return 'Scan failed'
+}
 
 function truncateMiddle(name: string): string {
   if (name.length <= MAX_FILENAME_CHARS) {
@@ -19,6 +33,7 @@ export type ScannerState = {
   localPhotos: PhotoRecord[]
   folderPath: string | null
   error: string | null
+  limit: ScanLimit | null
   progress: ScanProgress | null
   handleChooseFolder: () => Promise<void>
   handleRescan: () => Promise<void>
@@ -31,6 +46,7 @@ export function useScannerState(): ScannerState {
   const [localPhotos, setLocalPhotos] = useState<PhotoRecord[]>([])
   const [folderPath, setFolderPath] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [limit, setLimit] = useState<ScanLimit | null>(null)
   const [progress, setProgress] = useState<ScanProgress | null>(null)
   const unsubscribeRef = useRef<(() => void) | null>(null)
 
@@ -47,8 +63,18 @@ export function useScannerState(): ScannerState {
     setProgress(null)
   }
 
+  function applyScannedPhotos(scannedPhotos: PhotoRecord[], path: string): void {
+    setLimit(null)
+    setLocalPhotos(scannedPhotos)
+    setPhotos(scannedPhotos)
+    setScanRoot(path)
+    bumpScanRevision()
+    setStatus('done')
+  }
+
   async function handleChooseFolder(): Promise<void> {
     setError(null)
+    setLimit(null)
     try {
       const path = await window.api.pickFolder()
       if (!path) {
@@ -59,13 +85,15 @@ export function useScannerState(): ScannerState {
       setStatus('scanning')
       startProgress()
       const result = await window.api.scan(path)
-      setLocalPhotos(result)
-      setPhotos(result)
-      setScanRoot(path)
-      bumpScanRevision()
-      setStatus('done')
+      if (!result.ok) {
+        setLimit(result.limit)
+        setStatus('limit')
+        return
+      }
+      applyScannedPhotos(result.photos, path)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Scan failed')
+      console.error('[scanner] scan failed', err)
+      setError(toDisplayMessage(err))
       setStatus('idle')
     } finally {
       stopProgress()
@@ -77,17 +105,20 @@ export function useScannerState(): ScannerState {
       return
     }
     setError(null)
+    setLimit(null)
     setStatus('scanning')
     startProgress()
     try {
       const result = await window.api.scan(folderPath)
-      setLocalPhotos(result)
-      setPhotos(result)
-      setScanRoot(folderPath)
-      bumpScanRevision()
-      setStatus('done')
+      if (!result.ok) {
+        setLimit(result.limit)
+        setStatus('limit')
+        return
+      }
+      applyScannedPhotos(result.photos, folderPath)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Scan failed')
+      console.error('[scanner] rescan failed', err)
+      setError(toDisplayMessage(err))
       setStatus('done')
     } finally {
       stopProgress()
@@ -99,6 +130,7 @@ export function useScannerState(): ScannerState {
     setLocalPhotos([])
     setFolderPath(null)
     setError(null)
+    setLimit(null)
     setPhotos([])
     setScanRoot(null)
     bumpScanRevision()
@@ -109,6 +141,7 @@ export function useScannerState(): ScannerState {
     localPhotos,
     folderPath,
     error,
+    limit,
     progress,
     handleChooseFolder,
     handleRescan,

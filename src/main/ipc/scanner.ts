@@ -4,8 +4,8 @@ import { readdir, stat } from 'fs/promises'
 import { join, extname, basename } from 'path'
 import sharp from 'sharp'
 import exifr from 'exifr'
-import type { PhotoRecord } from '@shared/ipc'
-import { IPC } from '@shared/ipc'
+import type { PhotoRecord, ScanResult } from '@shared/ipc'
+import { FREE_PHOTO_LIMIT, IPC } from '@shared/ipc'
 import { allowDirectory } from '../localProtocol'
 import { canProcessPhotoCount } from '../entitlement'
 
@@ -122,7 +122,7 @@ export function registerScannerHandlers(): void {
     return canceled ? null : filePaths[0]
   })
 
-  ipcMain.handle(IPC.SCAN, async (event, folderPath: string): Promise<PhotoRecord[]> => {
+  ipcMain.handle(IPC.SCAN, async (event, folderPath: string): Promise<ScanResult> => {
     const controller = { cancelled: false }
     activeScanController = controller
 
@@ -132,7 +132,11 @@ export function registerScannerHandlers(): void {
     const total = paths.length
     const entitlement = await canProcessPhotoCount(total)
     if (!entitlement.allowed) {
-      throw new Error(entitlement.reason ?? 'Photo limit exceeded')
+      activeScanController = null
+      return {
+        ok: false,
+        limit: { photoCount: total, photoLimit: entitlement.photoLimit ?? FREE_PHOTO_LIMIT }
+      }
     }
     let done = 0
     const iter = paths[Symbol.iterator]()
@@ -165,6 +169,6 @@ export function registerScannerHandlers(): void {
       )
     }
 
-    return photoCache
+    return { ok: true, photos: photoCache }
   })
 }

@@ -17,10 +17,14 @@ export async function getEntitlementStatus(
 ): Promise<EntitlementStatus> {
   const licenseStatus = await getLicenseStatus(options)
   const licensed = licenseStatus.state === 'licensed'
+  // The free limit only applies to a genuine unlicensed user. When licensing is
+  // turned off for the build ('disabled'), there is no paid tier to sell and no
+  // way to activate a license, so local processing stays unlimited.
+  const limited = licenseStatus.state === 'unlicensed'
 
   return {
     licensed,
-    photoLimit: licensed ? null : FREE_PHOTO_LIMIT
+    photoLimit: limited ? FREE_PHOTO_LIMIT : null
   }
 }
 
@@ -28,18 +32,18 @@ export async function canProcessPhotoCount(
   photoCount: number,
   options: EntitlementOptions = {}
 ): Promise<PhotoCountDecision> {
-  const entitlement = await getEntitlementStatus(options)
-  if (entitlement.licensed || photoCount <= FREE_PHOTO_LIMIT) {
+  const { photoLimit } = await getEntitlementStatus(options)
+  if (photoLimit === null || photoCount <= photoLimit) {
     return {
       allowed: true,
-      photoLimit: entitlement.photoLimit,
+      photoLimit,
       reason: null
     }
   }
 
   return {
     allowed: false,
-    photoLimit: entitlement.photoLimit,
+    photoLimit,
     reason: freeLimitReason(photoCount)
   }
 }

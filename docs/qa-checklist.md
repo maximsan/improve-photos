@@ -105,7 +105,7 @@ Run through this before cutting a release DMG. Each section maps to one feature 
 | 7.1 | Unlicensed workflow action with 100 or fewer photos | Work can start |
 | 7.2 | Unlicensed workflow action with more than 100 photos | Upgrade prompt appears before work begins |
 | 7.3 | Licensed workflow action with more than 100 photos | Work can start without the free-limit prompt |
-| 7.4 | Payments are disabled | Core workflow testing is not blocked by license activation |
+| 7.4 | Payments are disabled, scan a folder with more than 100 photos | Scan completes with no free-limit prompt; processing is unlimited |
 
 ---
 

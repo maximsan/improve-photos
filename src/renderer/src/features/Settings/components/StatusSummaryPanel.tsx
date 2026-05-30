@@ -6,10 +6,22 @@ interface StatusSummaryPanelProps {
   entitlement: EntitlementStatus | null
 }
 
+/**
+ * A `null` photoLimit means no cap applies — either the user is licensed or
+ * licensing is turned off for the build. Only a real unlicensed user is capped.
+ */
+function describeFreeLimit(entitlement: EntitlementStatus | null): string {
+  if (entitlement && entitlement.photoLimit !== null) {
+    return `Unlicensed use is limited to ${entitlement.photoLimit} photos per workflow action.`
+  }
+  if (entitlement?.licensed) {
+    return 'Licensed use has unlimited local processing.'
+  }
+  return 'Local processing is unlimited while licensing is off.'
+}
+
 function StatusSummaryPanel({ flags, entitlement }: StatusSummaryPanelProps): React.JSX.Element {
-  const freeLimitCopy = entitlement?.licensed
-    ? 'Licensed use has unlimited local processing.'
-    : `Unlicensed use is limited to ${entitlement?.photoLimit ?? 100} photos per workflow action.`
+  const freeLimitCopy = describeFreeLimit(entitlement)
 
   return (
     <section className="max-w-3xl">

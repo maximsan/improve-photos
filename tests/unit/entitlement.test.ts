@@ -33,7 +33,11 @@ afterEach(async () => {
 
 describe('entitlement service', () => {
   it('allows unlicensed actions up to the free photo limit', async () => {
-    await expect(canProcessPhotoCount(FREE_PHOTO_LIMIT, { env: {} })).resolves.toEqual({
+    const path = await storagePath()
+
+    await expect(
+      canProcessPhotoCount(FREE_PHOTO_LIMIT, { env: PAYMENTS_ENABLED_ENV, storagePath: path })
+    ).resolves.toEqual({
       allowed: true,
       photoLimit: FREE_PHOTO_LIMIT,
       reason: null
@@ -41,11 +45,27 @@ describe('entitlement service', () => {
   })
 
   it('blocks unlicensed actions above the free photo limit', async () => {
-    const decision = await canProcessPhotoCount(FREE_PHOTO_LIMIT + 1, { env: {} })
+    const path = await storagePath()
+    const decision = await canProcessPhotoCount(FREE_PHOTO_LIMIT + 1, {
+      env: PAYMENTS_ENABLED_ENV,
+      storagePath: path
+    })
 
     expect(decision.allowed).toBe(false)
     expect(decision.photoLimit).toBe(FREE_PHOTO_LIMIT)
     expect(decision.reason).toContain(`${FREE_PHOTO_LIMIT}`)
+  })
+
+  it('treats a payments-disabled build as unlimited', async () => {
+    await expect(getEntitlementStatus({ env: {} })).resolves.toEqual({
+      licensed: false,
+      photoLimit: null
+    })
+    await expect(canProcessPhotoCount(FREE_PHOTO_LIMIT + 1, { env: {} })).resolves.toEqual({
+      allowed: true,
+      photoLimit: null,
+      reason: null
+    })
   })
 
   it('allows licensed actions above the free photo limit', async () => {

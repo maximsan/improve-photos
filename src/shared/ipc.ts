@@ -74,6 +74,21 @@ export interface ScanProgress {
   current: string
 }
 
+/** Details surfaced when a scan is blocked by the unlicensed free limit. */
+export interface ScanLimit {
+  /** Number of photos the chosen folder contains. */
+  photoCount: number
+  /** The free-tier cap that was exceeded. */
+  photoLimit: number
+}
+
+/**
+ * Result of a folder scan. The free-limit case is a normal, expected outcome —
+ * it is returned as data (not thrown) so the renderer can show a clean upsell
+ * rather than a raw "remote method" error string.
+ */
+export type ScanResult = { ok: true; photos: PhotoRecord[] } | { ok: false; limit: ScanLimit }
+
 // ─── Exporter ────────────────────────────────────────────────────────────────
 
 export type ExportFormat = 'jpeg' | 'png' | 'webp'
@@ -196,7 +211,7 @@ export const IPC = {
 export interface ElectronAPI {
   /** Opens a native folder-picker dialog; resolves to the chosen path or null if cancelled */
   pickFolder: () => Promise<string | null>
-  scan: (folderPath: string) => Promise<PhotoRecord[]>
+  scan: (folderPath: string) => Promise<ScanResult>
   computeHashes: (paths: string[]) => Promise<PhotoHashes>
   getDuplicateGroups: (hashes: PhotoHashes) => Promise<DuplicateGroup[]>
   getBlurScores: (paths: string[]) => Promise<BlurScores>
