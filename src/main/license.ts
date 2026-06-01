@@ -62,10 +62,6 @@ function statusFromStoredLicense(storedLicense: StoredLicense | null): LicenseSt
   return { state: 'licensed', maskedLicenseKey: storedLicense.maskedLicenseKey }
 }
 
-function disabledStatus(): LicenseStatus {
-  return { state: 'disabled' }
-}
-
 function maskLicenseKey(licenseKey: string): string {
   return `${LICENSE_KEY_MASK}${licenseKey.trim().slice(-4)}`
 }
@@ -128,10 +124,6 @@ function paymentsEnabled(options: LicenseServiceOptions = {}): boolean {
 export async function getLicenseStatus(
   options: LicenseServiceOptions = {}
 ): Promise<LicenseStatus> {
-  if (!paymentsEnabled(options)) {
-    return disabledStatus()
-  }
-
   return statusFromStoredLicense(await readStoredLicense(options))
 }
 

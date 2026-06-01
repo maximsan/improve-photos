@@ -123,11 +123,9 @@ export interface ReleaseFeatureFlags {
 
 export const FREE_PHOTO_LIMIT = 100
 
-// 'disabled' = payments gate off (no activation, unlimited); 'unlicensed' = gate on but no license (100 cap).
-export type LicenseState = 'disabled' | 'unlicensed' | 'licensed'
+export type LicenseState = 'unlicensed' | 'licensed'
 
 export type LicenseStatus =
-  | { state: 'disabled' }
   | { state: 'unlicensed' }
   /** Redacted key for display, e.g. `••••WXYZ`; fixed-length mask so the real key length isn't leaked. */
   | { state: 'licensed'; maskedLicenseKey: string }

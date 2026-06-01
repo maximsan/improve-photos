@@ -11,12 +11,17 @@ export interface LicenseState {
   deactivate: () => Promise<void>
 }
 
-export function useLicenseState(): LicenseState {
+export function useLicenseState(enabled: boolean): LicenseState {
   const [status, setStatus] = useState<LicenseRequestStatus>('loading')
   const [license, setLicense] = useState<LicenseStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Licensing is only meaningful once payments ship; skip the fetch until then.
+    if (!enabled) {
+      return
+    }
+
     let isMounted = true
 
     async function loadLicenseStatus(): Promise<void> {
@@ -41,7 +46,7 @@ export function useLicenseState(): LicenseState {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [enabled])
 
   async function activate(licenseKey: string): Promise<void> {
     setStatus('saving')
@@ -67,6 +72,10 @@ export function useLicenseState(): LicenseState {
       setError(err instanceof Error ? err.message : 'License deactivation failed')
       setStatus('error')
     }
+  }
+
+  if (!enabled) {
+    return { status: 'ready', license: null, error: null, activate, deactivate }
   }
 
   return { status, license, error, activate, deactivate }

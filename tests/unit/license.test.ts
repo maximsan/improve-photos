@@ -30,16 +30,13 @@ afterEach(async () => {
 })
 
 describe('license service', () => {
-  it('returns disabled status and makes no activation request when payments are gated off', async () => {
+  it('refuses activation and makes no network request when payments are gated off', async () => {
     const fetcher = vi.fn()
 
     await expect(
       activateLicense('license-key', { env: {}, fetch: fetcher, storagePath: await storagePath() })
     ).rejects.toThrow('disabled')
 
-    await expect(getLicenseStatus({ env: {}, storagePath: await storagePath() })).resolves.toEqual({
-      state: 'disabled'
-    })
     expect(fetcher).not.toHaveBeenCalled()
   })
 

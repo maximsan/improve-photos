@@ -13,10 +13,7 @@ interface LicensePanelProps {
 }
 
 function licenseCopy(license: LicenseStatus | null): string {
-  if (!license || license.state === 'disabled') {
-    return 'License activation is paused until payments are enabled for final v1 testing.'
-  }
-  if (license.state === 'licensed') {
+  if (license?.state === 'licensed') {
     return `Licensed with key ${license.maskedLicenseKey}.`
   }
   return 'No license is active. Unlicensed use keeps the 100-photo workflow limit.'

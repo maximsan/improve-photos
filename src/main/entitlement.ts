@@ -1,6 +1,7 @@
 import type { EntitlementStatus, PhotoCountDecision } from '@shared/ipc'
 import { FREE_PHOTO_LIMIT } from '@shared/ipc'
 import type { ReleaseFeatureFlagEnvironment } from './releaseFeatureFlags'
+import { getReleaseFeatureFlags } from './releaseFeatureFlags'
 import { getLicenseStatus } from './license'
 
 interface EntitlementOptions {
@@ -15,14 +16,16 @@ export function freeLimitReason(photoCount: number): string {
 export async function getEntitlementStatus(
   options: EntitlementOptions = {}
 ): Promise<EntitlementStatus> {
-  const licenseStatus = await getLicenseStatus(options)
-  const licensed = licenseStatus.state === 'licensed'
-  // Only a real unlicensed user is capped; 'disabled' (licensing off) stays unlimited.
-  const limited = licenseStatus.state === 'unlicensed'
+  // Licensing only exists once payments ship; until then processing is unlimited.
+  if (!getReleaseFeatureFlags(options.env).paymentsEnabled) {
+    return { licensed: false, photoLimit: null }
+  }
+
+  const licensed = (await getLicenseStatus(options)).state === 'licensed'
 
   return {
     licensed,
-    photoLimit: limited ? FREE_PHOTO_LIMIT : null
+    photoLimit: licensed ? null : FREE_PHOTO_LIMIT
   }
 }
 

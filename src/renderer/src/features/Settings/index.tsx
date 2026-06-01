@@ -18,7 +18,7 @@ import { useUpdateState } from './hooks/useUpdateState'
 function Settings(): React.JSX.Element {
   const { status, flags, error } = useReleaseFeatureFlags()
   const { entitlement } = useEntitlementState()
-  const licenseState = useLicenseState()
+  const licenseState = useLicenseState(flags?.paymentsEnabled ?? false)
   const updateState = useUpdateState()
   const { preferences, setConfirmBeforeTrash, setDefaultExportFormat } = useSettingsPreferences()
 
@@ -41,13 +41,15 @@ function Settings(): React.JSX.Element {
     return (
       <div className="flex-1 space-y-8 overflow-auto p-6">
         <StatusSummaryPanel flags={flags} entitlement={entitlement} />
-        <LicensePanel
-          requestStatus={licenseState.status}
-          license={licenseState.license}
-          error={licenseState.error}
-          onActivate={licenseState.activate}
-          onDeactivate={licenseState.deactivate}
-        />
+        {flags.paymentsEnabled ? (
+          <LicensePanel
+            requestStatus={licenseState.status}
+            license={licenseState.license}
+            error={licenseState.error}
+            onActivate={licenseState.activate}
+            onDeactivate={licenseState.deactivate}
+          />
+        ) : null}
         <UpdatePanel
           requestStatus={updateState.status}
           updateStatus={updateState.updateStatus}
