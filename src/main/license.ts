@@ -7,6 +7,8 @@ import type { ReleaseFeatureFlagEnvironment } from './releaseFeatureFlags'
 import { getReleaseFeatureFlags } from './releaseFeatureFlags'
 
 const LICENSE_FILE_NAME = 'license.json'
+// Fixed length on purpose — a mask that tracked the key length would leak it.
+const LICENSE_KEY_MASK = '••••'
 const LEMON_SQUEEZY_ACTIVATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/activate'
 const LEMON_SQUEEZY_DEACTIVATE_URL = 'https://api.lemonsqueezy.com/v1/licenses/deactivate'
 
@@ -14,7 +16,7 @@ interface StoredLicense {
   licenseKey: string
   instanceId: string
   instanceName: string
-  licenseKeyLast4: string
+  maskedLicenseKey: string
   productName: string | null
   customerEmail: string | null
   activatedAt: string
@@ -54,36 +56,18 @@ function licenseStoragePath(options: LicenseServiceOptions = {}): string {
 
 function statusFromStoredLicense(storedLicense: StoredLicense | null): LicenseStatus {
   if (!storedLicense) {
-    return {
-      state: 'unlicensed',
-      licenseKeyLast4: null,
-      productName: null,
-      customerEmail: null,
-      activatedAt: null
-    }
+    return { state: 'unlicensed' }
   }
 
-  return {
-    state: 'licensed',
-    licenseKeyLast4: storedLicense.licenseKeyLast4,
-    productName: storedLicense.productName,
-    customerEmail: storedLicense.customerEmail,
-    activatedAt: storedLicense.activatedAt
-  }
+  return { state: 'licensed', maskedLicenseKey: storedLicense.maskedLicenseKey }
 }
 
 function disabledStatus(): LicenseStatus {
-  return {
-    state: 'disabled',
-    licenseKeyLast4: null,
-    productName: null,
-    customerEmail: null,
-    activatedAt: null
-  }
+  return { state: 'disabled' }
 }
 
-function licenseKeyLast4(licenseKey: string): string {
-  return licenseKey.trim().slice(-4)
+function maskLicenseKey(licenseKey: string): string {
+  return `${LICENSE_KEY_MASK}${licenseKey.trim().slice(-4)}`
 }
 
 function createInstanceName(): string {
@@ -179,7 +163,7 @@ export async function activateLicense(
     licenseKey: payload.license_key?.key ?? trimmedLicenseKey,
     instanceId: payload.instance.id,
     instanceName: payload.instance.name ?? instanceName,
-    licenseKeyLast4: licenseKeyLast4(payload.license_key?.key ?? trimmedLicenseKey),
+    maskedLicenseKey: maskLicenseKey(payload.license_key?.key ?? trimmedLicenseKey),
     productName: payload.meta?.product_name ?? null,
     customerEmail: payload.meta?.customer_email ?? null,
     activatedAt: options.now?.() ?? new Date().toISOString()

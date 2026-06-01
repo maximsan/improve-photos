@@ -9,11 +9,6 @@ interface LimitReachedStateProps {
   onChooseFolder: () => void
 }
 
-/**
- * Shown when a folder exceeds the unlicensed free limit. Replaces the old raw
- * "remote method" error with a calm upsell: explain the cap, point to license
- * activation, and offer a smaller folder as the no-cost path forward.
- */
 export function LimitReachedState({
   limit,
   onChooseFolder

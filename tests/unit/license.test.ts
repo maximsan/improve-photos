@@ -38,11 +38,7 @@ describe('license service', () => {
     ).rejects.toThrow('disabled')
 
     await expect(getLicenseStatus({ env: {}, storagePath: await storagePath() })).resolves.toEqual({
-      state: 'disabled',
-      licenseKeyLast4: null,
-      productName: null,
-      customerEmail: null,
-      activatedAt: null
+      state: 'disabled'
     })
     expect(fetcher).not.toHaveBeenCalled()
   })
@@ -67,10 +63,7 @@ describe('license service', () => {
 
     expect(status).toEqual({
       state: 'licensed',
-      licenseKeyLast4: 'WXYZ',
-      productName: 'Cleanup Photos',
-      customerEmail: 'user@example.com',
-      activatedAt: '2026-05-28T00:00:00.000Z'
+      maskedLicenseKey: '••••WXYZ'
     })
     await expect(
       getLicenseStatus({ env: PAYMENTS_ENABLED_ENV, storagePath: path })
@@ -104,11 +97,7 @@ describe('license service', () => {
     await expect(
       getLicenseStatus({ env: PAYMENTS_ENABLED_ENV, storagePath: path })
     ).resolves.toEqual({
-      state: 'unlicensed',
-      licenseKeyLast4: null,
-      productName: null,
-      customerEmail: null,
-      activatedAt: null
+      state: 'unlicensed'
     })
   })
 })

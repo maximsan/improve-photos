@@ -6,10 +6,7 @@ interface StatusSummaryPanelProps {
   entitlement: EntitlementStatus | null
 }
 
-/**
- * A `null` photoLimit means no cap applies — either the user is licensed or
- * licensing is turned off for the build. Only a real unlicensed user is capped.
- */
+// null photoLimit = no cap (licensed, or licensing off); only a real unlicensed user is capped.
 function describeFreeLimit(entitlement: EntitlementStatus | null): string {
   if (entitlement && entitlement.photoLimit !== null) {
     return `Unlicensed use is limited to ${entitlement.photoLimit} photos per workflow action.`

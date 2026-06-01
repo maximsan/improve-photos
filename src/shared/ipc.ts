@@ -74,19 +74,12 @@ export interface ScanProgress {
   current: string
 }
 
-/** Details surfaced when a scan is blocked by the unlicensed free limit. */
 export interface ScanLimit {
-  /** Number of photos the chosen folder contains. */
   photoCount: number
-  /** The free-tier cap that was exceeded. */
   photoLimit: number
 }
 
-/**
- * Result of a folder scan. The free-limit case is a normal, expected outcome —
- * it is returned as data (not thrown) so the renderer can show a clean upsell
- * rather than a raw "remote method" error string.
- */
+/** Limit case is returned as data, not thrown, so the renderer shows an upsell instead of a raw IPC error. */
 export type ScanResult = { ok: true; photos: PhotoRecord[] } | { ok: false; limit: ScanLimit }
 
 // ─── Exporter ────────────────────────────────────────────────────────────────
@@ -130,15 +123,14 @@ export interface ReleaseFeatureFlags {
 
 export const FREE_PHOTO_LIMIT = 100
 
+// 'disabled' = payments gate off (no activation, unlimited); 'unlicensed' = gate on but no license (100 cap).
 export type LicenseState = 'disabled' | 'unlicensed' | 'licensed'
 
-export interface LicenseStatus {
-  state: LicenseState
-  licenseKeyLast4: string | null
-  productName: string | null
-  customerEmail: string | null
-  activatedAt: string | null
-}
+export type LicenseStatus =
+  | { state: 'disabled' }
+  | { state: 'unlicensed' }
+  /** Redacted key for display, e.g. `••••WXYZ`; fixed-length mask so the real key length isn't leaked. */
+  | { state: 'licensed'; maskedLicenseKey: string }
 
 export interface EntitlementStatus {
   licensed: boolean

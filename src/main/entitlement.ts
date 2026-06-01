@@ -17,9 +17,7 @@ export async function getEntitlementStatus(
 ): Promise<EntitlementStatus> {
   const licenseStatus = await getLicenseStatus(options)
   const licensed = licenseStatus.state === 'licensed'
-  // The free limit only applies to a genuine unlicensed user. When licensing is
-  // turned off for the build ('disabled'), there is no paid tier to sell and no
-  // way to activate a license, so local processing stays unlimited.
+  // Only a real unlicensed user is capped; 'disabled' (licensing off) stays unlimited.
   const limited = licenseStatus.state === 'unlicensed'
 
   return {

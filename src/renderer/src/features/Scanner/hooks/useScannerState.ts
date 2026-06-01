@@ -6,11 +6,7 @@ type ScanStatus = 'idle' | 'scanning' | 'done' | 'limit'
 
 const MAX_FILENAME_CHARS = 40
 
-/**
- * Strips Electron's `Error invoking remote method 'scan': Error: …` wrapper so a
- * genuine failure reads as a plain sentence in the UI. The full error is logged
- * separately for debugging.
- */
+// Strips Electron's "Error invoking remote method 'x': Error: …" wrapper for display.
 const REMOTE_METHOD_PREFIX_PATTERN = /^Error invoking remote method '[^']*':\s*(?:Error:\s*)?/
 
 function toDisplayMessage(error: unknown): string {

@@ -255,8 +255,7 @@ describe('scanner IPC handlers', () => {
   })
 
   it('returns a limit result before reading metadata when an unlicensed scan exceeds the free limit', async () => {
-    // The free limit only applies when payments are enabled and no license is
-    // stored; otherwise licensing is off and scanning is unlimited.
+    // The limit only applies with payments enabled and no stored license.
     const previousPaymentsEnabled = process.env.CLEANUP_PHOTOS_PAYMENTS_ENABLED
     process.env.CLEANUP_PHOTOS_PAYMENTS_ENABLED = 'true'
 
