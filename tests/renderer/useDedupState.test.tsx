@@ -4,7 +4,12 @@ import { renderHook, act } from '@testing-library/react'
 import { createElement, type ReactElement, type ReactNode } from 'react'
 import { PhotosContext } from '../../src/renderer/src/context/photos'
 import { useDedupState } from '../../src/renderer/src/features/Dedup/hooks/useDedupState'
-import type { PhotoRecord, DuplicateGroup, PhotoHashes } from '../../src/shared/ipc'
+import type {
+  ComputeHashesResult,
+  PhotoRecord,
+  DuplicateGroup,
+  PhotoHashes
+} from '../../src/shared/ipc'
 
 const PHOTO_A: PhotoRecord = {
   path: '/p/a.jpg',
@@ -59,6 +64,25 @@ beforeEach(() => {
 
 const PHOTOS = [PHOTO_A, PHOTO_B]
 
+function makeHashResult(hashes: PhotoHashes = {}, cancelled = false): ComputeHashesResult {
+  return { hashes, cancelled }
+}
+
+function createDeferred<T>(): {
+  promise: Promise<T>
+  resolve: (result: T) => void
+  reject: (error: unknown) => void
+} {
+  let resolve!: (result: T) => void
+  let reject!: (error: unknown) => void
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve
+    reject = promiseReject
+  })
+
+  return { promise, resolve, reject }
+}
+
 describe('useDedupState', () => {
   it('starts in idle state', () => {
     const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
@@ -70,7 +94,7 @@ describe('useDedupState', () => {
 
   it('handleAnalyze transitions to results with found groups', async () => {
     const hashes: PhotoHashes = { '/p/a.jpg': 'aabb', '/p/b.jpg': 'aabb' }
-    mockApi.computeHashes.mockResolvedValue(hashes)
+    mockApi.computeHashes.mockResolvedValue(makeHashResult(hashes))
     mockApi.getDuplicateGroups.mockResolvedValue([GROUP])
     const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
 
@@ -79,6 +103,19 @@ describe('useDedupState', () => {
     expect(result.current.status).toBe('results')
     expect(result.current.groups).toEqual([GROUP])
     expect(mockApi.computeHashes).toHaveBeenCalledWith(['/p/a.jpg', '/p/b.jpg'])
+  })
+
+  it('handleAnalyze ignores a cancelled hash result', async () => {
+    const hashes: PhotoHashes = { '/p/a.jpg': 'aabb' }
+    mockApi.computeHashes.mockResolvedValue(makeHashResult(hashes, true))
+    mockApi.getDuplicateGroups.mockResolvedValue([GROUP])
+    const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
+
+    await act(() => result.current.handleAnalyze())
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.groups).toEqual([])
+    expect(mockApi.getDuplicateGroups).not.toHaveBeenCalled()
   })
 
   it('handleAnalyze sets error and returns to idle on failure', async () => {
@@ -127,8 +164,31 @@ describe('useDedupState', () => {
     expect(mockApi.cancelHashes).toHaveBeenCalledTimes(1)
   })
 
+  it('handleCancel prevents late hash results from publishing groups', async () => {
+    const hashRun = createDeferred<ComputeHashesResult>()
+    mockApi.computeHashes.mockReturnValue(hashRun.promise)
+    mockApi.getDuplicateGroups.mockResolvedValue([GROUP])
+    const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
+    let analyzePromise!: Promise<void>
+
+    await act(async () => {
+      analyzePromise = result.current.handleAnalyze()
+      await Promise.resolve()
+    })
+    act(() => result.current.handleCancel())
+    await act(async () => {
+      hashRun.resolve(makeHashResult({ '/p/a.jpg': 'aabb' }))
+      await analyzePromise
+    })
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.groups).toEqual([])
+    expect(mockApi.cancelHashes).toHaveBeenCalledTimes(1)
+    expect(mockApi.getDuplicateGroups).not.toHaveBeenCalled()
+  })
+
   it('handleReset clears groups, trash set, and error', async () => {
-    mockApi.computeHashes.mockResolvedValue({})
+    mockApi.computeHashes.mockResolvedValue(makeHashResult())
     mockApi.getDuplicateGroups.mockResolvedValue([GROUP])
     const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
 
