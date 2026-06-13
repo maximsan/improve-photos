@@ -126,8 +126,6 @@ export function registerScannerHandlers(): void {
     const controller = { cancelled: false }
     activeScanController = controller
 
-    setAllowedPreviewRoot(folderPath)
-
     const paths = await walkDir(folderPath)
     const total = paths.length
     const entitlement = await canProcessPhotoCount(total)
@@ -159,6 +157,7 @@ export function registerScannerHandlers(): void {
     const chunks = await Promise.all(Array.from({ length: MAX_CONCURRENT }, worker))
     const records = chunks.flat()
 
+    setAllowedPreviewRoot(folderPath)
     photoCache = records.filter((r): r is PhotoRecord => r !== null)
     activeScanController = null
 
