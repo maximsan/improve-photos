@@ -6,9 +6,10 @@ import { PhotosContext } from '../../src/renderer/src/context/photos'
 import { useDedupState } from '../../src/renderer/src/features/Dedup/hooks/useDedupState'
 import type {
   ComputeHashesResult,
-  PhotoRecord,
   DuplicateGroup,
-  PhotoHashes
+  PhotoCountDecision,
+  PhotoHashes,
+  PhotoRecord
 } from '../../src/shared/ipc'
 
 const PHOTO_A: PhotoRecord = {
@@ -36,23 +37,27 @@ const mockApi = {
 }
 const removePhotosByPath = vi.fn()
 
-function wrapper({ children }: { children: ReactNode }): ReactElement {
-  return createElement(
-    PhotosContext.Provider,
-    {
-      value: {
-        photos: [],
-        scanRoot: null,
-        scanRevision: 0,
-        setPhotos: vi.fn(),
-        setScanRoot: vi.fn(),
-        removePhotosByPath,
-        bumpScanRevision: vi.fn()
-      }
-    },
-    children
-  )
+function makeWrapper(getScanRevision = () => 0) {
+  return function wrapper({ children }: { children: ReactNode }): ReactElement {
+    return createElement(
+      PhotosContext.Provider,
+      {
+        value: {
+          photos: [],
+          scanRoot: null,
+          scanRevision: getScanRevision(),
+          setPhotos: vi.fn(),
+          setScanRoot: vi.fn(),
+          removePhotosByPath,
+          bumpScanRevision: vi.fn()
+        }
+      },
+      children
+    )
+  }
 }
+
+const wrapper = makeWrapper()
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -185,6 +190,37 @@ describe('useDedupState', () => {
     expect(result.current.groups).toEqual([])
     expect(mockApi.cancelHashes).toHaveBeenCalledTimes(1)
     expect(mockApi.getDuplicateGroups).not.toHaveBeenCalled()
+  })
+
+  it('ignores a pending entitlement preflight after the scan revision changes', async () => {
+    const entitlementRun = createDeferred<PhotoCountDecision>()
+    mockApi.canProcessPhotoCount.mockReturnValue(entitlementRun.promise)
+    mockApi.computeHashes.mockResolvedValue(makeHashResult({ '/p/a.jpg': 'aabb' }))
+    mockApi.getDuplicateGroups.mockResolvedValue([GROUP])
+    let scanRevision = 0
+    const dynamicWrapper = makeWrapper(() => scanRevision)
+    const { result, rerender } = renderHook(() => useDedupState(PHOTOS), {
+      wrapper: dynamicWrapper
+    })
+    let analyzePromise!: Promise<void>
+
+    await act(async () => {
+      analyzePromise = result.current.handleAnalyze()
+      await Promise.resolve()
+    })
+    await act(async () => {
+      scanRevision = 1
+      rerender()
+    })
+    await act(async () => {
+      entitlementRun.resolve({ allowed: true, photoLimit: 100, reason: null })
+      await analyzePromise
+    })
+
+    expect(mockApi.computeHashes).not.toHaveBeenCalled()
+    expect(mockApi.getDuplicateGroups).not.toHaveBeenCalled()
+    expect(result.current.status).toBe('idle')
+    expect(result.current.groups).toEqual([])
   })
 
   it('handleReset clears groups, trash set, and error', async () => {
