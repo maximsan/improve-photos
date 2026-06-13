@@ -2,13 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { access, mkdir, rename } from 'fs/promises'
 import { ipcMain } from 'electron'
 import { deriveTargetPath, registerOrganizerHandlers } from '../../src/main/ipc/organizer'
+import { getCachedPhotos } from '../../src/main/ipc/scanner'
 import { IPC } from '../../src/shared/ipc'
-import type { MoveOperation, PhotoRecord } from '../../src/shared/ipc'
+import type { ExecuteOrganizeResult, MoveOperation, PhotoRecord } from '../../src/shared/ipc'
 
 vi.mock('fs/promises', () => ({
   rename: vi.fn(),
   access: vi.fn(),
   mkdir: vi.fn()
+}))
+
+vi.mock('../../src/main/ipc/scanner', () => ({
+  getCachedPhotos: vi.fn(() => [])
 }))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -89,6 +94,7 @@ describe('organizer IPC handlers', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     vi.clearAllMocks()
+    vi.mocked(getCachedPhotos).mockReturnValue([])
   })
 
   it('marks preview operations as conflicts when the target path already exists', async () => {
@@ -99,9 +105,11 @@ describe('organizer IPC handlers', () => {
       dateTaken: '2024-07-15T10:30:00.000Z'
     })
 
-    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!({}, [
-      photo
-    ] as never, '/library/imports' as never)) as MoveOperation[]
+    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!(
+      {},
+      [photo] as never,
+      '/library/imports' as never
+    )) as MoveOperation[]
 
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({
@@ -118,9 +126,11 @@ describe('organizer IPC handlers', () => {
       dateTaken: '2024-07-15T10:30:00.000Z'
     })
 
-    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!({}, [
-      photo
-    ] as never, '/library' as never)) as MoveOperation[]
+    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!(
+      {},
+      [photo] as never,
+      '/library' as never
+    )) as MoveOperation[]
 
     expect(result[0]?.targetPath).toBe('/library/2024/07/15/IMG_001.jpg')
   })
@@ -133,9 +143,11 @@ describe('organizer IPC handlers', () => {
       dateTaken: '2024-07-15T10:30:00.000Z'
     })
 
-    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!({}, [
-      photo
-    ] as never, '/library' as never)) as MoveOperation[]
+    const result = (await handlers.get(IPC.PREVIEW_ORGANIZE)!(
+      {},
+      [photo] as never,
+      '/library' as never
+    )) as MoveOperation[]
 
     expect(result[0]?.targetPath).toBe('/library/2024/07/15/IMG_001.jpg')
   })
@@ -150,8 +162,59 @@ describe('organizer IPC handlers', () => {
       conflict: false
     }
 
-    await expect(handlers.get(IPC.EXECUTE_ORGANIZE)!({}, [op] as never)).rejects.toThrow(
-      '1 of 1 file(s) could not be moved:\n/library/imports/IMG_001.jpg: permission denied'
-    )
+    const result = (await handlers.get(IPC.EXECUTE_ORGANIZE)!({}, [
+      op
+    ] as never)) as ExecuteOrganizeResult
+
+    expect(result).toEqual({
+      movedPairs: [],
+      errors: ['/library/imports/IMG_001.jpg: permission denied'],
+      requestedCount: 1,
+      movedCount: 0
+    })
+  })
+
+  it('returns successful move pairs while reporting later failures', async () => {
+    vi.mocked(mkdir).mockResolvedValue(undefined)
+    vi.mocked(rename)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('permission denied'))
+    const firstPhoto = makePhoto({ path: '/library/imports/IMG_001.jpg' })
+    const secondPhoto = makePhoto({ path: '/library/imports/IMG_002.jpg', name: 'IMG_002.jpg' })
+    const cachedPhotos = [{ ...firstPhoto }, { ...secondPhoto }]
+    vi.mocked(getCachedPhotos).mockReturnValue(cachedPhotos)
+    const handlers = registerOrganizerTestHandlers()
+    const ops: MoveOperation[] = [
+      {
+        photo: firstPhoto,
+        targetPath: '/library/2024/07/15/IMG_001.jpg',
+        conflict: false
+      },
+      {
+        photo: secondPhoto,
+        targetPath: '/library/2024/07/15/IMG_002.jpg',
+        conflict: false
+      }
+    ]
+
+    const result = (await handlers.get(IPC.EXECUTE_ORGANIZE)!(
+      {},
+      ops as never
+    )) as ExecuteOrganizeResult
+
+    expect(result).toEqual({
+      movedPairs: [{ from: '/library/imports/IMG_001.jpg', to: '/library/2024/07/15/IMG_001.jpg' }],
+      errors: ['/library/imports/IMG_002.jpg: permission denied'],
+      requestedCount: 2,
+      movedCount: 1
+    })
+    expect(cachedPhotos[0]).toMatchObject({
+      path: '/library/2024/07/15/IMG_001.jpg',
+      name: 'IMG_001.jpg'
+    })
+    expect(cachedPhotos[1]).toMatchObject({
+      path: '/library/imports/IMG_002.jpg',
+      name: 'IMG_002.jpg'
+    })
   })
 })
