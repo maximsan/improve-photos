@@ -42,6 +42,13 @@ export interface MoveOperation {
   conflict: boolean
 }
 
+export interface ExecuteOrganizeResult {
+  movedPairs: Array<{ from: string; to: string }>
+  errors: string[]
+  requestedCount: number
+  movedCount: number
+}
+
 // ─── Quality / blur ──────────────────────────────────────────────────────────
 
 /** Perceptual hash keyed by absolute file path */
@@ -206,7 +213,7 @@ export interface ElectronAPI {
   getDuplicateGroups: (hashes: PhotoHashes) => Promise<DuplicateGroup[]>
   getBlurScores: (paths: string[]) => Promise<BlurScores>
   previewOrganize: (photos: PhotoRecord[], scanRoot: string) => Promise<MoveOperation[]>
-  executeOrganize: (ops: MoveOperation[]) => Promise<void>
+  executeOrganize: (ops: MoveOperation[]) => Promise<ExecuteOrganizeResult>
   trashFiles: (paths: string[]) => Promise<void>
   exportBatch: (photos: PhotoRecord[], presets: ExportPreset[], outDir: string) => Promise<void>
   onExportProgress: (cb: (progress: ExportProgress) => void) => () => void

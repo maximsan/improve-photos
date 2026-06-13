@@ -2,7 +2,7 @@ import { ipcMain } from 'electron'
 import { rename } from 'fs/promises'
 import { join, dirname, basename } from 'path'
 import { access } from 'fs/promises'
-import type { MoveOperation, PhotoRecord } from '@shared/ipc'
+import type { ExecuteOrganizeResult, MoveOperation, PhotoRecord } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 import { getCachedPhotos } from './scanner'
 
@@ -54,40 +54,45 @@ export function registerOrganizerHandlers(): void {
     }
   )
 
-  ipcMain.handle(IPC.EXECUTE_ORGANIZE, async (_event, ops: MoveOperation[]): Promise<void> => {
-    const { mkdir } = await import('fs/promises')
-    const pending = ops.filter((op) => !op.conflict)
-    const movedPaths = new Map<string, string>()
-    const errors: string[] = []
+  ipcMain.handle(
+    IPC.EXECUTE_ORGANIZE,
+    async (_event, ops: MoveOperation[]): Promise<ExecuteOrganizeResult> => {
+      const { mkdir } = await import('fs/promises')
+      const pending = ops.filter((op) => !op.conflict)
+      const movedPaths = new Map<string, string>()
+      const errors: string[] = []
 
-    // Process sequentially so a mid-batch failure doesn't leave the cache out
-    // of sync: we update cache for every file that actually moved before throwing.
-    for (const op of pending) {
-      try {
-        await mkdir(dirname(op.targetPath), { recursive: true })
-        await rename(op.photo.path, op.targetPath)
-        movedPaths.set(op.photo.path, op.targetPath)
-      } catch (err) {
-        errors.push(`${op.photo.path}: ${err instanceof Error ? err.message : String(err)}`)
+      // Process sequentially so each successful file can be reflected in the cache.
+      for (const op of pending) {
+        try {
+          await mkdir(dirname(op.targetPath), { recursive: true })
+          await rename(op.photo.path, op.targetPath)
+          movedPaths.set(op.photo.path, op.targetPath)
+        } catch (err) {
+          errors.push(`${op.photo.path}: ${err instanceof Error ? err.message : String(err)}`)
+        }
+      }
+
+      // Refresh the in-memory cache for every file that succeeded
+      const cached = getCachedPhotos()
+      for (const record of cached) {
+        const newPath = movedPaths.get(record.path)
+        if (newPath) {
+          record.path = newPath
+          record.name = basename(newPath)
+        }
+      }
+
+      const movedPairs = Array.from(movedPaths.entries()).map(([from, to]) => ({ from, to }))
+
+      return {
+        movedPairs,
+        errors,
+        requestedCount: pending.length,
+        movedCount: movedPairs.length
       }
     }
-
-    // Refresh the in-memory cache for every file that succeeded
-    const cached = getCachedPhotos()
-    for (const record of cached) {
-      const newPath = movedPaths.get(record.path)
-      if (newPath) {
-        record.path = newPath
-        record.name = basename(newPath)
-      }
-    }
-
-    if (errors.length > 0) {
-      throw new Error(
-        `${errors.length} of ${pending.length} file(s) could not be moved:\n${errors.join('\n')}`
-      )
-    }
-  })
+  )
 
   ipcMain.handle(
     IPC.UNDO_ORGANIZE,
