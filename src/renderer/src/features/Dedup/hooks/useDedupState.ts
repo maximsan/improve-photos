@@ -29,6 +29,7 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   const [progress, setProgress] = useState<HashProgress | null>(null)
   const unsubscribeRef = useRef<(() => void) | null>(null)
   const lastRevisionRef = useRef(scanRevision)
+  const activeAnalysisRunRef = useRef(0)
 
   useEffect(() => {
     return () => {
@@ -48,10 +49,15 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   }, [scanRevision])
 
   async function handleAnalyze(): Promise<void> {
+    const analysisRunId = activeAnalysisRunRef.current + 1
+    activeAnalysisRunRef.current = analysisRunId
     setError(null)
     setProgress(null)
 
     const entitlement = await window.api.canProcessPhotoCount(photos.length)
+    if (activeAnalysisRunRef.current !== analysisRunId) {
+      return
+    }
     if (!entitlement.allowed) {
       setError(entitlement.reason ?? 'Photo limit exceeded')
       setStatus('idle')
@@ -60,24 +66,48 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
 
     setStatus('computing')
 
-    unsubscribeRef.current = window.api.onHashProgress(setProgress)
+    const unsubscribe = window.api.onHashProgress((nextProgress) => {
+      if (activeAnalysisRunRef.current === analysisRunId) {
+        setProgress(nextProgress)
+      }
+    })
+    unsubscribeRef.current = unsubscribe
 
     try {
-      const hashes = await window.api.computeHashes(photos.map((p) => p.path))
-      const found = await window.api.getDuplicateGroups(hashes)
+      const hashResult = await window.api.computeHashes(photos.map((p) => p.path))
+      if (activeAnalysisRunRef.current !== analysisRunId) {
+        return
+      }
+      if (hashResult.cancelled) {
+        setStatus('idle')
+        return
+      }
+
+      const found = await window.api.getDuplicateGroups(hashResult.hashes)
+      if (activeAnalysisRunRef.current !== analysisRunId) {
+        return
+      }
       setGroups(found)
       setStatus('results')
     } catch (err) {
+      if (activeAnalysisRunRef.current !== analysisRunId) {
+        return
+      }
       setError(err instanceof Error ? err.message : 'Analysis failed')
       setStatus('idle')
     } finally {
-      unsubscribeRef.current?.()
-      unsubscribeRef.current = null
-      setProgress(null)
+      unsubscribe()
+      if (unsubscribeRef.current === unsubscribe) {
+        unsubscribeRef.current = null
+      }
+      if (activeAnalysisRunRef.current === analysisRunId) {
+        setProgress(null)
+      }
     }
   }
 
   function handleCancel(): void {
+    activeAnalysisRunRef.current++
     window.api.cancelHashes()
     unsubscribeRef.current?.()
     unsubscribeRef.current = null
@@ -140,6 +170,7 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   }
 
   function handleReset(): void {
+    activeAnalysisRunRef.current++
     setStatus('idle')
     setGroups([])
     clearTrash()
