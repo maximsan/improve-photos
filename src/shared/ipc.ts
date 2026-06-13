@@ -56,6 +56,11 @@ export interface PhotoHashes {
   [path: string]: string
 }
 
+export interface ComputeHashesResult {
+  hashes: PhotoHashes
+  cancelled: boolean
+}
+
 /** Laplacian variance score — lower means blurrier */
 export interface BlurScores {
   [path: string]: number
@@ -209,7 +214,7 @@ export interface ElectronAPI {
   /** Opens a native folder-picker dialog; resolves to the chosen path or null if cancelled */
   pickFolder: () => Promise<string | null>
   scan: (folderPath: string) => Promise<ScanResult>
-  computeHashes: (paths: string[]) => Promise<PhotoHashes>
+  computeHashes: (paths: string[]) => Promise<ComputeHashesResult>
   getDuplicateGroups: (hashes: PhotoHashes) => Promise<DuplicateGroup[]>
   getBlurScores: (paths: string[]) => Promise<BlurScores>
   previewOrganize: (photos: PhotoRecord[], scanRoot: string) => Promise<MoveOperation[]>
