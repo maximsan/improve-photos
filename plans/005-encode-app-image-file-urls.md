@@ -8,21 +8,21 @@ Before editing, run:
 
 ```bash
 git diff -- src/renderer/src/lib/format.ts src/main/localProtocol.ts tests/renderer/format.test.ts tests/unit/localProtocol.test.ts
-git show --stat ca41862 -- src/renderer/src/lib/format.ts src/main/localProtocol.ts tests/renderer/format.test.ts tests/unit/localProtocol.test.ts
+git show --stat 4276491 -- src/renderer/src/lib/format.ts src/main/localProtocol.ts tests/renderer/format.test.ts tests/unit/localProtocol.test.ts
 ```
 
-If these paths changed since commit `ca41862`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
-| Field | Value |
-| --- | --- |
-| Priority | P2 |
-| Effort | S |
-| Risk | LOW |
-| Depends on | None |
-| Category | Bug |
-| Planned at | `ca41862` on 2026-06-13 |
+| Field      | Value                   |
+| ---------- | ----------------------- |
+| Priority   | P2                      |
+| Effort     | S                       |
+| Risk       | LOW                     |
+| Depends on | None                    |
+| Category   | Bug                     |
+| Planned at | `4276491` on 2026-06-13 |
 
 ## Why This Matters
 
@@ -32,14 +32,14 @@ Photo paths are inserted directly into `app://images...` URLs. Filenames contain
 
 Key files and roles:
 
-| Path | Role |
-| --- | --- |
-| `src/renderer/src/lib/format.ts` | Builds `app://images` URLs for `<img src>`. |
-| `src/main/localProtocol.ts` | Decodes `url.pathname` and fetches the local file. |
-| `tests/renderer/format.test.ts` | Tests basic `fileUrl` behavior but not reserved URL characters. |
-| `tests/unit/localProtocol.test.ts` | Tests protocol decoding and `net.fetch` calls. |
+| Path                               | Role                                                            |
+| ---------------------------------- | --------------------------------------------------------------- |
+| `src/renderer/src/lib/format.ts`   | Builds `app://images` URLs for `<img src>`.                     |
+| `src/main/localProtocol.ts`        | Decodes `url.pathname` and fetches the local file.              |
+| `tests/renderer/format.test.ts`    | Tests basic `fileUrl` behavior but not reserved URL characters. |
+| `tests/unit/localProtocol.test.ts` | Tests protocol decoding and `net.fetch` calls.                  |
 
-Evidence at `ca41862`:
+Evidence at `4276491`:
 
 ```ts
 // src/renderer/src/lib/format.ts
@@ -50,7 +50,11 @@ export function fileUrl(path: string): string {
 
 ```ts
 // src/main/localProtocol.ts
-const filePath = decodeURIComponent(url.pathname)
+const decodedFilePath = decodeURIComponent(url.pathname)
+...
+const filePath = path.resolve(decodedFilePath)
+...
+return net.fetch(pathToFileURL(filePath).toString())
 ```
 
 Current test expectation:
@@ -68,10 +72,10 @@ new URL('app://images/photos/a?b.jpg').pathname // '/photos/a'
 
 ## Commands
 
-| Purpose | Command |
-| --- | --- |
-| Type check | `pnpm typecheck` |
-| Focused tests | `pnpm test -- tests/renderer/format.test.ts tests/unit/localProtocol.test.ts` |
+| Purpose       | Command                                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type check    | `pnpm typecheck`                                                                                                                                      |
+| Focused tests | `pnpm test -- tests/renderer/format.test.ts tests/unit/localProtocol.test.ts`                                                                         |
 | Targeted lint | `pnpm exec eslint src/renderer/src/lib/format.ts src/main/localProtocol.ts tests/renderer/format.test.ts tests/unit/localProtocol.test.ts --no-cache` |
 
 ## Scope

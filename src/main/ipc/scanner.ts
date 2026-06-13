@@ -6,7 +6,7 @@ import sharp from 'sharp'
 import exifr from 'exifr'
 import type { PhotoRecord, ScanResult } from '@shared/ipc'
 import { FREE_PHOTO_LIMIT, IPC } from '@shared/ipc'
-import { allowDirectory } from '../localProtocol'
+import { setAllowedPreviewRoot } from '../localProtocol'
 import { canProcessPhotoCount } from '../entitlement'
 
 export const IMAGE_EXTENSIONS = new Set([
@@ -126,7 +126,7 @@ export function registerScannerHandlers(): void {
     const controller = { cancelled: false }
     activeScanController = controller
 
-    allowDirectory(folderPath)
+    setAllowedPreviewRoot(folderPath)
 
     const paths = await walkDir(folderPath)
     const total = paths.length

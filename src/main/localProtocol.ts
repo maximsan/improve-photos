@@ -17,7 +17,7 @@ const HEIC_EXTENSIONS = new Set(['.heic', '.heif'])
 /**
  * In-memory cache of HEIC→JPEG conversions keyed by original file path.
  * Avoids re-spawning sips on every render of the same thumbnail.
- * Cleared when the user scans a new folder via {@link clearPreviewCache}.
+ * Cleared when the user scans a new folder via {@link setAllowedPreviewRoot}.
  */
 const previewCache = new Map<string, Buffer>()
 
@@ -27,8 +27,16 @@ export function clearPreviewCache(): void {
 }
 
 /** Call this when the user scans/selects a folder so the protocol may serve files from it. */
-export function allowDirectory(dir: string): void {
-  allowedRoots.add(dir)
+export function setAllowedPreviewRoot(dir: string): void {
+  allowedRoots.clear()
+  previewCache.clear()
+  allowedRoots.add(path.resolve(dir))
+}
+
+function isPathUnderRoot(filePath: string, root: string): boolean {
+  const relativePath = path.relative(root, filePath)
+
+  return relativePath !== '' && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)
 }
 
 /**
@@ -73,7 +81,7 @@ async function serveHeicAsJpeg(filePath: string): Promise<Response> {
  * Security:
  * - Rejects requests outside `images` host
  * - Rejects paths containing `..` (directory traversal)
- * - Only serves files under directories registered via {@link allowDirectory}
+ * - Only serves files under the directory registered via {@link setAllowedPreviewRoot}
  *
  * Must be called inside `app.whenReady()`.
  */
@@ -88,16 +96,17 @@ export function registerAppProtocol(): void {
       return new Response(null, { status: 400 })
     }
 
-    const filePath = decodeURIComponent(url.pathname)
+    const decodedFilePath = decodeURIComponent(url.pathname)
 
-    if (filePath.includes('..')) {
+    if (decodedFilePath.includes('..')) {
       if (is.dev) {
-        console.warn('[localProtocol] 403 directory traversal attempt:', filePath)
+        console.warn('[localProtocol] 403 directory traversal attempt:', decodedFilePath)
       }
       return new Response(null, { status: 403 })
     }
 
-    const isAllowed = [...allowedRoots].some((root) => filePath.startsWith(root + '/'))
+    const filePath = path.resolve(decodedFilePath)
+    const isAllowed = [...allowedRoots].some((root) => isPathUnderRoot(filePath, root))
     if (!isAllowed) {
       if (is.dev) {
         console.warn('[localProtocol] 403 path outside allowed roots:', filePath)

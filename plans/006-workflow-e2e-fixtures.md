@@ -8,21 +8,21 @@ Before editing, run:
 
 ```bash
 git diff -- tests/e2e/app.spec.ts playwright.config.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts docs/v1-ready-to-market-plan.md docs/qa-checklist.md
-git show --stat ca41862 -- tests/e2e/app.spec.ts playwright.config.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts docs/v1-ready-to-market-plan.md docs/qa-checklist.md
+git show --stat 4276491 -- tests/e2e/app.spec.ts playwright.config.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts docs/v1-ready-to-market-plan.md docs/qa-checklist.md
 ```
 
-If these paths changed since commit `ca41862`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
-| Field | Value |
-| --- | --- |
-| Priority | P2 |
-| Effort | L |
-| Risk | MED |
-| Depends on | None |
-| Category | Tests |
-| Planned at | `ca41862` on 2026-06-13 |
+| Field      | Value                   |
+| ---------- | ----------------------- |
+| Priority   | P2                      |
+| Effort     | L                       |
+| Risk       | MED                     |
+| Depends on | None                    |
+| Category   | Tests                   |
+| Planned at | `4276491` on 2026-06-13 |
 
 ## Why This Matters
 
@@ -32,15 +32,15 @@ The app has a documented v1 requirement for workflow-level E2E smoke coverage, b
 
 Key files and roles:
 
-| Path | Role |
-| --- | --- |
-| `tests/e2e/app.spec.ts` | Spawns the built Electron app, connects over CDP, and tests shell/navigation. |
-| `src/main/ipc/scanner.ts` | Owns folder picker IPC and scan IPC. Native dialogs block direct E2E automation. |
-| `tests/unit/scanner.test.ts` | Add tests if an E2E-only folder picker queue is introduced. |
-| `docs/v1-ready-to-market-plan.md` | Documents Step 22 E2E workflow fixture requirements. |
-| `docs/qa-checklist.md` | Lists manual workflow scenarios to translate into smoke tests. |
+| Path                              | Role                                                                             |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `tests/e2e/app.spec.ts`           | Spawns the built Electron app, connects over CDP, and tests shell/navigation.    |
+| `src/main/ipc/scanner.ts`         | Owns folder picker IPC and scan IPC. Native dialogs block direct E2E automation. |
+| `tests/unit/scanner.test.ts`      | Add tests if an E2E-only folder picker queue is introduced.                      |
+| `docs/v1-ready-to-market-plan.md` | Documents Step 22 E2E workflow fixture requirements.                             |
+| `docs/qa-checklist.md`            | Lists manual workflow scenarios to translate into smoke tests.                   |
 
-Evidence at `ca41862`:
+Evidence at `4276491`:
 
 ```ts
 // tests/e2e/app.spec.ts
@@ -53,19 +53,20 @@ test('all remaining tabs open without error', async () => { ... })
 
 ```md
 <!-- docs/v1-ready-to-market-plan.md -->
+
 Step 22: Add workflow-level E2E smoke fixtures
 Definition of Done: E2E covers app launch, scan fixture folder, duplicate analysis no-crash path, organizer preview, quality scoring no-crash path, exporter output-folder flow, and one unlicensed over-limit prompt.
 ```
 
 ## Commands
 
-| Purpose | Command |
-| --- | --- |
-| Build app for E2E | `pnpm build` |
-| E2E tests | `pnpm test:e2e` |
-| Scanner unit tests | `pnpm test -- tests/unit/scanner.test.ts` |
-| Type check | `pnpm typecheck` |
-| Targeted lint | `pnpm exec eslint tests/e2e/app.spec.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts --no-cache` |
+| Purpose            | Command                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| Build app for E2E  | `pnpm build`                                                                                           |
+| E2E tests          | `pnpm test:e2e`                                                                                        |
+| Scanner unit tests | `pnpm test -- tests/unit/scanner.test.ts`                                                              |
+| Type check         | `pnpm typecheck`                                                                                       |
+| Targeted lint      | `pnpm exec eslint tests/e2e/app.spec.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts --no-cache` |
 
 Note: `pnpm build` writes `out/`, and `pnpm test:e2e` drives a built Electron app. These are appropriate during implementation, not during this planning pass.
 
