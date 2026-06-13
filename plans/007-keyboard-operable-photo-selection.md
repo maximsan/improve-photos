@@ -13,21 +13,21 @@ Before editing, run:
 
 ```bash
 git diff -- src/renderer/src/features/Dedup/components/PhotoCard.tsx src/renderer/src/features/Dedup/components/SelectionRow.tsx src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx src/renderer/src/features/QualityReview/components/PhotoTile.tsx src/renderer/src/features/QualityReview/components/TierSection.tsx src/renderer/src/components/TrashOverlay.tsx tests/renderer
-git show --stat ca41862 -- src/renderer/src/features/Dedup/components/PhotoCard.tsx src/renderer/src/features/Dedup/components/SelectionRow.tsx src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx src/renderer/src/features/QualityReview/components/PhotoTile.tsx src/renderer/src/features/QualityReview/components/TierSection.tsx src/renderer/src/components/TrashOverlay.tsx tests/renderer
+git show --stat 4276491 -- src/renderer/src/features/Dedup/components/PhotoCard.tsx src/renderer/src/features/Dedup/components/SelectionRow.tsx src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx src/renderer/src/features/QualityReview/components/PhotoTile.tsx src/renderer/src/features/QualityReview/components/TierSection.tsx src/renderer/src/components/TrashOverlay.tsx tests/renderer
 ```
 
-If these paths changed since commit `ca41862`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
-| Field | Value |
-| --- | --- |
-| Priority | P2 |
-| Effort | M |
-| Risk | LOW |
-| Depends on | None |
-| Category | Accessibility/Bug |
-| Planned at | `ca41862` on 2026-06-13 |
+| Field      | Value                   |
+| ---------- | ----------------------- |
+| Priority   | P2                      |
+| Effort     | M                       |
+| Risk       | LOW                     |
+| Depends on | None                    |
+| Category   | Accessibility/Bug       |
+| Planned at | `4276491` on 2026-06-13 |
 
 ## Why This Matters
 
@@ -37,16 +37,16 @@ Duplicate and quality review photo tiles are clickable with a mouse, but the pri
 
 Key files and roles:
 
-| Path | Role |
-| --- | --- |
-| `src/renderer/src/features/Dedup/components/PhotoCard.tsx` | Clickable card wrapper toggles trash selection when not already marked. |
-| `src/renderer/src/features/Dedup/components/SelectionRow.tsx` | Clickable row only when already marked. |
-| `src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx` | Shows selected overlay. |
-| `src/renderer/src/features/QualityReview/components/PhotoTile.tsx` | Clickable quality tile toggles selection. |
-| `src/renderer/src/components/TrashOverlay.tsx` | Clickable overlay action, currently a `div`. |
-| `src/renderer/src/features/QualityReview/components/TierSection.tsx` | Contains select all and collapse buttons. |
+| Path                                                                 | Role                                                                    |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `src/renderer/src/features/Dedup/components/PhotoCard.tsx`           | Clickable card wrapper toggles trash selection when not already marked. |
+| `src/renderer/src/features/Dedup/components/SelectionRow.tsx`        | Clickable row only when already marked.                                 |
+| `src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx`      | Shows selected overlay.                                                 |
+| `src/renderer/src/features/QualityReview/components/PhotoTile.tsx`   | Clickable quality tile toggles selection.                               |
+| `src/renderer/src/components/TrashOverlay.tsx`                       | Clickable overlay action, currently a `div`.                            |
+| `src/renderer/src/features/QualityReview/components/TierSection.tsx` | Contains select all and collapse buttons.                               |
 
-Evidence at `ca41862`:
+Evidence at `4276491`:
 
 ```tsx
 // PhotoCard.tsx
@@ -81,10 +81,10 @@ Evidence at `ca41862`:
 
 ## Commands
 
-| Purpose | Command |
-| --- | --- |
-| Type check | `pnpm typecheck` |
-| Focused tests | `pnpm test -- tests/renderer/photoSelectionAccessibility.test.tsx` |
+| Purpose       | Command                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type check    | `pnpm typecheck`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Focused tests | `pnpm test -- tests/renderer/photoSelectionAccessibility.test.tsx`                                                                                                                                                                                                                                                                                                                                                                                    |
 | Targeted lint | `pnpm exec eslint src/renderer/src/features/Dedup/components/PhotoCard.tsx src/renderer/src/features/Dedup/components/SelectionRow.tsx src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx src/renderer/src/features/QualityReview/components/PhotoTile.tsx src/renderer/src/features/QualityReview/components/TierSection.tsx src/renderer/src/components/TrashOverlay.tsx tests/renderer/photoSelectionAccessibility.test.tsx --no-cache` |
 
 If component tests are split by feature instead, adjust the focused test command to the actual new test paths.

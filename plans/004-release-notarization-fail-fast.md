@@ -8,21 +8,21 @@ Before editing, run:
 
 ```bash
 git diff -- build/notarize.cjs scripts/build-mac.sh README.md tests/unit
-git show --stat ca41862 -- build/notarize.cjs scripts/build-mac.sh README.md tests/unit
+git show --stat 4276491 -- build/notarize.cjs scripts/build-mac.sh README.md tests/unit
 ```
 
-If these paths changed since commit `ca41862`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
-| Field | Value |
-| --- | --- |
-| Priority | P1 |
-| Effort | S |
-| Risk | LOW |
-| Depends on | None |
-| Category | Release/Security |
-| Planned at | `ca41862` on 2026-06-13 |
+| Field      | Value                   |
+| ---------- | ----------------------- |
+| Priority   | P1                      |
+| Effort     | S                       |
+| Risk       | LOW                     |
+| Depends on | None                    |
+| Category   | Release/Security        |
+| Planned at | `4276491` on 2026-06-13 |
 
 ## Why This Matters
 
@@ -32,14 +32,14 @@ If these paths changed since commit `ca41862`, reconcile the current behavior be
 
 Key files and roles:
 
-| Path | Role |
-| --- | --- |
-| `build/notarize.cjs` | electron-builder `afterSign` hook. |
-| `scripts/build-mac.sh` | Build wrapper that flips hardened runtime when `MAC_NOTARIZE=1`. |
-| `README.md` | Documents the signed and notarized release flow. |
+| Path                          | Role                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `build/notarize.cjs`          | electron-builder `afterSign` hook.                                      |
+| `scripts/build-mac.sh`        | Build wrapper that flips hardened runtime when `MAC_NOTARIZE=1`.        |
+| `README.md`                   | Documents the signed and notarized release flow.                        |
 | `tests/unit/notarize.test.ts` | Does not exist yet; add it if the helper extraction below is practical. |
 
-Evidence at `ca41862`:
+Evidence at `4276491`:
 
 ```js
 // build/notarize.cjs
@@ -64,15 +64,16 @@ if (missing.length > 0) {
 
 ```md
 <!-- README.md -->
+
 With `MAC_NOTARIZE=1` the wrapper flips hardened runtime on (required by notarization) and lets identity discovery proceed.
 ```
 
 ## Commands
 
-| Purpose | Command |
-| --- | --- |
-| Focused test | `pnpm test -- tests/unit/notarize.test.ts` |
-| Type check | `pnpm typecheck` |
+| Purpose       | Command                                                                      |
+| ------------- | ---------------------------------------------------------------------------- |
+| Focused test  | `pnpm test -- tests/unit/notarize.test.ts`                                   |
+| Type check    | `pnpm typecheck`                                                             |
 | Targeted lint | `pnpm exec eslint build/notarize.cjs tests/unit/notarize.test.ts --no-cache` |
 
 If no TypeScript test is added, omit `pnpm typecheck` from the focused loop but still run it before finishing.
