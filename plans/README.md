@@ -2,29 +2,33 @@
 
 Generated on 2026-06-13 from audit commit `ca41862`.
 
-Last updated on 2026-06-13 at `66b11b1`.
+Last updated on 2026-06-14 at active checkout `d220a43`; DONE plans archived under `plans/archive/`.
 
 These plans are implementation briefs for separate agents or future passes. They intentionally do not modify source code.
 
-## Execution Order
+## Active Execution Order
 
 | Plan                                                                                 | Finding                                                           | Priority | Effort | Risk | Status  | Notes                                                                                                    |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | -------- | ------ | ---- | ------- | -------------------------------------------------------------------------------------------------------- |
-| [001-organizer-partial-move-state.md](001-organizer-partial-move-state.md)           | #1 Organizer partial moves leave renderer state stale             | P1       | M      | MED  | DONE    | Implemented in `1862ad1` on branch `codex/001-organizer-partial-move-state`; verified at `4276491`.      |
-| [002-dedup-cancel-result-race.md](002-dedup-cancel-result-race.md)                   | #2 Dedup cancel can still publish results                         | P1       | S      | LOW  | DONE    | Implemented in `aa53149` on branch `codex/002-dedup-cancel-result-race`; verified at `4276491`.          |
-| [003-preview-protocol-scan-scope-cache.md](003-preview-protocol-scan-scope-cache.md) | #3 Preview protocol keeps old scan roots and HEIC cache           | P1       | S      | MED  | DONE    | Implemented in `4276491` on branch `codex/003-preview-protocol-scan-scope-cache`; follow-up Plan 008 added. |
-| [008-defer-preview-root-until-scan-success.md](008-defer-preview-root-until-scan-success.md) | Branch audit: preview root changes before scan success      | P1       | S      | LOW  | Planned | Introduced by Plan 003 branch at `66b11b1`; fix before treating the branch as merge-ready.               |
-| [009-invalidate-dedup-preflight-on-scan-revision.md](009-invalidate-dedup-preflight-on-scan-revision.md) | Branch audit: dedup preflight can outlive a scan revision | P2       | S      | LOW  | Planned | Pre-existing in touched dedup hook; useful follow-up but not caused by Plan 003.                         |
-| [004-release-notarization-fail-fast.md](004-release-notarization-fail-fast.md)       | #4 Release notarization can silently skip when explicitly enabled | P1       | S      | LOW  | Planned | Refreshed to `4276491`; release code finding still exists and plan is executable.                        |
-| [005-encode-app-image-file-urls.md](005-encode-app-image-file-urls.md)               | #5 Thumbnail URLs break on filenames with `#` or `?`              | P2       | S      | LOW  | Planned | Refreshed to `4276491` after Plan 003 protocol changes; finding still exists.                            |
-| [006-workflow-e2e-fixtures.md](006-workflow-e2e-fixtures.md)                         | #7 Workflow E2E coverage is shell-only                            | P2       | L      | MED  | Planned | Refreshed to `4276491` after Plan 003 scanner drift; finding still exists.                               |
-| [007-keyboard-operable-photo-selection.md](007-keyboard-operable-photo-selection.md) | #8 Clickable photo tiles are not keyboard-operable                | P2       | M      | LOW  | Planned | Refreshed to `4276491`; target UI components still use mouse-only selection wrappers.                    |
+| [005-encode-app-image-file-urls.md](005-encode-app-image-file-urls.md)               | #5 Thumbnail URLs break on filenames with `#` or `?`              | P2       | S      | LOW  | Planned | Refreshed to `138a2d2`; `fileUrl` still inserts raw path data into `app://images` URLs.                  |
+| [006-workflow-e2e-fixtures.md](006-workflow-e2e-fixtures.md)                         | #7 Workflow E2E coverage is shell-only                            | P2       | L      | MED  | Planned | Refreshed to `138a2d2`; E2E coverage remains shell/navigation-only.                                      |
+| [007-keyboard-operable-photo-selection.md](007-keyboard-operable-photo-selection.md) | #8 Clickable photo tiles are not keyboard-operable                | P2       | M      | LOW  | Planned | Refreshed to `138a2d2`; target photo selection wrappers remain mouse-click driven.                       |
+
+## Archived Done Plans
+
+| Plan                                                                                         | Finding                                                           | Implemented | Verified | Notes                                                                                 |
+| -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------- |
+| [001-organizer-partial-move-state.md](archive/001-organizer-partial-move-state.md)           | #1 Organizer partial moves leave renderer state stale             | `1862ad1`   | `4276491` | Branch `codex/001-organizer-partial-move-state`.                                      |
+| [002-dedup-cancel-result-race.md](archive/002-dedup-cancel-result-race.md)                   | #2 Dedup cancel can still publish results                         | `aa53149`   | `4276491` | Branch `codex/002-dedup-cancel-result-race`.                                          |
+| [003-preview-protocol-scan-scope-cache.md](archive/003-preview-protocol-scan-scope-cache.md) | #3 Preview protocol keeps old scan roots and HEIC cache           | `4276491`   | `138a2d2` | Branch `codex/003-preview-protocol-scan-scope-cache`.                                 |
+| [004-release-notarization-fail-fast.md](archive/004-release-notarization-fail-fast.md)       | #4 Release notarization can silently skip when explicitly enabled | `d9490c0`   | `d9490c0` | Branch `codex/004-release-notarization-fail-fast`; not merged into active branch.     |
+| [008-defer-preview-root-until-scan-success.md](archive/008-defer-preview-root-until-scan-success.md) | Branch audit: preview root changes before scan success      | `3c8c5af`   | `138a2d2` | Branch `codex/008-009-scan-dedup-races`.                                             |
+| [009-invalidate-dedup-preflight-on-scan-revision.md](archive/009-invalidate-dedup-preflight-on-scan-revision.md) | Branch audit: dedup preflight can outlive a scan revision | `138a2d2`   | `138a2d2` | Branch `codex/008-009-scan-dedup-races`.                                             |
 
 ## Dependency Notes
 
-- Plan 008 should run before merging or declaring the Plan 003 branch complete, because it fixes a regression introduced by the branch.
-- Plan 009 is independent of Plan 008 and the preview protocol work. It is pre-existing in touched code, so it can run after Plan 008 unless the reviewer wants all branch-audit findings handled together.
-- Plans 004 and 005 are independent and can be implemented in any order; Plans 001 through 003 are complete.
+- Plans 001, 002, 003, 004, 008, and 009 are complete and archived under `plans/archive/`.
+- Plan 005 is independent of the remaining planned work.
 - Plan 006 can be implemented independently, but it may be easier after Plan 005 because workflow smoke tests will exercise thumbnails. The organizer and dedup dependencies from Plans 001 and 002 are already done.
 - Plan 007 is independent of the workflow test plan, but its accessibility improvements may make E2E selectors more stable.
 
@@ -34,11 +38,22 @@ These plans are implementation briefs for separate agents or future passes. They
 - Refreshed planned Plans 004, 005, 006, and 007 to `4276491` so future executor drift checks start from the current implemented baseline.
 - Added Plan 008 at `66b11b1` for the introduced branch regression where attempted scans can replace the allowed preview root before the renderer accepts new photos.
 - Added Plan 009 at `66b11b1` for a pre-existing stale dedup preflight window in a touched hook.
-- Plan 004 finding still exists: `MAC_NOTARIZE=1` with missing credentials logs a skip and returns success.
+- Reconciled on 2026-06-14 at `138a2d2`.
+- Marked Plans 008 and 009 DONE after implementation on branch `codex/008-009-scan-dedup-races`.
+- Verified Plans 008 and 009 with `pnpm typecheck`, `pnpm test -- tests/unit/scanner.test.ts tests/unit/localProtocol.test.ts tests/renderer/useDedupState.test.tsx`, and targeted ESLint for the touched scanner/dedup files.
+- Refreshed planned Plans 004, 005, 006, and 007 to `138a2d2`; current drift from earlier baselines was either fixed by Plans 008/009 or unrelated to the remaining findings.
 - Plan 005 finding still exists: `fileUrl` still inserts raw path data into `app://images` URLs.
 - Plan 006 finding still exists: E2E coverage remains shell/navigation-only.
 - Plan 007 finding still exists: target photo selection wrappers remain mouse-click driven.
 - No plans were rejected or superseded.
+- Marked Plan 004 DONE after implementation on branch `codex/004-release-notarization-fail-fast` at `d9490c0`.
+- Verified Plan 004 with `pnpm typecheck`, `pnpm test -- tests/unit/notarize.test.ts`, `pnpm exec eslint build/notarize.cjs tests/unit/notarize.test.ts --no-cache`, and `node -p "typeof require('./build/notarize.cjs').default"` in `/private/tmp/cleanup-photos-004`.
+- Reconciled on 2026-06-14 at active checkout `d220a43`.
+- Verified active-checkout DONE plans 001, 002, 003, 008, and 009 with `pnpm typecheck` and `pnpm test -- tests/unit/organizer.test.ts tests/renderer/useOrganizerState.test.tsx tests/renderer/useDedupState.test.tsx tests/unit/ipc-parity.test.ts tests/unit/localProtocol.test.ts tests/unit/scanner.test.ts`.
+- Verified Plan 004 remains DONE in `/private/tmp/cleanup-photos-004` with `pnpm test -- tests/unit/notarize.test.ts` and `pnpm exec eslint build/notarize.cjs tests/unit/notarize.test.ts --no-cache`.
+- Plan 004 source changes are not present in active checkout `d220a43`; merge or cherry-pick `d9490c0` when you want that fix in this branch.
+- Drift checks for planned Plans 005, 006, and 007 from `138a2d2` to `d220a43` produced no in-scope file changes, so those plans remain executable as written.
+- Archived DONE plan files 001, 002, 003, 004, 008, and 009 under `plans/archive/`.
 
 ## Findings Considered And Rejected
 
