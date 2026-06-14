@@ -13,12 +13,17 @@ vi.mock('fs/promises', () => ({
   stat: vi.fn()
 }))
 
+vi.mock('../../src/main/localProtocol', () => ({
+  setAllowedPreviewRoot: vi.fn()
+}))
+
 import { readdir, stat } from 'fs/promises'
 import { ipcMain } from 'electron'
 import sharp from 'sharp'
 import exifr from 'exifr'
 import { IPC } from '@shared/ipc'
 import type { ScanResult } from '@shared/ipc'
+import { setAllowedPreviewRoot } from '../../src/main/localProtocol'
 import {
   walkDir,
   buildPhotoRecord,
@@ -208,6 +213,8 @@ describe('scanner IPC handlers', () => {
 
     expect(result.ok).toBe(true)
     expect(result.ok && result.photos).toHaveLength(2)
+    expect(setAllowedPreviewRoot).toHaveBeenCalledWith('/photos')
+    expect(setAllowedPreviewRoot).toHaveBeenCalledTimes(1)
     expect(progressCalls).toHaveLength(2)
     expect(progressCalls.map(([, progress]) => progress)).toEqual(
       expect.arrayContaining([
@@ -273,10 +280,23 @@ describe('scanner IPC handlers', () => {
       const result = (await handlers.get(IPC.SCAN)!(event, '/photos' as never)) as ScanResult
 
       expect(result).toEqual({ ok: false, limit: { photoCount: 101, photoLimit: 100 } })
+      expect(setAllowedPreviewRoot).not.toHaveBeenCalled()
       expect(stat).not.toHaveBeenCalled()
       expect(event.sender.send).not.toHaveBeenCalled()
     } finally {
       process.env.CLEANUP_PHOTOS_PAYMENTS_ENABLED = previousPaymentsEnabled
     }
+  })
+
+  it('does not replace the preview root when directory walking fails', async () => {
+    vi.mocked(readdir).mockRejectedValueOnce(new Error('EACCES: permission denied'))
+
+    const handlers = registerScannerTestHandlers()
+    const event = { sender: { send: vi.fn() } }
+
+    await expect(handlers.get(IPC.SCAN)!(event, '/blocked' as never)).rejects.toThrow(
+      'EACCES: permission denied'
+    )
+    expect(setAllowedPreviewRoot).not.toHaveBeenCalled()
   })
 })
