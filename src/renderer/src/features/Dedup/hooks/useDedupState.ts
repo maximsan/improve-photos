@@ -31,6 +31,14 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   const lastRevisionRef = useRef(scanRevision)
   const activeAnalysisRunRef = useRef(0)
 
+  function resetAnalysisState(): void {
+    setStatus('idle')
+    setGroups([])
+    clearTrash()
+    setError(null)
+    setProgress(null)
+  }
+
   useEffect(() => {
     return () => {
       unsubscribeRef.current?.()
@@ -42,9 +50,11 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
       return
     }
     lastRevisionRef.current = scanRevision
-    if (status !== 'idle') {
-      handleReset()
+    if (status === 'idle') {
+      activeAnalysisRunRef.current++
+      return
     }
+    handleReset()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanRevision])
 
@@ -171,11 +181,7 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
 
   function handleReset(): void {
     activeAnalysisRunRef.current++
-    setStatus('idle')
-    setGroups([])
-    clearTrash()
-    setError(null)
-    setProgress(null)
+    resetAnalysisState()
   }
 
   return {

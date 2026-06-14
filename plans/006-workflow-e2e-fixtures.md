@@ -8,10 +8,10 @@ Before editing, run:
 
 ```bash
 git diff -- tests/e2e/app.spec.ts playwright.config.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts docs/v1-ready-to-market-plan.md docs/qa-checklist.md
-git show --stat 4276491 -- tests/e2e/app.spec.ts playwright.config.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts docs/v1-ready-to-market-plan.md docs/qa-checklist.md
+git show --stat 138a2d2 -- tests/e2e/app.spec.ts playwright.config.ts src/main/ipc/scanner.ts tests/unit/scanner.test.ts docs/v1-ready-to-market-plan.md docs/qa-checklist.md
 ```
 
-If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `138a2d2`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
@@ -22,7 +22,7 @@ If these paths changed since commit `4276491`, reconcile the current behavior be
 | Risk       | MED                     |
 | Depends on | None                    |
 | Category   | Tests                   |
-| Planned at | `4276491` on 2026-06-13 |
+| Planned at | `138a2d2` on 2026-06-14 |
 
 ## Why This Matters
 
@@ -40,7 +40,7 @@ Key files and roles:
 | `docs/v1-ready-to-market-plan.md` | Documents Step 22 E2E workflow fixture requirements.                             |
 | `docs/qa-checklist.md`            | Lists manual workflow scenarios to translate into smoke tests.                   |
 
-Evidence at `4276491`:
+Evidence at `138a2d2`:
 
 ```ts
 // tests/e2e/app.spec.ts
