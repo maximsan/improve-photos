@@ -13,10 +13,10 @@ Before editing, run:
 
 ```bash
 git diff -- src/renderer/src/features/Dedup/components/PhotoCard.tsx src/renderer/src/features/Dedup/components/SelectionRow.tsx src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx src/renderer/src/features/QualityReview/components/PhotoTile.tsx src/renderer/src/features/QualityReview/components/TierSection.tsx src/renderer/src/components/TrashOverlay.tsx tests/renderer
-git show --stat 4276491 -- src/renderer/src/features/Dedup/components/PhotoCard.tsx src/renderer/src/features/Dedup/components/SelectionRow.tsx src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx src/renderer/src/features/QualityReview/components/PhotoTile.tsx src/renderer/src/features/QualityReview/components/TierSection.tsx src/renderer/src/components/TrashOverlay.tsx tests/renderer
+git show --stat 138a2d2 -- src/renderer/src/features/Dedup/components/PhotoCard.tsx src/renderer/src/features/Dedup/components/SelectionRow.tsx src/renderer/src/features/Dedup/components/PhotoThumbnail.tsx src/renderer/src/features/QualityReview/components/PhotoTile.tsx src/renderer/src/features/QualityReview/components/TierSection.tsx src/renderer/src/components/TrashOverlay.tsx tests/renderer
 ```
 
-If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `138a2d2`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
@@ -27,7 +27,7 @@ If these paths changed since commit `4276491`, reconcile the current behavior be
 | Risk       | LOW                     |
 | Depends on | None                    |
 | Category   | Accessibility/Bug       |
-| Planned at | `4276491` on 2026-06-13 |
+| Planned at | `138a2d2` on 2026-06-14 |
 
 ## Why This Matters
 
@@ -46,7 +46,7 @@ Key files and roles:
 | `src/renderer/src/components/TrashOverlay.tsx`                       | Clickable overlay action, currently a `div`.                            |
 | `src/renderer/src/features/QualityReview/components/TierSection.tsx` | Contains select all and collapse buttons.                               |
 
-Evidence at `4276491`:
+Evidence at `138a2d2`:
 
 ```tsx
 // PhotoCard.tsx

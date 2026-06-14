@@ -8,10 +8,10 @@ Before editing, run:
 
 ```bash
 git diff -- src/renderer/src/lib/format.ts src/main/localProtocol.ts tests/renderer/format.test.ts tests/unit/localProtocol.test.ts
-git show --stat 4276491 -- src/renderer/src/lib/format.ts src/main/localProtocol.ts tests/renderer/format.test.ts tests/unit/localProtocol.test.ts
+git show --stat 138a2d2 -- src/renderer/src/lib/format.ts src/main/localProtocol.ts tests/renderer/format.test.ts tests/unit/localProtocol.test.ts
 ```
 
-If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `138a2d2`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
@@ -22,7 +22,7 @@ If these paths changed since commit `4276491`, reconcile the current behavior be
 | Risk       | LOW                     |
 | Depends on | None                    |
 | Category   | Bug                     |
-| Planned at | `4276491` on 2026-06-13 |
+| Planned at | `138a2d2` on 2026-06-14 |
 
 ## Why This Matters
 
@@ -39,7 +39,7 @@ Key files and roles:
 | `tests/renderer/format.test.ts`    | Tests basic `fileUrl` behavior but not reserved URL characters. |
 | `tests/unit/localProtocol.test.ts` | Tests protocol decoding and `net.fetch` calls.                  |
 
-Evidence at `4276491`:
+Evidence at `138a2d2`:
 
 ```ts
 // src/renderer/src/lib/format.ts
