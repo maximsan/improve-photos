@@ -8,10 +8,10 @@ Before editing, run:
 
 ```bash
 git diff -- build/notarize.cjs scripts/build-mac.sh README.md tests/unit
-git show --stat 4276491 -- build/notarize.cjs scripts/build-mac.sh README.md tests/unit
+git show --stat 138a2d2 -- build/notarize.cjs scripts/build-mac.sh README.md tests/unit
 ```
 
-If these paths changed since commit `4276491`, reconcile the current behavior before applying the steps below.
+If these paths changed since commit `138a2d2`, reconcile the current behavior before applying the steps below.
 
 ## Status
 
@@ -22,7 +22,7 @@ If these paths changed since commit `4276491`, reconcile the current behavior be
 | Risk       | LOW                     |
 | Depends on | None                    |
 | Category   | Release/Security        |
-| Planned at | `4276491` on 2026-06-13 |
+| Planned at | `138a2d2` on 2026-06-14 |
 
 ## Why This Matters
 
@@ -39,7 +39,7 @@ Key files and roles:
 | `README.md`                   | Documents the signed and notarized release flow.                        |
 | `tests/unit/notarize.test.ts` | Does not exist yet; add it if the helper extraction below is practical. |
 
-Evidence at `4276491`:
+Evidence at `138a2d2`:
 
 ```js
 // build/notarize.cjs
