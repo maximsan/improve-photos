@@ -2,9 +2,14 @@ import { ipcMain } from 'electron'
 import { rename } from 'fs/promises'
 import { join, dirname, basename } from 'path'
 import { access } from 'fs/promises'
-import type { ExecuteOrganizeResult, MoveOperation, PhotoRecord } from '@shared/ipc'
+import type {
+  ExecuteOrganizeResult,
+  MoveOperation,
+  PhotoRecord,
+  UndoOrganizeResult
+} from '@shared/ipc'
 import { IPC } from '@shared/ipc'
-import { getCachedPhotos } from './scanner'
+import { applyCurrentPhotoSetMoves } from '../currentPhotoSet'
 
 /**
  * Derives the destination path for a photo using its EXIF date.
@@ -73,30 +78,22 @@ export function registerOrganizerHandlers(): void {
         }
       }
 
-      // Refresh the in-memory cache for every file that succeeded
-      const cached = getCachedPhotos()
-      for (const record of cached) {
-        const newPath = movedPaths.get(record.path)
-        if (newPath) {
-          record.path = newPath
-          record.name = basename(newPath)
-        }
-      }
-
       const movedPairs = Array.from(movedPaths.entries()).map(([from, to]) => ({ from, to }))
+      const photos = applyCurrentPhotoSetMoves(movedPairs)
 
       return {
         movedPairs,
         errors,
         requestedCount: pending.length,
-        movedCount: movedPairs.length
+        movedCount: movedPairs.length,
+        photos
       }
     }
   )
 
   ipcMain.handle(
     IPC.UNDO_ORGANIZE,
-    async (_event, pairs: { from: string; to: string }[]): Promise<void> => {
+    async (_event, pairs: { from: string; to: string }[]): Promise<UndoOrganizeResult> => {
       const errors: string[] = []
       const reversedPaths = new Map<string, string>()
 
@@ -109,19 +106,17 @@ export function registerOrganizerHandlers(): void {
         }
       }
 
-      const cached = getCachedPhotos()
-      for (const record of cached) {
-        const originalPath = reversedPaths.get(record.path)
-        if (originalPath) {
-          record.path = originalPath
-          record.name = basename(originalPath)
-        }
-      }
+      const undonePairs = Array.from(reversedPaths.entries()).map(([to, from]) => ({ from, to }))
+      const photos = applyCurrentPhotoSetMoves(
+        undonePairs.map(({ from, to }) => ({ from: to, to: from }))
+      )
 
-      if (errors.length > 0) {
-        throw new Error(
-          `${errors.length} of ${pairs.length} file(s) could not be reverted:\n${errors.join('\n')}`
-        )
+      return {
+        photos,
+        undonePairs,
+        errors,
+        requestedCount: pairs.length,
+        undoneCount: undonePairs.length
       }
     }
   )

@@ -47,6 +47,23 @@ export interface ExecuteOrganizeResult {
   errors: string[]
   requestedCount: number
   movedCount: number
+  photos: PhotoRecord[]
+}
+
+export interface UndoOrganizeResult {
+  photos: PhotoRecord[]
+  undonePairs: Array<{ from: string; to: string }>
+  errors: string[]
+  requestedCount: number
+  undoneCount: number
+}
+
+export interface TrashFilesResult {
+  photos: PhotoRecord[]
+  trashedPaths: string[]
+  errors: string[]
+  requestedCount: number
+  trashedCount: number
 }
 
 // ─── Quality / blur ──────────────────────────────────────────────────────────
@@ -219,7 +236,7 @@ export interface ElectronAPI {
   getBlurScores: (paths: string[]) => Promise<BlurScores>
   previewOrganize: (photos: PhotoRecord[], scanRoot: string) => Promise<MoveOperation[]>
   executeOrganize: (ops: MoveOperation[]) => Promise<ExecuteOrganizeResult>
-  trashFiles: (paths: string[]) => Promise<void>
+  trashFiles: (paths: string[]) => Promise<TrashFilesResult>
   exportBatch: (photos: PhotoRecord[], presets: ExportPreset[], outDir: string) => Promise<void>
   onExportProgress: (cb: (progress: ExportProgress) => void) => () => void
   /** Subscribe to per-file hash progress events. Returns an unsubscribe function. */
@@ -235,7 +252,7 @@ export interface ElectronAPI {
   /** Cancel an in-progress `scan` call. */
   cancelScan: () => Promise<void>
   /** Reverse a previous `executeOrganize` call by moving files back to their original paths. */
-  undoOrganize: (pairs: { from: string; to: string }[]) => Promise<void>
+  undoOrganize: (pairs: { from: string; to: string }[]) => Promise<UndoOrganizeResult>
   /** Cancel an in-progress `exportBatch` call. */
   cancelExport: () => Promise<void>
   /** Cancel an in-progress `getBlurScores` call. */

@@ -30,6 +30,10 @@ function formatMoveErrors(errorCount: number, requestedCount: number, errors: st
   return `${errorCount} of ${requestedCount} file(s) could not be moved:\n${errors.join('\n')}`
 }
 
+function formatUndoErrors(errorCount: number, requestedCount: number, errors: string[]): string {
+  return `${errorCount} of ${requestedCount} file(s) could not be reverted:\n${errors.join('\n')}`
+}
+
 export function useOrganizerState(): OrganizerState {
   const { photos, scanRoot, setPhotos, scanRevision } = usePhotos()
   const [status, setStatus] = useState<OrganizerStatus>('idle')
@@ -89,7 +93,6 @@ export function useOrganizerState(): OrganizerState {
 
       setStatus('moving')
       const result = await window.api.executeOrganize(ops)
-      const movedPaths = new Map(result.movedPairs.map(({ from, to }) => [from, to]))
 
       if (result.errors.length > 0) {
         setError(formatMoveErrors(result.errors.length, result.requestedCount, result.errors))
@@ -98,12 +101,7 @@ export function useOrganizerState(): OrganizerState {
       if (result.movedPairs.length > 0) {
         setMovedCount(result.movedCount)
         setMovedPairs(result.movedPairs)
-        setPhotos(
-          photos.map((p) => {
-            const newPath = movedPaths.get(p.path)
-            return newPath ? { ...p, path: newPath, name: newPath.split('/').pop() ?? p.name } : p
-          })
-        )
+        setPhotos(result.photos)
         setStatus('done')
         return
       }
@@ -121,14 +119,18 @@ export function useOrganizerState(): OrganizerState {
     setError(null)
     setStatus('undoing')
     try {
-      await window.api.undoOrganize(movedPairs)
-      setPhotos(
-        photos.map((p) => {
-          const pair = movedPairs.find((mp) => mp.to === p.path)
-          return pair ? { ...p, path: pair.from, name: pair.from.split('/').pop() ?? p.name } : p
-        })
-      )
+      const result = await window.api.undoOrganize(movedPairs)
+      setPhotos(result.photos)
+      if (result.errors.length > 0) {
+        const undoneSources = new Set(result.undonePairs.map(({ from }) => from))
+        setMovedPairs((currentPairs) => currentPairs.filter(({ from }) => !undoneSources.has(from)))
+        setMovedCount(result.requestedCount - result.undoneCount)
+        setError(formatUndoErrors(result.errors.length, result.requestedCount, result.errors))
+        setStatus('done')
+        return
+      }
       setMovedPairs([])
+      setMovedCount(0)
       setStatus('undone')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Undo failed')

@@ -4,7 +4,7 @@ import { renderHook, act } from '@testing-library/react'
 import { createElement, type ReactElement, type ReactNode } from 'react'
 import { PhotosContext } from '../../src/renderer/src/context/photos'
 import { useQualityReviewState } from '../../src/renderer/src/features/QualityReview/hooks/useQualityReviewState'
-import type { PhotoRecord, QualityScoreItem } from '../../src/shared/ipc'
+import type { PhotoRecord, QualityScoreItem, TrashFilesResult } from '../../src/shared/ipc'
 
 const PHOTO_A: PhotoRecord = {
   path: '/p/a.jpg',
@@ -26,7 +26,7 @@ const mockApi = {
   confirmTrash: vi.fn(),
   trashFiles: vi.fn()
 }
-const removePhotosByPath = vi.fn()
+const mockSetPhotos = vi.fn()
 
 function wrapper({ children }: { children: ReactNode }): ReactElement {
   return createElement(
@@ -36,9 +36,8 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
         photos: [],
         scanRoot: null,
         scanRevision: 0,
-        setPhotos: vi.fn(),
+        setPhotos: mockSetPhotos,
         setScanRoot: vi.fn(),
-        removePhotosByPath,
         bumpScanRevision: vi.fn()
       }
     },
@@ -48,7 +47,6 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  removePhotosByPath.mockClear()
   mockApi.onQualityProgress.mockReturnValue(vi.fn())
   mockApi.onQualityScoreItem.mockReturnValue(vi.fn())
   mockApi.canProcessPhotoCount.mockResolvedValue({ allowed: true, photoLimit: 100, reason: null })
@@ -57,6 +55,16 @@ beforeEach(() => {
 })
 
 const PHOTOS = [PHOTO_A, PHOTO_B]
+
+function makeTrashResult(photos: PhotoRecord[], trashedPaths: string[]): TrashFilesResult {
+  return {
+    photos,
+    trashedPaths,
+    errors: [],
+    requestedCount: trashedPaths.length,
+    trashedCount: trashedPaths.length
+  }
+}
 
 describe('useQualityReviewState', () => {
   it('starts in idle state', () => {
@@ -136,8 +144,9 @@ describe('useQualityReviewState', () => {
     expect(result.current.selected.size).toBe(0)
   })
 
-  it('handleConfirmTrash calls trashFiles and sets done', async () => {
-    mockApi.trashFiles.mockResolvedValue(undefined)
+  it('handleConfirmTrash replaces shared photo state and sets done', async () => {
+    const updatedPhotos = [PHOTO_A]
+    mockApi.trashFiles.mockResolvedValue(makeTrashResult(updatedPhotos, ['/p/b.jpg']))
     const { result } = renderHook(() => useQualityReviewState(PHOTOS), { wrapper })
 
     act(() => result.current.toggleSelect('/p/b.jpg'))
@@ -145,7 +154,7 @@ describe('useQualityReviewState', () => {
 
     expect(mockApi.trashFiles).toHaveBeenCalledWith(['/p/b.jpg'])
     expect(mockApi.confirmTrash).toHaveBeenCalledWith(1)
-    expect(removePhotosByPath).toHaveBeenCalledWith(['/p/b.jpg'])
+    expect(mockSetPhotos).toHaveBeenCalledWith(updatedPhotos)
     expect(result.current.status).toBe('done')
   })
 
@@ -158,7 +167,7 @@ describe('useQualityReviewState', () => {
     await act(() => result.current.handleConfirmTrash())
 
     expect(mockApi.trashFiles).not.toHaveBeenCalled()
-    expect(removePhotosByPath).not.toHaveBeenCalled()
+    expect(mockSetPhotos).not.toHaveBeenCalled()
     expect(result.current.status).toBe('reviewing')
   })
 

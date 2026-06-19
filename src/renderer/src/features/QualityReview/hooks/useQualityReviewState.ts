@@ -4,6 +4,10 @@ import type { PhotoRecord, BlurScores, QualityProgress } from '@shared/ipc'
 
 export type QualityStatus = 'idle' | 'results' | 'reviewing' | 'trashing' | 'done'
 
+function formatTrashErrors(errorCount: number, requestedCount: number, errors: string[]): string {
+  return `${errorCount} of ${requestedCount} file(s) could not be trashed:\n${errors.join('\n')}`
+}
+
 export type QualityReviewState = {
   status: QualityStatus
   scores: BlurScores
@@ -21,7 +25,7 @@ export type QualityReviewState = {
 }
 
 export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState {
-  const { scanRevision, removePhotosByPath } = usePhotos()
+  const { scanRevision, setPhotos } = usePhotos()
   const [status, setStatus] = useState<QualityStatus>('idle')
   const [scores, setScores] = useState<BlurScores>({})
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -137,9 +141,18 @@ export function useQualityReviewState(photos: PhotoRecord[]): QualityReviewState
         return
       }
       setStatus('trashing')
-      await window.api.trashFiles(trashedPaths)
-      removePhotosByPath(trashedPaths)
-      setStatus('done')
+      const trashResult = await window.api.trashFiles(trashedPaths)
+      setPhotos(trashResult.photos)
+      if (trashResult.errors.length > 0) {
+        setError(
+          formatTrashErrors(
+            trashResult.errors.length,
+            trashResult.requestedCount,
+            trashResult.errors
+          )
+        )
+      }
+      setStatus(trashResult.trashedCount > 0 ? 'done' : 'reviewing')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Trash failed')
       setStatus('reviewing')

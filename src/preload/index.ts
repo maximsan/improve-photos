@@ -14,7 +14,9 @@ import type {
   LicenseStatus,
   EntitlementStatus,
   PhotoCountDecision,
-  UpdateStatus
+  UpdateStatus,
+  TrashFilesResult,
+  UndoOrganizeResult
 } from '@shared/ipc'
 import { IPC } from '@shared/ipc'
 
@@ -43,7 +45,8 @@ const api: ElectronAPI = {
 
   executeOrganize: (ops: MoveOperation[]) => ipcRenderer.invoke(IPC.EXECUTE_ORGANIZE, ops),
 
-  trashFiles: (paths: string[]) => ipcRenderer.invoke(IPC.TRASH_FILES, paths),
+  trashFiles: (paths: string[]): Promise<TrashFilesResult> =>
+    ipcRenderer.invoke(IPC.TRASH_FILES, paths),
 
   exportBatch: (photos: PhotoRecord[], presets: ExportPreset[], outDir: string) =>
     ipcRenderer.invoke(IPC.EXPORT_BATCH, photos, presets, outDir),
@@ -90,7 +93,7 @@ const api: ElectronAPI = {
 
   cancelScan: () => ipcRenderer.invoke(IPC.CANCEL_SCAN),
 
-  undoOrganize: (pairs: { from: string; to: string }[]) =>
+  undoOrganize: (pairs: { from: string; to: string }[]): Promise<UndoOrganizeResult> =>
     ipcRenderer.invoke(IPC.UNDO_ORGANIZE, pairs),
 
   cancelExport: () => ipcRenderer.invoke(IPC.CANCEL_EXPORT),

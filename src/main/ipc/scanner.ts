@@ -8,6 +8,7 @@ import type { PhotoRecord, ScanResult } from '@shared/ipc'
 import { FREE_PHOTO_LIMIT, IPC } from '@shared/ipc'
 import { setAllowedPreviewRoot } from '../localProtocol'
 import { canProcessPhotoCount } from '../entitlement'
+import { replaceCurrentPhotoSet } from '../currentPhotoSet'
 
 export const IMAGE_EXTENSIONS = new Set([
   '.jpg',
@@ -20,20 +21,8 @@ export const IMAGE_EXTENSIONS = new Set([
   '.tif'
 ])
 
-/** In-memory cache — populated by the last successful scan. */
-let photoCache: PhotoRecord[] = []
-
 /** Set by CANCEL_SCAN to interrupt the active SCAN call. */
 let activeScanController: { cancelled: boolean } | null = null
-
-export function getCachedPhotos(): PhotoRecord[] {
-  return photoCache
-}
-
-export function removeCachedPhotosByPath(paths: string[]): void {
-  const removedPaths = new Set(paths)
-  photoCache = photoCache.filter((photo) => !removedPaths.has(photo.path))
-}
 
 /**
  * Recursively walks `dir` and returns absolute paths of all image files.
@@ -158,16 +147,16 @@ export function registerScannerHandlers(): void {
     const records = chunks.flat()
 
     setAllowedPreviewRoot(folderPath)
-    photoCache = records.filter((r): r is PhotoRecord => r !== null)
+    const photos = replaceCurrentPhotoSet(records.filter((r): r is PhotoRecord => r !== null))
     activeScanController = null
 
     if (is.dev) {
-      const failed = records.length - photoCache.length
+      const failed = records.length - photos.length
       console.log(
-        `[scanner] ${photoCache.length} photos loaded from "${folderPath}"${failed > 0 ? `, ${failed} failed` : ''}`
+        `[scanner] ${photos.length} photos loaded from "${folderPath}"${failed > 0 ? `, ${failed} failed` : ''}`
       )
     }
 
-    return { ok: true, photos: photoCache }
+    return { ok: true, photos }
   })
 }
