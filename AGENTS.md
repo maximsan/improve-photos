@@ -18,10 +18,10 @@ Keep this file minimal and strict.
 
 ### Execution order (MANDATORY)
 
-1. Apply: react-component-architecture
+1. Apply repo-local skill: `.skills/react-component-architecture/SKILL.md` (`react-component-architecture`)
 2. Then apply: external performance rules (Vercel skills already installed)
 
-Do not skip step 1.
+If `react-component-architecture` is not listed as an installed skill, read the repo-local `SKILL.md` file directly and follow it. Do not skip step 1.
 
 ---
 

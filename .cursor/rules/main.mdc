@@ -7,7 +7,9 @@ Follow AGENTS.md as the primary rule source.
 
 When working with React:
 
-1. Apply react-component-architecture skill
+1. Apply `.skills/react-component-architecture/SKILL.md` (`react-component-architecture`)
 2. Then apply performance best practices
+
+If `react-component-architecture` is not available as an installed skill, read the repo-local `SKILL.md` file directly before editing React code.
 
 Do not generate large monolithic components.

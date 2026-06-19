@@ -49,9 +49,13 @@ Apply `react-component-architecture` for **any** of these tasks:
 
 This includes **file-level splitting** — extracting components and hooks into their own files is required, not optional.
 
+Repo-local skill path: `.skills/react-component-architecture/SKILL.md`.
+
+If `react-component-architecture` is not listed as an installed skill, read that file directly from the repository root and follow it before editing React code.
+
 ### Execution order (MANDATORY)
 
-1. Apply: react-component-architecture — including file-level splitting into `components/` and `hooks/` subdirectories
+1. Apply: `.skills/react-component-architecture/SKILL.md` (`react-component-architecture`) — including file-level splitting into `components/` and `hooks/` subdirectories
 2. Then apply: external performance rules (Vercel skills already installed)
 
 Do not skip step 1.

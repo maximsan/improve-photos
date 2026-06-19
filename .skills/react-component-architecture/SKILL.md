@@ -1,9 +1,15 @@
 ---
 name: react-component-architecture
-description: Use when creating or refactoring React components. Enforces simple, composable, reusable structure.
+description: Use before creating, reviewing, refactoring, or modifying React components, hooks, JSX, TSX files, renderer features, or UI state. This skill is required for React work in this repo, even when the user only asks for a small UI change. It enforces single-responsibility components, file-level splitting, hook extraction, shallow JSX, named constants, and reusable feature folders before performance guidance is applied.
 ---
 
 # React Component Architecture
+
+## Discovery
+
+This repo stores the skill locally at `.skills/react-component-architecture/SKILL.md`.
+
+If an agent is told to apply `react-component-architecture` but it is not listed as an installed skill, read this file directly from the repository root and follow it before editing React code.
 
 ## Goal
 
@@ -72,19 +78,19 @@ Never leave magic values inline.
 
 ---
 
-### 8. File structure (MANDATORY)
+### 5. File structure
 
-Every extracted unit lives in its own file. Co-locating multiple components or hooks in one file is **not** a valid split — it is deferred work.
+Every extracted unit lives in its own file. Co-locating multiple components or hooks in one file is not a valid split; it is deferred work.
 
 Required layout for any feature with more than one component or hook:
 
 ```
 FeatureName/
-  index.tsx                  ← main component only; imports from below
+  index.tsx                  # main component only; imports from below
   hooks/
-    useFeatureState.ts       ← state orchestration
+    useFeatureState.ts       # state orchestration
   components/
-    SubComponent.tsx         ← one component per file
+    SubComponent.tsx         # one component per file
 ```
 
 Rules:
@@ -96,7 +102,7 @@ Rules:
 
 ---
 
-### 5. JSX
+### 6. JSX
 
 JSX must be:
 
@@ -111,7 +117,7 @@ Do NOT:
 
 ---
 
-### 6. Naming
+### 7. Naming
 
 Use descriptive names.
 
@@ -124,7 +130,7 @@ Avoid:
 
 ---
 
-### 7. State
+### 8. State
 
 - keep local
 - avoid unnecessary lifting
