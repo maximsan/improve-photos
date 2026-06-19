@@ -5,6 +5,10 @@ import type { DuplicateGroup, HashProgress, PhotoRecord } from '@shared/ipc'
 
 export type DedupStatus = 'idle' | 'computing' | 'results' | 'reviewing' | 'trashing' | 'done'
 
+function formatTrashErrors(errorCount: number, requestedCount: number, errors: string[]): string {
+  return `${errorCount} of ${requestedCount} file(s) could not be trashed:\n${errors.join('\n')}`
+}
+
 export type DedupState = {
   status: DedupStatus
   groups: DuplicateGroup[]
@@ -21,7 +25,7 @@ export type DedupState = {
 }
 
 export function useDedupState(photos: PhotoRecord[]): DedupState {
-  const { scanRevision, removePhotosByPath } = usePhotos()
+  const { scanRevision, setPhotos } = usePhotos()
   const [status, setStatus] = useState<DedupStatus>('idle')
   const [groups, setGroups] = useState<DuplicateGroup[]>([])
   const [toTrash, toggleTrash, clearTrash] = useSetToggle<string>()
@@ -126,7 +130,6 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
   }
 
   function applyTrash(trashedPaths: Set<string>): void {
-    removePhotosByPath([...trashedPaths])
     const remainingGroups = groups
       .map((g) => ({ ...g, photos: g.photos.filter((p) => !trashedPaths.has(p.path)) }))
       .filter((g) => g.photos.length >= 2)
@@ -150,8 +153,18 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
         return
       }
       setStatus('trashing')
-      const trashedPaths = new Set([...toTrash])
-      await window.api.trashFiles([...trashedPaths])
+      const trashResult = await window.api.trashFiles([...toTrash])
+      const trashedPaths = new Set(trashResult.trashedPaths)
+      setPhotos(trashResult.photos)
+      if (trashResult.errors.length > 0) {
+        setError(
+          formatTrashErrors(
+            trashResult.errors.length,
+            trashResult.requestedCount,
+            trashResult.errors
+          )
+        )
+      }
       applyTrash(trashedPaths)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Trash failed')
@@ -170,8 +183,18 @@ export function useDedupState(photos: PhotoRecord[]): DedupState {
       }
 
       setStatus('trashing')
-      const trashedPaths = new Set([...toTrash])
-      await window.api.trashFiles([...trashedPaths])
+      const trashResult = await window.api.trashFiles([...toTrash])
+      const trashedPaths = new Set(trashResult.trashedPaths)
+      setPhotos(trashResult.photos)
+      if (trashResult.errors.length > 0) {
+        setError(
+          formatTrashErrors(
+            trashResult.errors.length,
+            trashResult.requestedCount,
+            trashResult.errors
+          )
+        )
+      }
       applyTrash(trashedPaths)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Trash failed')

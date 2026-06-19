@@ -24,12 +24,11 @@ import exifr from 'exifr'
 import { IPC } from '@shared/ipc'
 import type { ScanResult } from '@shared/ipc'
 import { setAllowedPreviewRoot } from '../../src/main/localProtocol'
+import { getCurrentPhotoSet, replaceCurrentPhotoSet } from '../../src/main/currentPhotoSet'
 import {
   walkDir,
   buildPhotoRecord,
   IMAGE_EXTENSIONS,
-  getCachedPhotos,
-  removeCachedPhotosByPath,
   registerScannerHandlers
 } from '../../src/main/ipc/scanner'
 
@@ -190,6 +189,7 @@ describe('scanner IPC handlers', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     vi.clearAllMocks()
+    replaceCurrentPhotoSet([])
   })
 
   it('emits scan progress for each processed photo', async () => {
@@ -213,6 +213,7 @@ describe('scanner IPC handlers', () => {
 
     expect(result.ok).toBe(true)
     expect(result.ok && result.photos).toHaveLength(2)
+    expect(getCurrentPhotoSet()).toHaveLength(2)
     expect(setAllowedPreviewRoot).toHaveBeenCalledWith('/photos')
     expect(setAllowedPreviewRoot).toHaveBeenCalledTimes(1)
     expect(progressCalls).toHaveLength(2)
@@ -224,7 +225,7 @@ describe('scanner IPC handlers', () => {
     )
   })
 
-  it('removes trashed paths from the scan cache', async () => {
+  it('replaces the current photo set after a successful scan', async () => {
     vi.mocked(readdir).mockResolvedValueOnce([
       { name: 'a.jpg', isDirectory: () => false },
       { name: 'b.png', isDirectory: () => false }
@@ -239,9 +240,12 @@ describe('scanner IPC handlers', () => {
     const event = { sender: { send: vi.fn() } }
 
     await handlers.get(IPC.SCAN)!(event, '/photos' as never)
-    removeCachedPhotosByPath(['/photos/a.jpg'])
 
-    expect(getCachedPhotos().map((photo) => photo.path)).toEqual(['/photos/b.png'])
+    expect(
+      getCurrentPhotoSet()
+        .map((photo) => photo.path)
+        .sort()
+    ).toEqual(['/photos/a.jpg', '/photos/b.png'])
   })
 
   it('cancels an active scan before records are processed', async () => {
@@ -275,11 +279,23 @@ describe('scanner IPC handlers', () => {
 
     const handlers = registerScannerTestHandlers()
     const event = { sender: { send: vi.fn() } }
+    replaceCurrentPhotoSet([
+      {
+        path: '/existing.jpg',
+        name: 'existing.jpg',
+        size: 1,
+        dateTaken: null,
+        width: null,
+        height: null,
+        camera: null
+      }
+    ])
 
     try {
       const result = (await handlers.get(IPC.SCAN)!(event, '/photos' as never)) as ScanResult
 
       expect(result).toEqual({ ok: false, limit: { photoCount: 101, photoLimit: 100 } })
+      expect(getCurrentPhotoSet().map((photo) => photo.path)).toEqual(['/existing.jpg'])
       expect(setAllowedPreviewRoot).not.toHaveBeenCalled()
       expect(stat).not.toHaveBeenCalled()
       expect(event.sender.send).not.toHaveBeenCalled()
@@ -293,10 +309,22 @@ describe('scanner IPC handlers', () => {
 
     const handlers = registerScannerTestHandlers()
     const event = { sender: { send: vi.fn() } }
+    replaceCurrentPhotoSet([
+      {
+        path: '/existing.jpg',
+        name: 'existing.jpg',
+        size: 1,
+        dateTaken: null,
+        width: null,
+        height: null,
+        camera: null
+      }
+    ])
 
     await expect(handlers.get(IPC.SCAN)!(event, '/blocked' as never)).rejects.toThrow(
       'EACCES: permission denied'
     )
+    expect(getCurrentPhotoSet().map((photo) => photo.path)).toEqual(['/existing.jpg'])
     expect(setAllowedPreviewRoot).not.toHaveBeenCalled()
   })
 })

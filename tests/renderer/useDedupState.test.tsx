@@ -9,7 +9,8 @@ import type {
   DuplicateGroup,
   PhotoCountDecision,
   PhotoHashes,
-  PhotoRecord
+  PhotoRecord,
+  TrashFilesResult
 } from '../../src/shared/ipc'
 
 const PHOTO_A: PhotoRecord = {
@@ -35,7 +36,7 @@ const mockApi = {
   confirmTrash: vi.fn(),
   trashFiles: vi.fn()
 }
-const removePhotosByPath = vi.fn()
+const mockSetPhotos = vi.fn()
 
 function makeWrapper(getScanRevision = () => 0) {
   return function wrapper({ children }: { children: ReactNode }): ReactElement {
@@ -46,9 +47,8 @@ function makeWrapper(getScanRevision = () => 0) {
           photos: [],
           scanRoot: null,
           scanRevision: getScanRevision(),
-          setPhotos: vi.fn(),
+          setPhotos: mockSetPhotos,
           setScanRoot: vi.fn(),
-          removePhotosByPath,
           bumpScanRevision: vi.fn()
         }
       },
@@ -61,7 +61,6 @@ const wrapper = makeWrapper()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  removePhotosByPath.mockClear()
   mockApi.onHashProgress.mockReturnValue(vi.fn())
   mockApi.canProcessPhotoCount.mockResolvedValue({ allowed: true, photoLimit: 100, reason: null })
   Object.defineProperty(window, 'api', { value: mockApi, writable: true, configurable: true })
@@ -71,6 +70,16 @@ const PHOTOS = [PHOTO_A, PHOTO_B]
 
 function makeHashResult(hashes: PhotoHashes = {}, cancelled = false): ComputeHashesResult {
   return { hashes, cancelled }
+}
+
+function makeTrashResult(photos: PhotoRecord[], trashedPaths: string[]): TrashFilesResult {
+  return {
+    photos,
+    trashedPaths,
+    errors: [],
+    requestedCount: trashedPaths.length,
+    trashedCount: trashedPaths.length
+  }
 }
 
 function createDeferred<T>(): {
@@ -237,8 +246,9 @@ describe('useDedupState', () => {
     expect(result.current.toTrash.size).toBe(0)
   })
 
-  it('removes trashed duplicate photos from shared photo state', async () => {
-    mockApi.trashFiles.mockResolvedValue(undefined)
+  it('replaces shared photo state with trashFiles photos', async () => {
+    const updatedPhotos = [PHOTO_A]
+    mockApi.trashFiles.mockResolvedValue(makeTrashResult(updatedPhotos, ['/p/b.jpg']))
     const { result } = renderHook(() => useDedupState(PHOTOS), { wrapper })
 
     act(() => result.current.setStatus('reviewing'))
@@ -246,6 +256,6 @@ describe('useDedupState', () => {
     await act(() => result.current.handleConfirmTrash())
 
     expect(mockApi.trashFiles).toHaveBeenCalledWith(['/p/b.jpg'])
-    expect(removePhotosByPath).toHaveBeenCalledWith(['/p/b.jpg'])
+    expect(mockSetPhotos).toHaveBeenCalledWith(updatedPhotos)
   })
 })

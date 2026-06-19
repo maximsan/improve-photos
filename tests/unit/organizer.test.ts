@@ -2,18 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { access, mkdir, rename } from 'fs/promises'
 import { ipcMain } from 'electron'
 import { deriveTargetPath, registerOrganizerHandlers } from '../../src/main/ipc/organizer'
-import { getCachedPhotos } from '../../src/main/ipc/scanner'
+import { replaceCurrentPhotoSet } from '../../src/main/currentPhotoSet'
 import { IPC } from '../../src/shared/ipc'
-import type { ExecuteOrganizeResult, MoveOperation, PhotoRecord } from '../../src/shared/ipc'
+import type {
+  ExecuteOrganizeResult,
+  MoveOperation,
+  PhotoRecord,
+  UndoOrganizeResult
+} from '../../src/shared/ipc'
 
 vi.mock('fs/promises', () => ({
   rename: vi.fn(),
   access: vi.fn(),
   mkdir: vi.fn()
-}))
-
-vi.mock('../../src/main/ipc/scanner', () => ({
-  getCachedPhotos: vi.fn(() => [])
 }))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@ describe('organizer IPC handlers', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     vi.clearAllMocks()
-    vi.mocked(getCachedPhotos).mockReturnValue([])
+    replaceCurrentPhotoSet([])
   })
 
   it('marks preview operations as conflicts when the target path already exists', async () => {
@@ -170,7 +171,8 @@ describe('organizer IPC handlers', () => {
       movedPairs: [],
       errors: ['/library/imports/IMG_001.jpg: permission denied'],
       requestedCount: 1,
-      movedCount: 0
+      movedCount: 0,
+      photos: []
     })
   })
 
@@ -182,7 +184,7 @@ describe('organizer IPC handlers', () => {
     const firstPhoto = makePhoto({ path: '/library/imports/IMG_001.jpg' })
     const secondPhoto = makePhoto({ path: '/library/imports/IMG_002.jpg', name: 'IMG_002.jpg' })
     const cachedPhotos = [{ ...firstPhoto }, { ...secondPhoto }]
-    vi.mocked(getCachedPhotos).mockReturnValue(cachedPhotos)
+    replaceCurrentPhotoSet(cachedPhotos)
     const handlers = registerOrganizerTestHandlers()
     const ops: MoveOperation[] = [
       {
@@ -206,15 +208,53 @@ describe('organizer IPC handlers', () => {
       movedPairs: [{ from: '/library/imports/IMG_001.jpg', to: '/library/2024/07/15/IMG_001.jpg' }],
       errors: ['/library/imports/IMG_002.jpg: permission denied'],
       requestedCount: 2,
-      movedCount: 1
+      movedCount: 1,
+      photos: [
+        expect.objectContaining({
+          path: '/library/2024/07/15/IMG_001.jpg',
+          name: 'IMG_001.jpg'
+        }),
+        expect.objectContaining({
+          path: '/library/imports/IMG_002.jpg',
+          name: 'IMG_002.jpg'
+        })
+      ]
     })
-    expect(cachedPhotos[0]).toMatchObject({
+    expect(cachedPhotos[0].path).toBe('/library/imports/IMG_001.jpg')
+    expect(cachedPhotos[1].path).toBe('/library/imports/IMG_002.jpg')
+  })
+
+  it('returns successful undo pairs while reporting later failures', async () => {
+    vi.mocked(rename)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('permission denied'))
+    const movedFirst = makePhoto({
       path: '/library/2024/07/15/IMG_001.jpg',
       name: 'IMG_001.jpg'
     })
-    expect(cachedPhotos[1]).toMatchObject({
-      path: '/library/imports/IMG_002.jpg',
+    const movedSecond = makePhoto({
+      path: '/library/2024/07/15/IMG_002.jpg',
       name: 'IMG_002.jpg'
+    })
+    replaceCurrentPhotoSet([movedFirst, movedSecond])
+    const handlers = registerOrganizerTestHandlers()
+
+    const result = (await handlers.get(IPC.UNDO_ORGANIZE)!({}, [
+      { from: '/library/imports/IMG_001.jpg', to: '/library/2024/07/15/IMG_001.jpg' },
+      { from: '/library/imports/IMG_002.jpg', to: '/library/2024/07/15/IMG_002.jpg' }
+    ] as never)) as UndoOrganizeResult
+
+    expect(result).toEqual({
+      photos: [
+        expect.objectContaining({ path: '/library/imports/IMG_001.jpg', name: 'IMG_001.jpg' }),
+        expect.objectContaining({ path: '/library/2024/07/15/IMG_002.jpg', name: 'IMG_002.jpg' })
+      ],
+      undonePairs: [
+        { from: '/library/imports/IMG_001.jpg', to: '/library/2024/07/15/IMG_001.jpg' }
+      ],
+      errors: ['/library/2024/07/15/IMG_002.jpg: permission denied'],
+      requestedCount: 2,
+      undoneCount: 1
     })
   })
 })

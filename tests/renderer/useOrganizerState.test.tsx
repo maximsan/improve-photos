@@ -4,7 +4,12 @@ import { renderHook, act } from '@testing-library/react'
 import { createElement, type ReactElement, type ReactNode } from 'react'
 import { PhotosContext } from '../../src/renderer/src/context/photos'
 import { useOrganizerState } from '../../src/renderer/src/features/Organizer/hooks/useOrganizerState'
-import type { ExecuteOrganizeResult, PhotoRecord, MoveOperation } from '../../src/shared/ipc'
+import type {
+  ExecuteOrganizeResult,
+  MoveOperation,
+  PhotoRecord,
+  UndoOrganizeResult
+} from '../../src/shared/ipc'
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -30,17 +35,36 @@ const OP_A: MoveOperation = {
 const OP_B: MoveOperation = { ...OP_A, photo: PHOTO_B, targetPath: '/root/2024/06/15/b.jpg' }
 const MOVE_PAIR_A = { from: PHOTO_A.path, to: OP_A.targetPath }
 const MOVE_PAIR_B = { from: PHOTO_B.path, to: OP_B.targetPath }
+const PHOTO_A_MOVED: PhotoRecord = { ...PHOTO_A, path: OP_A.targetPath }
+const PHOTO_B_MOVED: PhotoRecord = { ...PHOTO_B, path: OP_B.targetPath }
 
 function makeExecuteResult(
   movedPairs: ExecuteOrganizeResult['movedPairs'],
   errors: string[] = [],
-  requestedCount = movedPairs.length
+  requestedCount = movedPairs.length,
+  photos: PhotoRecord[] = PHOTOS
 ): ExecuteOrganizeResult {
   return {
     movedPairs,
     errors,
     requestedCount,
-    movedCount: movedPairs.length
+    movedCount: movedPairs.length,
+    photos
+  }
+}
+
+function makeUndoResult(
+  undonePairs: UndoOrganizeResult['undonePairs'],
+  errors: string[] = [],
+  requestedCount = undonePairs.length,
+  photos: PhotoRecord[] = PHOTOS
+): UndoOrganizeResult {
+  return {
+    photos,
+    undonePairs,
+    errors,
+    requestedCount,
+    undoneCount: undonePairs.length
   }
 }
 
@@ -66,7 +90,6 @@ function makeWrapper(scanRevision = 0, scanRoot: string | null = SCAN_ROOT) {
           scanRevision,
           setPhotos: mockSetPhotos,
           setScanRoot: vi.fn(),
-          removePhotosByPath: vi.fn(),
           bumpScanRevision: vi.fn()
         }
       },
@@ -151,26 +174,27 @@ describe('useOrganizerState', () => {
   })
 
   it('handleConfirm calls setPhotos with updated paths', async () => {
+    const updatedPhotos = [PHOTO_A_MOVED, PHOTO_B]
     mockApi.previewOrganize.mockResolvedValue([OP_A])
-    mockApi.executeOrganize.mockResolvedValue(makeExecuteResult([MOVE_PAIR_A]))
+    mockApi.executeOrganize.mockResolvedValue(
+      makeExecuteResult([MOVE_PAIR_A], [], 1, updatedPhotos)
+    )
     const { result } = renderHook(() => useOrganizerState(), { wrapper: makeWrapper() })
 
     await act(() => result.current.handlePreview())
     await act(() => result.current.handleConfirm())
 
     expect(mockSetPhotos).toHaveBeenCalledOnce()
-    const updatedPhotos: PhotoRecord[] = mockSetPhotos.mock.calls[0][0]
-    const updated = updatedPhotos.find((p) => p.name === 'a.jpg')
-    expect(updated?.path).toBe('/root/2024/06/15/a.jpg')
-    expect(updated?.name).toBe('a.jpg')
+    expect(mockSetPhotos.mock.calls[0][0]).toBe(updatedPhotos)
   })
 
   it('handleConfirm applies partial successes and keeps undo data', async () => {
+    const updatedPhotos = [PHOTO_A_MOVED, PHOTO_B]
     mockApi.previewOrganize.mockResolvedValue([OP_A, OP_B])
     mockApi.executeOrganize.mockResolvedValue(
-      makeExecuteResult([MOVE_PAIR_A], ['/root/2024/b.jpg: permission denied'], 2)
+      makeExecuteResult([MOVE_PAIR_A], ['/root/2024/b.jpg: permission denied'], 2, updatedPhotos)
     )
-    mockApi.undoOrganize.mockResolvedValue(undefined)
+    mockApi.undoOrganize.mockResolvedValue(makeUndoResult([MOVE_PAIR_A]))
     const { result } = renderHook(() => useOrganizerState(), { wrapper: makeWrapper() })
 
     await act(() => result.current.handlePreview())
@@ -182,9 +206,7 @@ describe('useOrganizerState', () => {
       '1 of 2 file(s) could not be moved:\n/root/2024/b.jpg: permission denied'
     )
     expect(mockSetPhotos).toHaveBeenCalledOnce()
-    const updatedPhotos: PhotoRecord[] = mockSetPhotos.mock.calls[0][0]
-    expect(updatedPhotos.find((photo) => photo.name === 'a.jpg')?.path).toBe(OP_A.targetPath)
-    expect(updatedPhotos.find((photo) => photo.name === 'b.jpg')?.path).toBe(PHOTO_B.path)
+    expect(mockSetPhotos.mock.calls[0][0]).toBe(updatedPhotos)
 
     await act(() => result.current.handleUndo())
 
@@ -228,9 +250,10 @@ describe('useOrganizerState', () => {
   })
 
   it('handleUndo transitions done → undoing → undone', async () => {
+    const movedPhotos = [PHOTO_A_MOVED, PHOTO_B]
     mockApi.previewOrganize.mockResolvedValue([OP_A])
-    mockApi.executeOrganize.mockResolvedValue(makeExecuteResult([MOVE_PAIR_A]))
-    mockApi.undoOrganize.mockResolvedValue(undefined)
+    mockApi.executeOrganize.mockResolvedValue(makeExecuteResult([MOVE_PAIR_A], [], 1, movedPhotos))
+    mockApi.undoOrganize.mockResolvedValue(makeUndoResult([MOVE_PAIR_A], [], 1, PHOTOS))
     const { result } = renderHook(() => useOrganizerState(), { wrapper: makeWrapper() })
 
     await act(() => result.current.handlePreview())
@@ -239,12 +262,14 @@ describe('useOrganizerState', () => {
 
     expect(result.current.status).toBe('undone')
     expect(result.current.error).toBeNull()
+    expect(mockSetPhotos).toHaveBeenLastCalledWith(PHOTOS)
+    expect(result.current.movedCount).toBe(0)
   })
 
   it('handleUndo passes the correct pairs to undoOrganize', async () => {
     mockApi.previewOrganize.mockResolvedValue([OP_A])
     mockApi.executeOrganize.mockResolvedValue(makeExecuteResult([MOVE_PAIR_A]))
-    mockApi.undoOrganize.mockResolvedValue(undefined)
+    mockApi.undoOrganize.mockResolvedValue(makeUndoResult([MOVE_PAIR_A]))
     const { result } = renderHook(() => useOrganizerState(), { wrapper: makeWrapper() })
 
     await act(() => result.current.handlePreview())
@@ -252,6 +277,41 @@ describe('useOrganizerState', () => {
     await act(() => result.current.handleUndo())
 
     expect(mockApi.undoOrganize).toHaveBeenCalledWith([{ from: PHOTO_A.path, to: OP_A.targetPath }])
+  })
+
+  it('handleUndo keeps failed pairs available when undo is partial', async () => {
+    const movedPhotos = [PHOTO_A_MOVED, PHOTO_B_MOVED]
+    const partialUndoPhotos = [PHOTO_A, PHOTO_B_MOVED]
+    mockApi.previewOrganize.mockResolvedValue([OP_A, OP_B])
+    mockApi.executeOrganize.mockResolvedValue(
+      makeExecuteResult([MOVE_PAIR_A, MOVE_PAIR_B], [], 2, movedPhotos)
+    )
+    mockApi.undoOrganize
+      .mockResolvedValueOnce(
+        makeUndoResult(
+          [MOVE_PAIR_A],
+          [`${OP_B.targetPath}: permission denied`],
+          2,
+          partialUndoPhotos
+        )
+      )
+      .mockResolvedValueOnce(makeUndoResult([MOVE_PAIR_B], [], 1, PHOTOS))
+    const { result } = renderHook(() => useOrganizerState(), { wrapper: makeWrapper() })
+
+    await act(() => result.current.handlePreview())
+    await act(() => result.current.handleConfirm())
+    await act(() => result.current.handleUndo())
+
+    expect(result.current.status).toBe('done')
+    expect(result.current.movedCount).toBe(1)
+    expect(result.current.error).toBe(
+      `1 of 2 file(s) could not be reverted:\n${OP_B.targetPath}: permission denied`
+    )
+    expect(mockSetPhotos).toHaveBeenLastCalledWith(partialUndoPhotos)
+
+    await act(() => result.current.handleUndo())
+
+    expect(mockApi.undoOrganize).toHaveBeenLastCalledWith([MOVE_PAIR_B])
   })
 
   it('handleUndo on failure returns to done with error', async () => {

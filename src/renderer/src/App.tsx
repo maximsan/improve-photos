@@ -33,10 +33,6 @@ function App(): React.JSX.Element {
   function bumpScanRevision(): void {
     setScanRevision((r) => r + 1)
   }
-  function removePhotosByPath(paths: string[]): void {
-    const trashedPaths = new Set(paths)
-    setPhotos((currentPhotos) => currentPhotos.filter((photo) => !trashedPaths.has(photo.path)))
-  }
 
   return (
     <NavigationContext.Provider value={{ setActiveTab }}>
@@ -47,7 +43,6 @@ function App(): React.JSX.Element {
           scanRevision,
           setPhotos,
           setScanRoot,
-          removePhotosByPath,
           bumpScanRevision
         }}
       >

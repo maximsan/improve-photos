@@ -8,7 +8,6 @@ interface PhotosContextValue {
   scanRevision: number
   setPhotos: (photos: PhotoRecord[]) => void
   setScanRoot: (scanRoot: string | null) => void
-  removePhotosByPath: (paths: string[]) => void
   bumpScanRevision: () => void
 }
 
@@ -18,7 +17,6 @@ export const PhotosContext = createContext<PhotosContextValue>({
   scanRevision: 0,
   setPhotos: () => {},
   setScanRoot: () => {},
-  removePhotosByPath: () => {},
   bumpScanRevision: () => {}
 })
 

@@ -44,7 +44,6 @@ function wrapper({ children }: { children: ReactNode }): ReactElement {
         scanRevision: 0,
         setPhotos: vi.fn(),
         setScanRoot: vi.fn(),
-        removePhotosByPath: vi.fn(),
         bumpScanRevision: vi.fn()
       }
     },
