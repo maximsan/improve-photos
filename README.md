@@ -8,8 +8,9 @@ The v1 release target is a Universal macOS DMG distributed through GitHub Releas
 
 - Final v1 scope lives in `docs/v1-ready-to-market-plan.md`.
 - Payments, auto-updates, and release publishing are disabled by default until explicit final v1 approval.
-- Unlicensed v1 use will be limited to 100 photos per workflow action; licensed users will get unlimited local processing.
-- Lemon Squeezy license activation, GitHub Releases auto-update, signing, notarization, and Universal macOS packaging are planned v1 work and must remain gated until approval.
+- Gated Lemon Squeezy license activation, GitHub Releases auto-update, Universal macOS packaging, and 100-photo limit UX are implemented in the app.
+- When payments are enabled for release, unlicensed users can process up to 100 photos per workflow action; licensed users get unlimited local processing.
+- Public release still needs signing, notarization, release artifacts, final QA, and explicit approval before market features are enabled.
 
 ## Recommended IDE Setup
 
