@@ -92,14 +92,14 @@ src/renderer/*.tsx →  out/renderer/
 
 ```
 out/          ─┐
-resources/    ─┤  →  dist/cleanup-photos.dmg
-build/icons   ─┘
+resources/    ─┤  →  dist/mac-universal/Cleanup Photos.app
+build/icons   ─┘      dist/Cleanup Photos-<version>-universal.dmg
 node_modules (including native modules like sharp)
 ```
 
 The result is a self-contained `.app` — the user who installs it needs nothing else (no Node.js, no pnpm).
 
-`pnpm dev` skips both stages entirely and runs the TypeScript source directly with hot reload. `pnpm build:mac` runs `pnpm build` first, then packages the current local macOS arm64 app. The v1 release target remains a Universal macOS DMG.
+`pnpm dev` skips both stages entirely and runs the TypeScript source directly with hot reload. `pnpm build:mac` runs `pnpm build` first, packages a Universal macOS app/DMG, and writes `dist/mac-universal/Cleanup Photos.app` plus `dist/Cleanup Photos-<version>-universal.dmg`. Local builds are unsigned by default. Signed and notarized release builds require `MAC_NOTARIZE=1` plus Apple signing/notarization credentials; see the README build section for the command flow.
 
 > **Why `sharp` needs a special build step:** native modules like `sharp` contain compiled C++ code. They must be compiled against the exact Node.js version bundled inside Electron — not the system Node.js. `electron-builder install-app-deps` (run automatically after `pnpm install`) handles this recompilation.
 
